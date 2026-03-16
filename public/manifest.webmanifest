@@ -1,0 +1,25 @@
+{
+  "name": "Doxa Commission Global",
+  "short_name": "Doxa Church",
+  "description": "Doxa Commission Global church platform.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1877f2",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/Img/doxa.PNG",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/Img/doxa.PNG",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
