@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
-{{-- 
+{{--
 TODO: Add Active route indicators
 --}}
 <head>
@@ -10,6 +10,27 @@ TODO: Add Active route indicators
 
     @include('partials.head')
     @stack('styles')
+    
+    <script>
+        // Apply theme from session on page load
+        (function() {
+            const theme = '{{ session('theme', 'system') }}';
+            const html = document.documentElement;
+            
+            if (theme === 'dark') {
+                html.classList.add('dark');
+            } else if (theme === 'light') {
+                html.classList.remove('dark');
+            } else {
+                // System preference
+                if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    html.classList.add('dark');
+                } else {
+                    html.classList.remove('dark');
+                }
+            }
+        })();
+    </script>
 </head>
 
 @php
@@ -18,22 +39,22 @@ TODO: Add Active route indicators
     $adminName = $globalSettings?->church_name ?? config('app.name', 'Doxa Commission Global');
 @endphp
 
-<body class="min-h-screen bg-slate-50 font-['Poppins'] text-slate-900">
-    <div class="relative min-h-screen bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.06),transparent_55%)]">
-        <flux:sidebar id="admin-sidebar" sticky stashable class="border-e border-slate-200 bg-white text-slate-900">
+<body class="min-h-screen bg-slate-50 font-['Poppins'] text-slate-900 dark:bg-zinc-900 dark:text-gray-200">
+    <div class="relative min-h-screen bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.06),transparent_55%)] dark:bg-none">
+        <flux:sidebar id="admin-sidebar" sticky stashable class="border-e border-slate-200 bg-white text-slate-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-gray-200">
         <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
 
         <a href="{{ route('dashboard') }}" class="me-5 flex items-center gap-3 rtl:space-x-reverse" wire:navigate>
-            <span class="flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl bg-blue-50 ring-1 ring-blue-100">
+            <span class="flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl bg-blue-50 ring-1 ring-blue-100 dark:bg-blue-900/30 dark:ring-blue-800">
                 @if ($adminLogo)
                     <img src="{{ $adminLogo }}" alt="{{ $adminName }}" class="h-full w-full object-contain">
                 @else
-                    <x-app-logo-icon class="size-7 fill-current text-blue-700" />
+                    <x-app-logo-icon class="size-7 fill-current text-blue-700 dark:text-blue-400" />
                 @endif
             </span>
             <div class="leading-tight">
-                <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Admin</p>
-                <p class="text-sm font-semibold text-slate-900">{{ $adminName }}</p>
+                <p class="text-xs uppercase tracking-[0.3em] text-slate-400 dark:text-gray-500">Admin</p>
+                <p class="text-sm font-semibold text-slate-900 dark:text-gray-200">{{ $adminName }}</p>
             </div>
         </a>
 
@@ -176,7 +197,7 @@ TODO: Add Active route indicators
     </flux:sidebar>
 
     <!-- Mobile User Menu -->
-    <flux:header sticky class="border-b border-slate-200/80 bg-white/95 backdrop-blur">
+    <flux:header sticky class="border-b border-slate-200/80 bg-white/95 backdrop-blur dark:border-zinc-700 dark:bg-zinc-900/95">
         <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
 
         <flux:spacer />
@@ -223,7 +244,7 @@ TODO: Add Active route indicators
             </flux:menu>
         </flux:dropdown>
     </flux:header>
-    <flux:main class="min-h-screen bg-slate-50">
+    <flux:main class="min-h-screen bg-slate-50 dark:bg-zinc-950">
         @role('super-admin')
             <livewire:admin.components.chapter-switcher />
         @endrole

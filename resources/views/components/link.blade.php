@@ -1,6 +1,6 @@
 @props(['href' => '#', 'text' => '', 'icon' => null, 'position' => 'left'])
 
-<a href="{{ $href }}" {{ $attributes->merge(['class' => 'inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700']) }}>
+<a href="{{ $href }}" {{ $attributes->merge(['class' => 'inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300']) }}>
     @if($icon && $position === 'left')
         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             @if($icon === 'arrow-up-right')
