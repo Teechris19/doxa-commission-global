@@ -136,11 +136,12 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
             return $path;
         }
 
-        if (Storage::disk('public')->exists($path)) {
+        // Generate URL directly without checking existence (Laravel will handle 404 if file doesn't exist)
+        try {
             return Storage::disk('public')->url($path);
+        } catch (\Throwable $e) {
+            return null;
         }
-
-        return null;
     }
 
     public function submitTestimony()
