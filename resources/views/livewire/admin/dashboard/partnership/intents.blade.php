@@ -620,14 +620,14 @@ new #[Layout('components.layouts.admin')] class extends Component {
             <a
                 href="{{ route('admin.dashboard.partnership.accounts', array_merge(request()->query(), ['chapter' => $chapterName])) }}"
                 wire:navigate
-                class="rounded-lg border border-blue-200 bg-white px-3 py-2 text-xs font-semibold text-blue-700"
+                class="rounded-lg border border-blue-200 bg-white px-3 py-2 text-xs font-semibold text-blue-700 dark:border-blue-800 dark:bg-zinc-800 dark:text-blue-400"
             >
                 Accounts
             </a>
             <button
                 type="button"
                 x-on:click="$wire.call('createIntent').then(() => $modalOpen('partnership-intent-modal'))"
-                class="rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white"
+                class="rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600"
             >
                 New Intent
             </button>
@@ -635,58 +635,58 @@ new #[Layout('components.layouts.admin')] class extends Component {
     </x-fancy-header>
 
     <div class="mb-6 flex flex-wrap items-center gap-3 text-sm">
-        <span class="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-blue-700">Chapter: {{ $chapterName }}</span>
-        <span class="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-amber-700">Pending Intents: {{ $intentStats['pending'] ?? 0 }}</span>
-        <span class="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-indigo-700">Reviewing: {{ $intentStats['reviewing'] ?? 0 }}</span>
-        <span class="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-emerald-700">Approved: {{ $intentStats['approved'] ?? 0 }}</span>
-        <span class="rounded-full border border-zinc-300 bg-zinc-100 px-3 py-1 text-zinc-700">Withdrawn: {{ $intentStats['withdrawn'] ?? 0 }}</span>
+        <span class="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-blue-700 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-400">Chapter: {{ $chapterName }}</span>
+        <span class="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-amber-700 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-400">Pending Intents: {{ $intentStats['pending'] ?? 0 }}</span>
+        <span class="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-indigo-700 dark:border-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400">Reviewing: {{ $intentStats['reviewing'] ?? 0 }}</span>
+        <span class="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">Approved: {{ $intentStats['approved'] ?? 0 }}</span>
+        <span class="rounded-full border border-zinc-300 bg-zinc-100 px-3 py-1 text-zinc-700 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Withdrawn: {{ $intentStats['withdrawn'] ?? 0 }}</span>
     </div>
 
-    <x-card class="mb-6">
+    <x-card class="mb-6 dark:bg-zinc-900">
         <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div>
-                <h2 class="text-lg font-semibold text-slate-900">Partnership Categories</h2>
-                <p class="text-sm text-slate-500">Categorize intents as general, event-based, or project-based tracks.</p>
+                <h2 class="text-lg font-semibold text-slate-900 dark:text-gray-200">Partnership Categories</h2>
+                <p class="text-sm text-slate-500 dark:text-gray-400">Categorize intents as general, event-based, or project-based tracks.</p>
             </div>
             <button
                 type="button"
                 x-on:click="$wire.call('createCategory').then(() => $modalOpen('partnership-category-modal'))"
-                class="rounded-lg border border-blue-200 px-3 py-2 text-xs font-semibold text-blue-700"
+                class="rounded-lg border border-blue-200 px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-zinc-800"
             >
                 Add Category
             </button>
         </div>
 
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-zinc-200 text-sm">
-                <thead class="bg-zinc-50">
+            <table class="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-700">
+                <thead class="bg-zinc-50 dark:bg-zinc-800">
                     <tr>
-                        <th class="px-3 py-2 text-left font-semibold text-zinc-700">Category</th>
-                        <th class="px-3 py-2 text-left font-semibold text-zinc-700">Linked Account</th>
-                        <th class="px-3 py-2 text-left font-semibold text-zinc-700">Description</th>
-                        <th class="px-3 py-2 text-left font-semibold text-zinc-700">Intents</th>
-                        <th class="px-3 py-2 text-left font-semibold text-zinc-700">Status</th>
-                        <th class="px-3 py-2 text-left font-semibold text-zinc-700">Action</th>
+                        <th class="px-3 py-2 text-left font-semibold text-zinc-700 dark:text-gray-300">Category</th>
+                        <th class="px-3 py-2 text-left font-semibold text-zinc-700 dark:text-gray-300">Linked Account</th>
+                        <th class="px-3 py-2 text-left font-semibold text-zinc-700 dark:text-gray-300">Description</th>
+                        <th class="px-3 py-2 text-left font-semibold text-zinc-700 dark:text-gray-300">Intents</th>
+                        <th class="px-3 py-2 text-left font-semibold text-zinc-700 dark:text-gray-300">Status</th>
+                        <th class="px-3 py-2 text-left font-semibold text-zinc-700 dark:text-gray-300">Action</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-zinc-100 bg-white">
+                <tbody class="divide-y divide-zinc-100 bg-white dark:divide-zinc-700 dark:bg-zinc-900">
                     @forelse($categories as $category)
-                        <tr>
-                            <td class="px-3 py-3 font-medium text-zinc-900">{{ $category->name }}</td>
-                            <td class="px-3 py-3 text-zinc-600">
+                        <tr class="dark:border-zinc-700">
+                            <td class="px-3 py-3 font-medium text-zinc-900 dark:text-gray-200">{{ $category->name }}</td>
+                            <td class="px-3 py-3 text-zinc-600 dark:text-gray-400">
                                 @if($category->account)
                                     <p>{{ $category->account->account_name }} ({{ $category->account->bank_name }}){{ $category->account->account_number ? ' • ' . $category->account->account_number : '' }}</p>
                                     @if($category->account->chapter_id === null)
-                                        <p class="text-xs text-indigo-600">Global account</p>
+                                        <p class="text-xs text-indigo-600 dark:text-indigo-400">Global account</p>
                                     @endif
                                 @else
-                                    <p class="text-rose-600">No linked account</p>
+                                    <p class="text-rose-600 dark:text-rose-400">No linked account</p>
                                 @endif
                             </td>
-                            <td class="px-3 py-3 text-zinc-600">{{ $category->description ?: 'No description' }}</td>
-                            <td class="px-3 py-3 text-zinc-600">{{ $category->intents_count }}</td>
+                            <td class="px-3 py-3 text-zinc-600 dark:text-gray-400">{{ $category->description ?: 'No description' }}</td>
+                            <td class="px-3 py-3 text-zinc-600 dark:text-gray-400">{{ $category->intents_count }}</td>
                             <td class="px-3 py-3">
-                                <span class="inline-flex rounded-full px-2 py-1 text-xs font-semibold {{ $category->is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-zinc-200 text-zinc-700' }}">
+                                <span class="inline-flex rounded-full px-2 py-1 text-xs font-semibold {{ $category->is_active ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-400' }}">
                                     {{ $category->is_active ? 'Active' : 'Inactive' }}
                                 </span>
                             </td>
@@ -694,7 +694,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
                                 <div class="flex flex-wrap gap-2">
                                     <button
                                         type="button"
-                                        class="rounded-md border border-blue-200 px-2 py-1 text-xs font-medium text-blue-700"
+                                        class="rounded-md border border-blue-200 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-zinc-800"
                                         x-on:click="$wire.call('editCategory', {{ $category->id }}).then(() => $modalOpen('partnership-category-modal'))"
                                     >
                                         Edit
@@ -702,7 +702,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
                                     <button
                                         type="button"
                                         wire:click="deleteCategory({{ $category->id }})"
-                                        class="rounded-md border border-rose-200 px-2 py-1 text-xs font-medium text-rose-700"
+                                        class="rounded-md border border-rose-200 px-2 py-1 text-xs font-medium text-rose-700 hover:bg-rose-50 dark:border-rose-800 dark:text-rose-400 dark:hover:bg-zinc-800"
                                     >
                                         Delete
                                     </button>
@@ -711,7 +711,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-3 py-5 text-center text-zinc-500">No categories created for this chapter.</td>
+                            <td colspan="6" class="px-3 py-5 text-center text-zinc-500 dark:text-gray-400">No categories created for this chapter.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -719,24 +719,24 @@ new #[Layout('components.layouts.admin')] class extends Component {
         </div>
     </x-card>
 
-    <x-card>
+    <x-card class="dark:bg-zinc-900">
         <div class="mb-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-                <h2 class="text-lg font-semibold text-slate-900">Partnership Intents</h2>
-                <p class="text-sm text-slate-500">Intent records are pledges only, not transactions. Intents can be updated or withdrawn.</p>
+                <h2 class="text-lg font-semibold text-slate-900 dark:text-gray-200">Partnership Intents</h2>
+                <p class="text-sm text-slate-500 dark:text-gray-400">Intent records are pledges only, not transactions. Intents can be updated or withdrawn.</p>
             </div>
             <button
                 type="button"
                 x-on:click="$wire.call('createIntent').then(() => $modalOpen('partnership-intent-modal'))"
-                class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white"
+                class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600"
             >
                 Create Intent
             </button>
         </div>
 
         <div class="mb-4 grid grid-cols-1 gap-3 lg:grid-cols-5">
-            <input wire:model.live.debounce.300ms="intentSearch" type="text" class="rounded-lg border px-3 py-2 text-sm" placeholder="Search title, category, user" />
-            <select wire:model.live="intentStatusFilter" class="rounded-lg border px-3 py-2 text-sm">
+            <input wire:model.live.debounce.300ms="intentSearch" type="text" class="rounded-lg border px-3 py-2 text-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-200 dark:placeholder-gray-400" placeholder="Search title, category, user" />
+            <select wire:model.live="intentStatusFilter" class="rounded-lg border px-3 py-2 text-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-200">
                 <option value="">All statuses</option>
                 <option value="draft">Draft</option>
                 <option value="pending">Pending</option>
@@ -745,13 +745,13 @@ new #[Layout('components.layouts.admin')] class extends Component {
                 <option value="declined">Declined</option>
                 <option value="withdrawn">Withdrawn</option>
             </select>
-            <select wire:model.live="intentTypeFilter" class="rounded-lg border px-3 py-2 text-sm">
+            <select wire:model.live="intentTypeFilter" class="rounded-lg border px-3 py-2 text-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-200">
                 <option value="">All types</option>
                 <option value="general">General</option>
                 <option value="event">Event</option>
                 <option value="project">Project</option>
             </select>
-            <select wire:model.live="intentQuantity" class="rounded-lg border px-3 py-2 text-sm">
+            <select wire:model.live="intentQuantity" class="rounded-lg border px-3 py-2 text-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-200">
                 <option value="10">10</option>
                 <option value="15">15</option>
                 <option value="25">25</option>
@@ -760,53 +760,53 @@ new #[Layout('components.layouts.admin')] class extends Component {
         </div>
 
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-zinc-200 text-sm">
-                <thead class="bg-zinc-50">
+            <table class="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-700">
+                <thead class="bg-zinc-50 dark:bg-zinc-800">
                     <tr>
-                        <th class="px-3 py-2 text-left font-semibold text-zinc-700">Intent</th>
-                        <th class="px-3 py-2 text-left font-semibold text-zinc-700">Type / Category</th>
-                        <th class="px-3 py-2 text-left font-semibold text-zinc-700">Partner</th>
-                        <th class="px-3 py-2 text-left font-semibold text-zinc-700">Pledge</th>
-                        <th class="px-3 py-2 text-left font-semibold text-zinc-700">Linked Modules</th>
-                        <th class="px-3 py-2 text-left font-semibold text-zinc-700">Status</th>
-                        <th class="px-3 py-2 text-left font-semibold text-zinc-700">Action</th>
+                        <th class="px-3 py-2 text-left font-semibold text-zinc-700 dark:text-gray-300">Intent</th>
+                        <th class="px-3 py-2 text-left font-semibold text-zinc-700 dark:text-gray-300">Type / Category</th>
+                        <th class="px-3 py-2 text-left font-semibold text-zinc-700 dark:text-gray-300">Partner</th>
+                        <th class="px-3 py-2 text-left font-semibold text-zinc-700 dark:text-gray-300">Pledge</th>
+                        <th class="px-3 py-2 text-left font-semibold text-zinc-700 dark:text-gray-300">Linked Modules</th>
+                        <th class="px-3 py-2 text-left font-semibold text-zinc-700 dark:text-gray-300">Status</th>
+                        <th class="px-3 py-2 text-left font-semibold text-zinc-700 dark:text-gray-300">Action</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-zinc-100 bg-white">
+                <tbody class="divide-y divide-zinc-100 bg-white dark:divide-zinc-700 dark:bg-zinc-900">
                     @forelse($intents as $intent)
-                        <tr>
+                        <tr class="dark:border-zinc-700">
                             <td class="px-3 py-3">
-                                <p class="font-medium text-zinc-900">{{ $intent->title }}</p>
-                                <p class="text-xs text-zinc-500">Created {{ $intent->created_at?->format('M d, Y H:i') }}</p>
+                                <p class="font-medium text-zinc-900 dark:text-gray-200">{{ $intent->title }}</p>
+                                <p class="text-xs text-zinc-500 dark:text-gray-400">Created {{ $intent->created_at?->format('M d, Y H:i') }}</p>
                             </td>
-                            <td class="px-3 py-3 text-zinc-700">
+                            <td class="px-3 py-3 text-zinc-700 dark:text-gray-300">
                                 <p>{{ ucfirst($intent->intent_type) }}</p>
-                                <p class="text-xs text-zinc-500">{{ $intent->category?->name ?: 'No category' }}</p>
+                                <p class="text-xs text-zinc-500 dark:text-gray-400">{{ $intent->category?->name ?: 'No category' }}</p>
                             </td>
-                            <td class="px-3 py-3 text-zinc-700">
+                            <td class="px-3 py-3 text-zinc-700 dark:text-gray-300">
                                 <p>{{ $intent->user?->name ?: 'Anonymous/External' }}</p>
                             </td>
-                            <td class="px-3 py-3 text-zinc-700">
+                            <td class="px-3 py-3 text-zinc-700 dark:text-gray-300">
                                 @if($intent->pledge_amount !== null)
                                     <p>{{ $intent->pledge_currency }} {{ number_format((float) $intent->pledge_amount, 2) }}</p>
-                                    <p class="text-xs text-zinc-500">{{ str_replace('_', ' ', ucfirst($intent->pledge_frequency)) }}</p>
+                                    <p class="text-xs text-zinc-500 dark:text-gray-400">{{ str_replace('_', ' ', ucfirst($intent->pledge_frequency)) }}</p>
                                 @else
-                                    <p class="text-xs text-zinc-500">No pledge amount</p>
+                                    <p class="text-xs text-zinc-500 dark:text-gray-400">No pledge amount</p>
                                 @endif
                             </td>
-                            <td class="px-3 py-3 text-zinc-700">
-                                <p class="text-xs">Event: {{ $intent->event?->title ?: 'Not linked' }}</p>
-                                <p class="text-xs">Account: {{ $intent->account?->account_name ?: 'Not linked' }}</p>
+                            <td class="px-3 py-3 text-zinc-700 dark:text-gray-300">
+                                <p class="text-xs dark:text-gray-400">Event: {{ $intent->event?->title ?: 'Not linked' }}</p>
+                                <p class="text-xs dark:text-gray-400">Account: {{ $intent->account?->account_name ?: 'Not linked' }}</p>
                             </td>
                             <td class="px-3 py-3">
                                 @php
                                     $statusClass = match($intent->status) {
-                                        'approved' => 'bg-emerald-100 text-emerald-700',
-                                        'reviewing' => 'bg-indigo-100 text-indigo-700',
-                                        'declined' => 'bg-rose-100 text-rose-700',
-                                        'withdrawn' => 'bg-zinc-200 text-zinc-700',
-                                        'draft' => 'bg-slate-100 text-slate-700',
-                                        default => 'bg-amber-100 text-amber-700',
+                                        'approved' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+                                        'reviewing' => 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
+                                        'declined' => 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400',
+                                        'withdrawn' => 'bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-400',
+                                        'draft' => 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400',
+                                        default => 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
                                     };
                                 @endphp
                                 <span class="inline-flex rounded-full px-2 py-1 text-xs font-semibold {{ $statusClass }}">
@@ -817,7 +817,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
                                 <div class="flex flex-wrap gap-2">
                                     <button
                                         type="button"
-                                        class="rounded-md border border-blue-200 px-2 py-1 text-xs font-medium text-blue-700"
+                                        class="rounded-md border border-blue-200 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-zinc-800"
                                         x-on:click="$wire.call('editIntent', {{ $intent->id }}).then(() => $modalOpen('partnership-intent-modal'))"
                                     >
                                         Edit
@@ -826,7 +826,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
                                         <button
                                             type="button"
                                             wire:click="setIntentStatus({{ $intent->id }}, 'withdrawn')"
-                                            class="rounded-md border border-zinc-300 px-2 py-1 text-xs font-medium text-zinc-700"
+                                            class="rounded-md border border-zinc-300 px-2 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-400 dark:hover:bg-zinc-800"
                                         >
                                             Withdraw
                                         </button>
@@ -834,7 +834,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
                                     <button
                                         type="button"
                                         wire:click="deleteIntent({{ $intent->id }})"
-                                        class="rounded-md border border-rose-200 px-2 py-1 text-xs font-medium text-rose-700"
+                                        class="rounded-md border border-rose-200 px-2 py-1 text-xs font-medium text-rose-700 hover:bg-rose-50 dark:border-rose-800 dark:text-rose-400 dark:hover:bg-zinc-800"
                                     >
                                         Delete
                                     </button>
@@ -843,7 +843,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-3 py-5 text-center text-zinc-500">No partnership intents found for this chapter.</td>
+                            <td colspan="7" class="px-3 py-5 text-center text-zinc-500 dark:text-gray-400">No partnership intents found for this chapter.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -858,20 +858,20 @@ new #[Layout('components.layouts.admin')] class extends Component {
     <x-modal id="partnership-category-modal" :title="$editingCategoryId ? 'Edit Partnership Category' : 'Create Partnership Category'" size="lg">
         <form wire:submit.prevent="saveCategory" class="space-y-4">
             <div>
-                <label class="mb-1 block text-sm font-medium">Category Name</label>
-                <input wire:model.lazy="categoryName" type="text" class="w-full rounded-lg border px-3 py-2" placeholder="e.g. Outreach Project" />
+                <label class="mb-1 block text-sm font-medium text-slate-900 dark:text-gray-200">Category Name</label>
+                <input wire:model.lazy="categoryName" type="text" class="w-full rounded-lg border px-3 py-2 text-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-200 dark:placeholder-gray-400" placeholder="e.g. Outreach Project" />
                 @error('categoryName') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
             </div>
 
             <div>
-                <label class="mb-1 block text-sm font-medium">Description</label>
-                <textarea wire:model.lazy="categoryDescription" rows="3" class="w-full rounded-lg border px-3 py-2" placeholder="Optional category description"></textarea>
+                <label class="mb-1 block text-sm font-medium text-slate-900 dark:text-gray-200">Description</label>
+                <textarea wire:model.lazy="categoryDescription" rows="3" class="w-full rounded-lg border px-3 py-2 text-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-200 dark:placeholder-gray-400" placeholder="Optional category description"></textarea>
                 @error('categoryDescription') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
             </div>
 
             <div>
-                <label class="mb-1 block text-sm font-medium">Linked Contribution Account</label>
-                <select wire:model.lazy="categoryAccountId" class="w-full rounded-lg border px-3 py-2">
+                <label class="mb-1 block text-sm font-medium text-slate-900 dark:text-gray-200">Linked Contribution Account</label>
+                <select wire:model.lazy="categoryAccountId" class="w-full rounded-lg border px-3 py-2 text-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-200">
                     <option value="">Select account</option>
                     @foreach($chapterAccounts as $chapterAccount)
                         <option value="{{ $chapterAccount->id }}">
@@ -883,13 +883,13 @@ new #[Layout('components.layouts.admin')] class extends Component {
             </div>
 
             <label class="inline-flex items-center gap-2 text-sm">
-                <input type="checkbox" wire:model="categoryIsActive" class="rounded border-zinc-300" />
-                Active category
+                <input type="checkbox" wire:model="categoryIsActive" class="rounded border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800" />
+                <span class="text-slate-900 dark:text-gray-200">Active category</span>
             </label>
 
             <div class="flex justify-end gap-2 pt-2">
-                <button type="button" x-on:click="$modalClose('partnership-category-modal')" class="rounded-lg border px-4 py-2 text-sm">Cancel</button>
-                <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white">Save Category</button>
+                <button type="button" x-on:click="$modalClose('partnership-category-modal')" class="rounded-lg border border-slate-200 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-gray-300 dark:hover:bg-zinc-700">Cancel</button>
+                <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600">Save Category</button>
             </div>
         </form>
     </x-modal>
@@ -898,13 +898,13 @@ new #[Layout('components.layouts.admin')] class extends Component {
         <form wire:submit.prevent="saveIntent" class="space-y-4">
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
-                    <label class="mb-1 block text-sm font-medium">Intent Title</label>
-                    <input wire:model.lazy="intentTitle" type="text" class="w-full rounded-lg border px-3 py-2" placeholder="e.g. Youth Conference Partnership" />
+                    <label class="mb-1 block text-sm font-medium text-slate-900 dark:text-gray-200">Intent Title</label>
+                    <input wire:model.lazy="intentTitle" type="text" class="w-full rounded-lg border px-3 py-2 text-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-200 dark:placeholder-gray-400" placeholder="e.g. Youth Conference Partnership" />
                     @error('intentTitle') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm font-medium">Intent Type</label>
-                    <select wire:model.lazy="intentType" class="w-full rounded-lg border px-3 py-2">
+                    <label class="mb-1 block text-sm font-medium text-slate-900 dark:text-gray-200">Intent Type</label>
+                    <select wire:model.lazy="intentType" class="w-full rounded-lg border px-3 py-2 text-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-200">
                         <option value="general">General</option>
                         <option value="event">Event</option>
                         <option value="project">Project</option>
@@ -915,8 +915,8 @@ new #[Layout('components.layouts.admin')] class extends Component {
 
             <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <div>
-                    <label class="mb-1 block text-sm font-medium">Partner (User)</label>
-                    <select wire:model.lazy="intentUserId" class="w-full rounded-lg border px-3 py-2">
+                    <label class="mb-1 block text-sm font-medium text-slate-900 dark:text-gray-200">Partner (User)</label>
+                    <select wire:model.lazy="intentUserId" class="w-full rounded-lg border px-3 py-2 text-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-200">
                         <option value="">Anonymous/External</option>
                         @foreach($chapterUsers as $chapterUser)
                             <option value="{{ $chapterUser->id }}">{{ $chapterUser->name }}</option>
@@ -926,8 +926,8 @@ new #[Layout('components.layouts.admin')] class extends Component {
                 </div>
                 @if($intentType === 'project')
                     <div>
-                        <label class="mb-1 block text-sm font-medium">Category</label>
-                        <select wire:model.lazy="intentCategoryId" class="w-full rounded-lg border px-3 py-2">
+                        <label class="mb-1 block text-sm font-medium text-slate-900 dark:text-gray-200">Category</label>
+                        <select wire:model.lazy="intentCategoryId" class="w-full rounded-lg border px-3 py-2 text-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-200">
                             <option value="">Select category</option>
                             @foreach($categoryOptions as $categoryOption)
                                 <option value="{{ $categoryOption->id }}">
@@ -939,8 +939,8 @@ new #[Layout('components.layouts.admin')] class extends Component {
                     </div>
                 @else
                     <div>
-                        <label class="mb-1 block text-sm font-medium">Contribution Account</label>
-                        <select wire:model.lazy="intentAccountId" class="w-full rounded-lg border px-3 py-2">
+                        <label class="mb-1 block text-sm font-medium text-slate-900 dark:text-gray-200">Contribution Account</label>
+                        <select wire:model.lazy="intentAccountId" class="w-full rounded-lg border px-3 py-2 text-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-200">
                             <option value="">Select account</option>
                             @if($intentType === 'event')
                                 @foreach($eventAccounts as $account)
@@ -960,8 +960,8 @@ new #[Layout('components.layouts.admin')] class extends Component {
                     </div>
                 @endif
                 <div>
-                    <label class="mb-1 block text-sm font-medium">Status</label>
-                    <select wire:model.lazy="intentStatus" class="w-full rounded-lg border px-3 py-2">
+                    <label class="mb-1 block text-sm font-medium text-slate-900 dark:text-gray-200">Status</label>
+                    <select wire:model.lazy="intentStatus" class="w-full rounded-lg border px-3 py-2 text-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-200">
                         <option value="draft">Draft</option>
                         <option value="pending">Pending</option>
                         <option value="reviewing">Reviewing</option>
@@ -976,8 +976,8 @@ new #[Layout('components.layouts.admin')] class extends Component {
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                 @if($intentType === 'event')
                     <div>
-                        <label class="mb-1 block text-sm font-medium">Linked Event</label>
-                        <select wire:model.lazy="intentEventId" class="w-full rounded-lg border px-3 py-2">
+                        <label class="mb-1 block text-sm font-medium text-slate-900 dark:text-gray-200">Linked Event</label>
+                        <select wire:model.lazy="intentEventId" class="w-full rounded-lg border px-3 py-2 text-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-200">
                             <option value="">Select event</option>
                             @foreach($chapterEvents as $chapterEvent)
                                 <option value="{{ $chapterEvent->id }}">
@@ -991,9 +991,9 @@ new #[Layout('components.layouts.admin')] class extends Component {
                         @error('intentEventId') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
                     </div>
                 @else
-                    <div class="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2">
-                        <label class="mb-1 block text-sm font-medium">Intent Summary</label>
-                        <p class="text-sm text-zinc-700">
+                    <div class="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-600 dark:bg-zinc-800">
+                        <label class="mb-1 block text-sm font-medium text-slate-900 dark:text-gray-200">Intent Summary</label>
+                        <p class="text-sm text-zinc-700 dark:text-gray-300">
                             {{ $intentType === 'project' ? 'Project partnership' : 'General partnership' }}
                         </p>
                     </div>
@@ -1014,14 +1014,14 @@ new #[Layout('components.layouts.admin')] class extends Component {
                         $linkedIntentAccount = $eventAccounts->firstWhere('id', (int) $intentAccountId);
                     }
                 @endphp
-                <div class="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2">
-                    <label class="mb-1 block text-sm font-medium">Linked Contribution Account</label>
+                <div class="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-600 dark:bg-zinc-800">
+                    <label class="mb-1 block text-sm font-medium text-slate-900 dark:text-gray-200">Linked Contribution Account</label>
                     @if($linkedIntentAccount)
-                        <p class="text-sm text-zinc-700">
+                        <p class="text-sm text-zinc-700 dark:text-gray-300">
                             {{ $linkedIntentAccount->account_name }} ({{ $linkedIntentAccount->bank_name }}){{ $linkedIntentAccount->account_number ? ' • ' . $linkedIntentAccount->account_number : '' }}{{ $linkedIntentAccount->chapter_id === null ? ' - Global' : '' }}
                         </p>
                     @else
-                        <p class="text-sm text-rose-600">
+                        <p class="text-sm text-rose-600 dark:text-rose-400">
                             @if($intentType === 'project')
                                 Select a category with a linked account.
                             @elseif($intentType === 'event')
@@ -1036,18 +1036,18 @@ new #[Layout('components.layouts.admin')] class extends Component {
 
             <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
                 <div>
-                    <label class="mb-1 block text-sm font-medium">Pledge Amount</label>
-                    <input wire:model.lazy="intentPledgeAmount" type="number" step="0.01" min="0" class="w-full rounded-lg border px-3 py-2" placeholder="0.00" />
+                    <label class="mb-1 block text-sm font-medium text-slate-900 dark:text-gray-200">Pledge Amount</label>
+                    <input wire:model.lazy="intentPledgeAmount" type="number" step="0.01" min="0" class="w-full rounded-lg border px-3 py-2 text-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-200 dark:placeholder-gray-400" placeholder="0.00" />
                     @error('intentPledgeAmount') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm font-medium">Currency</label>
-                    <input wire:model.lazy="intentPledgeCurrency" type="text" maxlength="3" class="w-full rounded-lg border px-3 py-2" placeholder="NGN" />
+                    <label class="mb-1 block text-sm font-medium text-slate-900 dark:text-gray-200">Currency</label>
+                    <input wire:model.lazy="intentPledgeCurrency" type="text" maxlength="3" class="w-full rounded-lg border px-3 py-2 text-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-200 dark:placeholder-gray-400" placeholder="NGN" />
                     @error('intentPledgeCurrency') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm font-medium">Frequency</label>
-                    <select wire:model.lazy="intentPledgeFrequency" class="w-full rounded-lg border px-3 py-2">
+                    <label class="mb-1 block text-sm font-medium text-slate-900 dark:text-gray-200">Frequency</label>
+                    <select wire:model.lazy="intentPledgeFrequency" class="w-full rounded-lg border px-3 py-2 text-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-200">
                         <option value="one_time">One Time</option>
                         <option value="weekly">Weekly</option>
                         <option value="monthly">Monthly</option>
@@ -1058,27 +1058,27 @@ new #[Layout('components.layouts.admin')] class extends Component {
                     @error('intentPledgeFrequency') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm font-medium">Pledged At</label>
-                    <input wire:model.lazy="intentPledgedAt" type="datetime-local" class="w-full rounded-lg border px-3 py-2" />
+                    <label class="mb-1 block text-sm font-medium text-slate-900 dark:text-gray-200">Pledged At</label>
+                    <input wire:model.lazy="intentPledgedAt" type="datetime-local" class="w-full rounded-lg border px-3 py-2 text-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-200" />
                     @error('intentPledgedAt') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
                 </div>
             </div>
 
             <div>
-                <label class="mb-1 block text-sm font-medium">Intent Notes</label>
-                <textarea wire:model.lazy="intentNotes" rows="3" class="w-full rounded-lg border px-3 py-2" placeholder="Describe the pledge intent (not a transaction)."></textarea>
+                <label class="mb-1 block text-sm font-medium text-slate-900 dark:text-gray-200">Intent Notes</label>
+                <textarea wire:model.lazy="intentNotes" rows="3" class="w-full rounded-lg border px-3 py-2 text-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-200 dark:placeholder-gray-400" placeholder="Describe the pledge intent (not a transaction)."></textarea>
                 @error('intentNotes') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
             </div>
 
             <div>
-                <label class="mb-1 block text-sm font-medium">Internal Admin Notes</label>
-                <textarea wire:model.lazy="intentAdminNotes" rows="3" class="w-full rounded-lg border px-3 py-2" placeholder="Internal follow-up, reconciliation notes, next steps."></textarea>
+                <label class="mb-1 block text-sm font-medium text-slate-900 dark:text-gray-200">Internal Admin Notes</label>
+                <textarea wire:model.lazy="intentAdminNotes" rows="3" class="w-full rounded-lg border px-3 py-2 text-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-200 dark:placeholder-gray-400" placeholder="Internal follow-up, reconciliation notes, next steps."></textarea>
                 @error('intentAdminNotes') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
             </div>
 
             <div class="flex justify-end gap-2 pt-2">
-                <button type="button" x-on:click="$modalClose('partnership-intent-modal')" class="rounded-lg border px-4 py-2 text-sm">Cancel</button>
-                <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white">Save Intent</button>
+                <button type="button" x-on:click="$modalClose('partnership-intent-modal')" class="rounded-lg border border-slate-200 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-gray-300 dark:hover:bg-zinc-700">Cancel</button>
+                <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600">Save Intent</button>
             </div>
         </form>
     </x-modal>

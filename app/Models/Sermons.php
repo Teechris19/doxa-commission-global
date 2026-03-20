@@ -10,6 +10,7 @@ class Sermons extends Model
 {
     protected $fillable = [
         'title',
+        'speaker_name',
         'description',
         'preached_at',
         'image_path',

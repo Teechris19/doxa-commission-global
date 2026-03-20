@@ -93,6 +93,8 @@ new #[Layout('components.layouts.admin')]  class extends Component {
     }
 
     // Sermon CRUD
+    public $speaker_name = '';
+    
     public function createSermon()
     {
         $this->resetSermonForm();
@@ -103,6 +105,7 @@ new #[Layout('components.layouts.admin')]  class extends Component {
     {
         $this->selectedSermon = Sermons::findOrFail($id);
         $this->title = $this->selectedSermon->title;
+        $this->speaker_name = $this->selectedSermon->speaker_name ?? '';
         $this->description = $this->selectedSermon->description;
         $this->preached_at = $this->selectedSermon->preached_at->format('Y-m-d');
         $this->series_id = $this->selectedSermon->series_id;
@@ -113,6 +116,7 @@ new #[Layout('components.layouts.admin')]  class extends Component {
     {
         $this->validate([
             'title' => 'required|string|max:255',
+            'speaker_name' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'preached_at' => 'required|date',
             'series_id' => 'required|exists:series,id',
@@ -132,6 +136,7 @@ new #[Layout('components.layouts.admin')]  class extends Component {
         $sermon = $this->editMode ? $this->selectedSermon : new Sermons();
         $sermon->fill([
             'title' => $this->title,
+            'speaker_name' => $this->speaker_name,
             'description' => $this->description,
             'preached_at' => $this->preached_at,
             'series_id' => $this->series_id,
@@ -268,7 +273,7 @@ new #[Layout('components.layouts.admin')]  class extends Component {
     // Helper methods
     private function resetSermonForm()
     {
-        $this->reset(['title', 'description', 'preached_at', 'series_id', 'image', 'audioFile', 'videoFile', 'selectedSermon']);
+        $this->reset(['title', 'speaker_name', 'description', 'preached_at', 'series_id', 'image', 'audioFile', 'videoFile', 'selectedSermon']);
     }
 
     private function resetSeriesForm()
@@ -336,6 +341,14 @@ new #[Layout('components.layouts.admin')]  class extends Component {
                 <input wire:model="title" type="text"
                     class="w-full px-3 py-2 rounded-lg bg-white dark:bg-zinc-900 border dark:border-zinc-700 dark:text-gray-200" />
                 @error('title') <span class="text-xs text-red-400">{{ $message }}</span> @enderror
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium mb-1 dark:text-gray-200">Speaker Name</label>
+                <input wire:model="speaker_name" type="text"
+                    class="w-full px-3 py-2 rounded-lg bg-white dark:bg-zinc-900 border dark:border-zinc-700 dark:text-gray-200"
+                    placeholder="e.g. Pastor John Doe" />
+                @error('speaker_name') <span class="text-xs text-red-400">{{ $message }}</span> @enderror
             </div>
 
             <div>

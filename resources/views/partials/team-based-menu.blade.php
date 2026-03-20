@@ -113,6 +113,15 @@
         </flux:navlist.item>
     </flux:navlist.group>
 @endif
+
+{{-- Appearance Settings - All Users --}}
+<flux:navlist.group expandable heading="Appearance"
+    :expanded="request()->routeIs('settings.appearance') ? 'true' : 'false'">
+    <flux:navlist.item icon="paint-brush" :href="route('settings.appearance', request()->query())" wire:navigate
+        :active="request()->routeIs('settings.appearance') ? 'true' : 'false'">
+        Theme Preference
+    </flux:navlist.item>
+</flux:navlist.group>
 @if($can('partnerships') && ($isSuperAdmin || $isAdmin || $isPartnershipTeamMember))
     <flux:navlist.group expandable heading="Partnerships"
         :expanded="request()->routeIs('admin.dashboard.partnership.*') ? 'true' : 'false'">

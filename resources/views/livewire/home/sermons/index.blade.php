@@ -339,7 +339,7 @@ input[type="range"]::-moz-range-thumb {
                     <article class="sermon-card group relative flex flex-col overflow-hidden rounded-3xl border border-blue-100 bg-white shadow-[0_25px_60px_-30px_rgba(37,99,235,0.25)] transition hover:border-blue-300 hover:shadow-[0_30px_60px_-20px_rgba(37,99,235,0.35)] cursor-pointer"
                         data-id="{{ $sermon->id }}"
                         data-title="{{ $sermon->title }}"
-                        data-artist="{{ $sermon->series->title ?? 'Unknown' }}"
+                        data-artist="{{ $sermon->speaker_name ?? ($sermon->series->title ?? 'Unknown') }}"
                         data-audio-src="{{ $audioMedia ? $this->resolveMediaUrl($audioMedia->file_path) : '' }}"
                         data-image-src="{{ $sermon->image_path ? $this->resolveMediaUrl($sermon->image_path) : 'https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=900&q=80' }}">
                         <div class="relative h-56 w-full overflow-hidden">
@@ -365,6 +365,9 @@ input[type="range"]::-moz-range-thumb {
                                 <span>{{ $sermon->preached_at->format('M d, Y') }}</span>
                                 <span>{{ $audioMedia ? 'Play now' : 'Awaiting audio' }}</span>
                             </div>
+                            @if($sermon->speaker_name)
+                                <p class="text-xs text-slate-500">Speaker: {{ $sermon->speaker_name }}</p>
+                            @endif
                         </div>
                     </article>
                 @empty
@@ -758,19 +761,19 @@ input[type="range"]::-moz-range-thumb {
                 });
             }
 
-                setupSeekBar(seekBar);
-                setupSeekBar(seekBarMobile);
-            }
+            setupSeekBar(seekBar);
+            setupSeekBar(seekBarMobile);
+        }
 
-            // Initialize on DOM ready
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', initAudioPlayer);
-            } else {
-                initAudioPlayer();
-            }
+        // Initialize on DOM ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initAudioPlayer);
+        } else {
+            initAudioPlayer();
+        }
 
-            // Also reinitialize after Livewire navigation
-            document.addEventListener('livewire:navigated', initAudioPlayer);
-        })();
+        // Also reinitialize after Livewire navigation
+        document.addEventListener('livewire:navigated', initAudioPlayer);
+    })();
     </script>
 </div>

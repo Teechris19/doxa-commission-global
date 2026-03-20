@@ -125,8 +125,8 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
                             <h2 class="text-2xl font-semibold text-slate-900">{{ $selectedSermon->title }}</h2>
 
                             <div class="space-y-1 text-sm text-slate-600">
-                                @if($selectedSermon->preacher)
-                                    <p><span class="font-semibold text-slate-800">Speaker:</span> {{ $selectedSermon->preacher }}</p>
+                                @if($selectedSermon->speaker_name)
+                                    <p><span class="font-semibold text-slate-800">Speaker:</span> {{ $selectedSermon->speaker_name }}</p>
                                 @endif
 
                                 @if($selectedSermon->preached_at)
@@ -190,7 +190,7 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
 
                             <div class="min-w-0 flex-1">
                                 <p class="truncate text-sm font-semibold text-slate-900">{{ $sermon->title }}</p>
-                                <p class="text-xs text-slate-500">{{ $sermon->preacher ?? 'Unknown' }} @if($sermon->preached_at) • {{ $sermon->preached_at->format('M d, Y') }} @endif</p>
+                                <p class="text-xs text-slate-500">{{ $sermon->speaker_name ?? 'Unknown' }} @if($sermon->preached_at) • {{ $sermon->preached_at->format('M d, Y') }} @endif</p>
                             </div>
 
                             <span @class(['text-sm font-semibold', 'text-blue-700' => $itemIsActive, 'text-slate-400' => !$itemIsActive])>
