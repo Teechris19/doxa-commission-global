@@ -111,7 +111,7 @@ new #[Layout('components.layouts.admin')] class extends Component
 
         $this->toast()->success('Event created', 'Your event was created successfully')->send();
 
-        return redirect()->route('events.show', [$event->id]);
+        return redirect()->route('admin.dashboard.events.index', request()->query());
     }
 
 

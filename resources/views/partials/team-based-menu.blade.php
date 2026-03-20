@@ -101,7 +101,10 @@
             Team Functions
         </flux:navlist.item>
     </flux:navlist.group>
+@endif
 
+{{-- System Settings - Super Admin Only --}}
+@if($isSuperAdmin)
     <flux:navlist.group expandable heading="System Settings"
         :expanded="request()->routeIs('admin.dashboard.settings.index') ? 'true' : 'false'">
         <flux:navlist.item icon="cog-6-tooth" :href="route('admin.dashboard.settings.index', request()->query())" wire:navigate
@@ -109,7 +112,6 @@
             Global & Landing
         </flux:navlist.item>
     </flux:navlist.group>
-
 @endif
 @if($can('partnerships') && ($isSuperAdmin || $isAdmin || $isPartnershipTeamMember))
     <flux:navlist.group expandable heading="Partnerships"

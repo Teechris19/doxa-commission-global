@@ -88,7 +88,12 @@ new #[Layout('components.layouts.admin')] class extends Component {
             'newBatch.max_students' => 'nullable|integer|min:1',
         ]);
 
-        $academy = BeliversAcademy::find($this->academy['id']);
+        $academy = BeliversAcademy::find($this->academy['id'] ?? null);
+        if (!$academy) {
+            $this->toast()->error('Error', 'Academy not found. Please save the academy settings first.')->send();
+            return;
+        }
+
         if ($academy) {
             // Close all existing batches for this academy
             $academy->batches()->update(['status' => 'closed']);
@@ -97,7 +102,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
             $batch = $academy->batches()->create([
                 'name' => $this->newBatch['name'],
                 'start_date' => $this->newBatch['start_date'],
-                'max_students' => $this->newBatch['max_students'],
+                'max_students' => empty($this->newBatch['max_students']) ? null : (int) $this->newBatch['max_students'],
                 'status' => 'open', // Always create as open, regardless of form input
             ]);
 
@@ -127,7 +132,12 @@ new #[Layout('components.layouts.admin')] class extends Component {
                 // If setting to open, close all other batches
                 $batch->academy->batches()->where('id', '!=', $batch->id)->update(['status' => 'closed']);
             }
-            $batch->update($this->editingBatch);
+            $batch->update([
+                'name' => $this->editingBatch['name'],
+                'start_date' => $this->editingBatch['start_date'],
+                'max_students' => empty($this->editingBatch['max_students']) ? null : (int) $this->editingBatch['max_students'],
+                'status' => $this->editingBatch['status'],
+            ]);
             $this->editingBatch = null;
             $this->loadBatches();
             $this->toast()->success('Batch updated successfully');

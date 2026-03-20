@@ -25,7 +25,11 @@ new #[Layout('components.layouts.admin')] class extends Component {
     public function mount(): void
     {
         $user = auth()->user();
-        $this->isSuperAdmin = (bool) ($user && method_exists($user, 'hasRole') && $user->hasRole('super-admin'));
+        if (!$user || !$user->hasRole('super-admin')) {
+            abort(403, 'Unauthorized access. System settings are only accessible by super admins.');
+        }
+        
+        $this->isSuperAdmin = true;
         if ($this->isSuperAdmin) {
             $this->chapterNames = Chapter::orderBy('name')->pluck('name')->all();
         }

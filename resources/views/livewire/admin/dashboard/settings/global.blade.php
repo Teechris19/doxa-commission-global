@@ -39,6 +39,11 @@ new   #[Layout('components.layouts.admin')]  class extends Component {
 
     public function mount()
     {
+        $user = auth()->user();
+        if (!$user || !$user->hasRole('super-admin')) {
+            abort(403, 'Unauthorized access. System settings are only accessible by super admins.');
+        }
+        
         $this->settings = GlobalSetting::firstOrCreate([]);
 
 

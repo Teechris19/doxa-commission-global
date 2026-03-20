@@ -28,8 +28,6 @@ new #[Layout('components.layouts.admin')] class extends Component {
         ['key' => 'transport', 'label' => 'Transportation'],
         ['key' => 'appointments', 'label' => 'Appointments'],
         ['key' => 'prayer_requests', 'label' => 'Prayer Requests'],
-        ['key' => 'team_settings', 'label' => 'Team Setting'],
-        ['key' => 'system_settings', 'label' => 'System Settings'],
         ['key' => 'partnerships', 'label' => 'Partnerships'],
         ['key' => 'believers_academy', 'label' => "Believer's Academy"],
         ['key' => 'reports', 'label' => 'Report'],
@@ -111,7 +109,10 @@ new #[Layout('components.layouts.admin')] class extends Component {
             return;
         }
 
-        $teamFunction = TeamFunction::firstOrCreate(['team_id' => $teamId]);
+        $teamFunction = TeamFunction::firstOrCreate(
+            ['team_id' => $teamId],
+            ['function' => ['report' => true]]
+        );
         $functionMap = $teamFunction->function ?? [];
 
         if (!empty($functionMap[$functionKey])) {
@@ -120,6 +121,11 @@ new #[Layout('components.layouts.admin')] class extends Component {
         } else {
             $functionMap[$functionKey] = true;
             $this->toast()->success('Done', 'Team permission granted.')->send();
+        }
+
+        // Ensure we always have a valid JSON object (not empty)
+        if (empty($functionMap)) {
+            $functionMap = ['report' => true];
         }
 
         $teamFunction->function = $functionMap;

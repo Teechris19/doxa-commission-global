@@ -9,17 +9,20 @@ Route::prefix('admin/dashboard')
         // -----------------------------------------------------------------
         //              SETTINGS SECTION
         //-------------------------------------------------------------------
+        // System Settings (Super Admin Only)
+        Route::middleware(['super-admin'])->group(function () {
+            Volt::route('/settings', 'admin.dashboard.settings.index')->name('admin.dashboard.settings.index');
+            Volt::route('/settings/landing', 'admin.dashboard.settings.landing')->name('admin.dashboard.settings.landing');
+            Volt::route('/settings/global', 'admin.dashboard.settings.global')->name('admin.dashboard.settings.global');
+        });
+        
+        // Other Settings (Accessible by admins with appropriate team functions)
         volt::route('settings/appointment', 'admin.dashboard.settings.appointment')->name('admin.dashboard.settings.appointment');
         Volt::route('settings/team-functions', 'admin.dashboard.settings.team-functions')->name('admin.dashboard.settings.team-functions');
         Volt::route('prayer-request-teams', 'admin.dashboard.settings.request_teams')->name('admin.dashboard.prayer_requests.request_teams');
         Volt::route('believers-academy', 'admin.dashboard.settings.believersclass')->name('admin.settings.believersclass');
         // Settings - Event Teams
         Volt::route('/settings/event-teams', 'admin.dashboard.settings.event-teams')->name('admin.dashboard.settings.event-teams');
-        
-        // Settings - Landing and Global
-        Volt::route('/settings', 'admin.dashboard.settings.index')->name('admin.dashboard.settings.index');
-        Volt::route('/settings/landing', 'admin.dashboard.settings.landing')->name('admin.dashboard.settings.landing');
-        Volt::route('/settings/global', 'admin.dashboard.settings.global')->name('admin.dashboard.settings.global');
         // -----------------------------------------------------------------
         //              MEMBERS SECTION
         //-------------------------------------------------------------------

@@ -191,32 +191,40 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
         };
     @endphp
 
-    <section class="relative overflow-hidden border-b border-blue-100">
-        <div class="relative h-[68vh] min-h-[460px]">
+    <section class="relative overflow-hidden">
+        <div class="relative h-screen min-h-[600px] w-full">
             @if($heroType === 'video' && $heroMedia)
                 <video autoplay muted loop playsinline class="absolute inset-0 h-full w-full object-cover">
                     <source src="{{ $heroMedia }}" type="video/mp4">
                 </video>
             @else
-                <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('{{ $heroMedia ?: $fallbackHero }}');"></div>
+                <div class="absolute inset-0 h-full w-full bg-cover bg-center bg-no-repeat" style="background-image: url('{{ $heroMedia ?: $fallbackHero }}');"></div>
             @endif
 
-            <div class="absolute inset-0 bg-slate-950/55"></div>
+            <div class="absolute inset-0 bg-gradient-to-b from-slate-950/70 via-slate-950/50 to-slate-950/60"></div>
 
-            <div class="relative z-10 mx-auto flex h-full w-full max-w-6xl items-center px-4 sm:px-6 lg:px-8">
-                <div class="max-w-3xl text-white">
+            <div class="relative z-10 flex h-full w-full items-center justify-center px-4 sm:px-6 lg:px-8">
+                <div class="max-w-5xl text-center text-white">
                     @if($activeChapter)
-                        <p class="text-xs font-semibold uppercase tracking-[0.3em] text-blue-200">{{ $activeChapter->name }}</p>
+                        <p class="mx-auto inline-block rounded-full bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.3em] text-blue-200 backdrop-blur-sm">{{ $activeChapter->name }}</p>
                     @endif
-                    <h1 class="mt-3 text-4xl font-semibold leading-tight sm:text-5xl">{{ $heroSection['title'] }}</h1>
-                    <p class="mt-5 max-w-2xl text-base leading-7 text-blue-50 sm:text-lg">{{ $heroSection['subtitle'] }}</p>
+                    <h1 class="mt-6 text-4xl font-semibold leading-tight sm:text-5xl md:text-6xl lg:text-7xl">{{ $heroSection['title'] }}</h1>
+                    <p class="mx-auto mt-6 max-w-3xl text-base leading-7 text-blue-50 sm:text-lg md:text-xl">{{ $heroSection['subtitle'] }}</p>
 
                     @if(!empty($heroSection['cta_text']) && !empty($heroSection['cta_url']))
-                        <a href="{{ $heroSection['cta_url'] }}" wire:navigate class="mt-8 inline-flex rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-700">
-                            {{ $heroSection['cta_text'] }}
-                        </a>
+                        <div class="mt-10">
+                            <a href="{{ $heroSection['cta_url'] }}" wire:navigate class="inline-flex rounded-full bg-blue-600 px-8 py-4 text-sm font-semibold text-white transition-all hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/30">
+                                {{ $heroSection['cta_text'] }}
+                            </a>
+                        </div>
                     @endif
                 </div>
+            </div>
+
+            <div class="absolute bottom-8 left-1/2 z-10 -translate-x-1/2 animate-bounce">
+                <svg class="h-8 w-8 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                </svg>
             </div>
         </div>
     </section>
