@@ -156,42 +156,57 @@ input[type="range"]::-moz-range-thumb {
 .audio-player-bar {
     position: fixed;
     bottom: calc(var(--mobile-nav-height, 5.25rem) + env(safe-area-inset-bottom, 0px) + 1rem);
-    left: 1.5rem;
-    right: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 3rem);
     max-width: 960px;
-    margin: 0 auto;
     border-radius: 26px;
     border: 1px solid rgba(37, 99, 235, 0.25);
     background: rgba(255, 255, 255, 0.97);
     backdrop-filter: blur(24px);
-    transition: transform 0.35s ease, opacity 0.35s ease;
+    transition: transform 0.35s ease, opacity 0.35s ease, width 0.35s ease;
     opacity: 0;
-    transform: translateY(60px);
+    transform: translateX(-50%) translateY(60px);
     z-index: 1050;
     pointer-events: none;
 }
 
 .audio-player-bar.visible {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateX(-50%) translateY(0);
     pointer-events: auto;
 }
 
 .audio-player-bar.pip-mode {
-    left: auto;
     width: 360px;
-    right: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
-@media (max-width: 768px) {
+.audio-player-bar.pip-mode.visible {
+    transform: translateX(-50%) translateY(0);
+}
+
+/* Hide expanded view when minimized on desktop */
+@media (min-width: 768px) {
+    .audio-player-bar.pip-mode .expanded-view {
+        display: none !important;
+    }
+    
+    /* Show compact view when minimized on desktop */
+    .audio-player-bar.pip-mode .compact-view {
+        display: block !important;
+    }
+}
+
+/* Show compact view always on mobile */
+@media (max-width: 767px) {
     .audio-player-bar {
-        left: 0.75rem;
-        right: 0.75rem;
+        width: calc(100% - 1.5rem);
     }
 
     .audio-player-bar.pip-mode {
         width: calc(100% - 1.5rem);
-        right: 0.75rem;
     }
 }
 
@@ -381,7 +396,8 @@ input[type="range"]::-moz-range-thumb {
     </section>
 
     <div id="audio-player-bar" class="audio-player-bar hidden">
-        <div class="hidden items-center gap-6 px-6 py-4 md:flex">
+        <!-- Desktop Expanded View -->
+        <div class="expanded-view hidden md:flex items-center gap-6 px-6 py-4">
             <div class="flex items-center gap-4 min-w-[260px]">
                 <div id="player-album-art" class="h-20 w-20 overflow-hidden rounded-[18px] bg-blue-50">
                     <img src="" class="h-full w-full object-cover" alt="Album art" />
@@ -397,8 +413,7 @@ input[type="range"]::-moz-range-thumb {
                         <i class="fas fa-step-backward"></i>
                     </button>
                     <button id="play-pause-btn" class="rounded-full bg-blue-600 px-4 py-2 text-2xl text-white transition hover:bg-blue-700">
-                        <i id="play-icon" class="fas fa-play fa-2x"></i>
-                        <i id="pause-icon" class="fas fa-pause fa-2x hidden"></i>
+                        <i id="play-pause-icon" class="fas fa-play fa-2x"></i>
                     </button>
                     <button id="next-btn" class="rounded-full border border-blue-100 bg-blue-50 px-3 py-2 text-blue-700 transition hover:border-blue-300">
                         <i class="fas fa-step-forward"></i>
@@ -423,14 +438,15 @@ input[type="range"]::-moz-range-thumb {
                 </button>
             </div>
         </div>
-        <div class="space-y-3 px-5 py-4 md:hidden">
+        <!-- Compact View (Mobile & Minimized Desktop) -->
+        <div class="compact-view block md:hidden space-y-3 px-5 py-4">
             <div class="flex items-center gap-3">
                 <div id="player-album-art-mobile" class="h-12 w-12 overflow-hidden rounded-2xl bg-blue-50">
                     <img src="" class="h-full w-full object-cover" alt="Album art" />
                 </div>
-                <div class="flex-1">
-                    <p id="player-title-mobile" class="text-sm font-semibold text-slate-900">Select a Sermon</p>
-                    <p id="player-artist-mobile" class="text-xs text-slate-500">--</p>
+                <div class="flex-1 min-w-0">
+                    <p id="player-title-mobile" class="text-sm font-semibold text-slate-900 truncate">Select a Sermon</p>
+                    <p id="player-artist-mobile" class="text-xs text-slate-500 truncate">--</p>
                 </div>
                 <button id="close-player-btn-mobile" class="rounded-full border border-blue-100 bg-blue-50 p-2 text-blue-700 transition hover:border-red-400 hover:text-red-600">
                     <i class="fas fa-times"></i>
@@ -441,8 +457,7 @@ input[type="range"]::-moz-range-thumb {
                     <i class="fas fa-step-backward"></i>
                 </button>
                 <button id="play-pause-btn-mobile" class="rounded-full bg-blue-600 px-4 py-2 text-2xl text-white transition hover:bg-blue-700">
-                    <i id="play-icon-mobile" class="fas fa-play fa-2x"></i>
-                    <i id="pause-icon-mobile" class="fas fa-pause fa-2x hidden"></i>
+                    <i id="play-pause-icon-mobile" class="fas fa-play fa-2x"></i>
                 </button>
                 <button id="next-btn-mobile" class="rounded-full border border-blue-100 bg-blue-50 px-3 py-2 text-blue-700 transition hover:border-blue-300">
                     <i class="fas fa-step-forward"></i>
@@ -499,8 +514,7 @@ input[type="range"]::-moz-range-thumb {
 
                 // Desktop elements
             const playPauseBtn = document.getElementById('play-pause-btn');
-            const playIcon = document.getElementById('play-icon');
-            const pauseIcon = document.getElementById('pause-icon');
+            const playPauseIcon = document.getElementById('play-pause-icon');
             const playerTitle = document.getElementById('player-title');
             const playerArtist = document.getElementById('player-artist');
             const playerAlbumArt = document.getElementById('player-album-art').querySelector('img');
@@ -515,8 +529,7 @@ input[type="range"]::-moz-range-thumb {
 
             // Mobile elements
             const playPauseBtnMobile = document.getElementById('play-pause-btn-mobile');
-            const playIconMobile = document.getElementById('play-icon-mobile');
-            const pauseIconMobile = document.getElementById('pause-icon-mobile');
+            const playPauseIconMobile = document.getElementById('play-pause-icon-mobile');
             const playerTitleMobile = document.getElementById('player-title-mobile');
             const playerArtistMobile = document.getElementById('player-artist-mobile');
             const playerAlbumArtMobile = document.getElementById('player-album-art-mobile').querySelector('img');
@@ -580,19 +593,27 @@ input[type="range"]::-moz-range-thumb {
             playPauseBtn.addEventListener('click', togglePlayPause);
             playPauseBtnMobile.addEventListener('click', togglePlayPause);
 
-            // Update icons on play/pause events
+            // Update icons on play/pause events - single icon toggle
             audioPlayer.addEventListener('play', () => {
-                playIcon.classList.add('hidden');
-                pauseIcon.classList.remove('hidden');
-                playIconMobile.classList.add('hidden');
-                pauseIconMobile.classList.remove('hidden');
+                playPauseIcon.classList.remove('fa-play');
+                playPauseIcon.classList.add('fa-pause');
+                playPauseIconMobile.classList.remove('fa-play');
+                playPauseIconMobile.classList.add('fa-pause');
             });
 
             audioPlayer.addEventListener('pause', () => {
-                playIcon.classList.remove('hidden');
-                pauseIcon.classList.add('hidden');
-                playIconMobile.classList.remove('hidden');
-                pauseIconMobile.classList.add('hidden');
+                playPauseIcon.classList.remove('fa-pause');
+                playPauseIcon.classList.add('fa-play');
+                playPauseIconMobile.classList.remove('fa-pause');
+                playPauseIconMobile.classList.add('fa-play');
+            });
+            
+            // Also handle ended event to reset icon
+            audioPlayer.addEventListener('ended', () => {
+                playPauseIcon.classList.remove('fa-pause');
+                playPauseIcon.classList.add('fa-play');
+                playPauseIconMobile.classList.remove('fa-pause');
+                playPauseIconMobile.classList.add('fa-play');
             });
 
             // Update the current time display and seek bar
