@@ -24,34 +24,44 @@ new #[Layout('components.layouts.admin')] class extends Component {
     }
     public function getReports()
     {
-        $query = Report::with(['createdBy', 'team']);
+        $query = Report::with(['createdBy', 'team', 'chapter']);
         $user = Auth::user();
 
-        // Team-lead / lead-assist (non-admin): see ALL their team's reports (any level)
-        $query->when($this->leadersTeam && !$user->hasRole('admin'), function ($q) {
-            $q->where('team_id', $this->leadersTeam->id);
-        });
-
-        // Admin: see everything
-        $query->when($user->hasRole('admin'), function ($q) {
-            // If you want admins to see all reports:
-            // nothing needed, they already do
-            // If you want them limited to their team + chapter, uncomment:
-            /*
-        if ($this->leadersTeam) {
-            $q->where(function ($sub) {
-                $sub->where('team_id', $this->leadersTeam->id)
-                    ->orWhere('level', 'chapter');
-            });
-        }
-        */
-        });
-
-        // Optional filter by chapter param
+        // Optional filter by chapter param - apply FIRST
         $query->when($this->chapter, function ($q) {
             $chapter = Chapter::where('name', e($this->chapter))->firstOrFail();
             $q->where('chapter_id', $chapter->id);
         });
+
+        // Super Admin: see all reports
+        if ($user->hasRole('super-admin')) {
+            // No restrictions - see everything
+        }
+        // Admin: see all reports in their chapter
+        elseif ($user->hasRole('admin')) {
+            $query->where('chapter_id', $user->chapter_id);
+        }
+        // Team Lead / Lead Assist: see their team's reports and their own reports
+        elseif ($user->hasRole(['team-lead', 'lead-assist', 'lead_assist'])) {
+            $leadersTeam = $user->teams->filter(fn($team) =>
+                in_array($team->pivot->role_in_team, ['team-lead', 'lead-assist', 'lead_assist'])
+            )->first();
+
+            if ($leadersTeam) {
+                $query->where(function ($q) use ($user, $leadersTeam) {
+                    // Reports from their team OR their own reports
+                    $q->where('team_id', $leadersTeam->id)
+                      ->orWhere('created_by', $user->id);
+                });
+            } else {
+                // Team lead without a team - show only their own reports
+                $query->where('created_by', $user->id);
+            }
+        }
+        // Regular users: see only their own reports
+        else {
+            $query->where('created_by', $user->id);
+        }
 
         return $query->latest()->paginate(10);
     }
@@ -145,7 +155,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
         if ($level === 'chapter') {
             $this->toast()->success('✅ Report Escalated', "Report sent to Chapter Admin for review")->send();
         } elseif ($level === 'hq') {
-            $this->toast()->success('🚀 Report Escalated', "Report sent to HQ for final review")->send();
+            $this->toast()->success('🚀 Report Escalated', "Report sent to Super Admin for final review")->send();
         }
     }
 
@@ -194,6 +204,11 @@ new #[Layout('components.layouts.admin')] class extends Component {
         {{-- Report Level (Admins see as text, leaders can escalate) --}}
         @interact('column_level', $row)
             @php
+                $labels = [
+                    'team' => 'Team',
+                    'chapter' => 'Chapter',
+                    'hq' => 'Super Admin',
+                ];
                 $colors = [
                     'team' => 'bg-green-500 text-white',
                     'chapter' => 'bg-blue-500 text-white',
@@ -215,15 +230,15 @@ new #[Layout('components.layouts.admin')] class extends Component {
             @endphp
 
             @if (Auth::user()->hasRole('admin'))
-                {{-- Admin can push chapter -> HQ --}}
+                {{-- Admin can push chapter -> Super Admin --}}
                 @if ($row->level === 'chapter')
                     <button class="{{ $badgeClass }} hover:opacity-80 transition" title="{{ $tooltip }}"
                         wire:click="changeLevel({{ $row->id }}, 'hq')">
-                        Push to Hq
+                        Push to Super Admin
                     </button>
                 @else
-                    <span class="{{ $badgeClass }}" title="{{ ucfirst($row->level) }} level">
-                        {{ ucfirst($row->level) }}
+                    <span class="{{ $badgeClass }}" title="{{ $labels[$row->level] ?? ucfirst($row->level) }} level">
+                        {{ $labels[$row->level] ?? ucfirst($row->level) }}
                     </span>
                 @endif
             @elseif($row->level === 'team' && $row->team_id === $leadersTeam?->id)
@@ -234,8 +249,8 @@ new #[Layout('components.layouts.admin')] class extends Component {
                 </button>
             @else
                 {{-- Otherwise just static --}}
-                <span class="{{ $badgeClass }}" title="{{ ucfirst($row->level) }} level">
-                    {{ ucfirst($row->level) }}
+                <span class="{{ $badgeClass }}" title="{{ $labels[$row->level] ?? ucfirst($row->level) }} level">
+                    {{ $labels[$row->level] ?? ucfirst($row->level) }}
                 </span>
             @endif
 
@@ -243,7 +258,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
 
         {{-- Actions --}}
         @interact('column_actions', $row)
-            <a href="{{ route('admin.dashboard.reports.view-report', request()->query()) }}">
+            <a href="{{ route('admin.dashboard.reports.view-report', array_merge(request()->query(), ['id' => $row->id])) }}">
                 <x-button.circle color="primary" icon="eye" label="View" class="mr-2" />
             </a>
             <x-button.circle color="red" icon="trash" wire:click='deleteReport({{ $row->id }})' />

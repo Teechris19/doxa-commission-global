@@ -47,6 +47,11 @@ class TeamFunctionAccess
             'events' => EventTeam::class,
         ];
 
+        // Members is always accessible to team leaders (they manage their own team members)
+        if ($functionKey === 'members') {
+            return $next($request);
+        }
+
         if (array_key_exists($functionKey, $relationMap)) {
             $model = $relationMap[$functionKey];
             $assigned = $model::where('chapter_id', $chapterId)

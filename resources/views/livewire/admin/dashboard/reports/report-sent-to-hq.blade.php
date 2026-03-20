@@ -96,14 +96,14 @@ new #[Layout('components.layouts.admin')] class extends Component
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <div class="flex justify-between items-center">
             <div>
-                <h2 class="text-2xl font-bold">Reports Sent to HQ</h2>
+                <h2 class="text-2xl font-bold">Reports Sent to Super Admin</h2>
                 <p class="text-gray-600 dark:text-gray-400 mt-1">
-                    View all chapter reports that have been escalated to headquarters
+                    View all chapter reports that have been escalated to super admin
                 </p>
             </div>
             <div class="text-right">
                 <div class="text-3xl font-bold text-blue-600">{{ $hqReports->total() }}</div>
-                <div class="text-sm text-gray-600 dark:text-gray-400">Total HQ Reports</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Total Super Admin Reports</div>
             </div>
         </div>
     </div>
@@ -141,9 +141,9 @@ new #[Layout('components.layouts.admin')] class extends Component
                 <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                 </svg>
-                <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">No HQ Reports</h3>
+                <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">No Super Admin Reports</h3>
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                    No reports have been sent to HQ yet.
+                    No reports have been sent to super admin yet.
                 </p>
             </div>
         @else

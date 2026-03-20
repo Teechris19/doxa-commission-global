@@ -36,13 +36,24 @@ new #[Layout('components.layouts.admin')] class extends Component
         $this->teams = Team::all();
         $this->created_by = Auth::user()->name;
         $this->leadersTeam = Auth()->user()->teams->filter(fn($team) => $team->pivot->role_in_team === 'team-lead' || $team->pivot->role_in_team === 'lead-assist')->first();
+        
+        // Auto-set chapter from URL parameter or user's chapter
         if($this->chapter != null){
             $this->leadersChapter = Chapter::where('name', '=', e($this->chapter))->firstOrFail();
+            $this->chapter_id = $this->leadersChapter->id;
+        } else {
+            // Auto-assign user's chapter if not set
+            $this->chapter_id = Auth::user()->chapter_id;
         }
     }
 
     public function saveReport()
     {
+        // Auto-assign chapter_id if not set
+        if (!$this->chapter_id) {
+            $this->chapter_id = Auth::user()->chapter_id;
+        }
+        
         $this->validate([
             'title'       => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -50,7 +61,7 @@ new #[Layout('components.layouts.admin')] class extends Component
             'report_path' => 'nullable|file|mimes:pdf,doc,docx,csv,xlsx|max:10240',
             'content'     => 'nullable|string',
             'level'       => 'required|in:team,chapter,hq',
-            'chapter_id'  => 'nullable|exists:chapters,id',
+            'chapter_id'  => 'required|exists:chapters,id',
             'team_id'     => 'nullable|exists:teams,id',
         ]);
 
@@ -199,18 +210,18 @@ new #[Layout('components.layouts.admin')] class extends Component
         </div>
 
         @if(auth()->user()->hasRole('team-lead'))
-        <x-select label="Level" wire:model="level">
+        <x-select label="Report Level" wire:model="level">
             <option value="team">Team</option>
             <option value="chapter">Chapter</option>
         </x-select>
-        @elseif (auth()->user()->hasAnyRole('lead-assist'))
-        <x-select label="Level" wire:model="level">
+        @elseif (auth()->user()->hasAnyRole('lead-assist', 'lead_assist'))
+        <x-select label="Report Level" wire:model="level">
             <option value="team">Team</option>
         </x-select>
         @else
-        <x-select label="Level" wire:model="level">
+        <x-select label="Report Level" wire:model="level">
             <option value="chapter">Chapter</option>
-            <option value="hq">HQ</option>
+            <option value="hq">Super Admin</option>
         </x-select>
         @endif
 

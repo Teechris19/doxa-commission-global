@@ -37,6 +37,10 @@ TODO: Add Active route indicators
     $globalSettings = \App\Models\GlobalSetting::first();
     $adminLogo = $globalSettings?->logo ? asset('storage/' . $globalSettings->logo) : null;
     $adminName = $globalSettings?->church_name ?? config('app.name', 'Doxa Commission Global');
+    $user = auth()->user();
+    $isSuperAdmin = $user && $user->hasRole('super-admin');
+    $isTeamLeader = $user && $user->hasRole(['team-lead', 'lead-assist', 'lead_assist']);
+    $sidebarLabel = $isSuperAdmin ? 'Super Admin' : ($isTeamLeader ? 'Team Lead' : 'Admin');
 @endphp
 
 <body class="min-h-screen bg-slate-50 font-['Poppins'] text-slate-900 dark:bg-zinc-900 dark:text-gray-200">
@@ -53,7 +57,7 @@ TODO: Add Active route indicators
                 @endif
             </span>
             <div class="leading-tight">
-                <p class="text-xs uppercase tracking-[0.3em] text-slate-400 dark:text-gray-500">Admin</p>
+                <p class="text-xs uppercase tracking-[0.3em] text-slate-400 dark:text-gray-500">{{ $sidebarLabel }}</p>
                 <p class="text-sm font-semibold text-slate-900 dark:text-gray-200">{{ $adminName }}</p>
             </div>
         </a>
@@ -80,17 +84,25 @@ TODO: Add Active route indicators
              @role(['admin', 'team-lead', 'lead-assist', 'lead_assist', 'super-admin'])
             <flux:navlist.group expandable heading="Members"
                 :expanded="request()->routeIs('admin.dashboard.members.*') ? 'true' : 'false'">
+                @role(['admin', 'super-admin'])
                 <flux:navlist.item icon="users" :href="route('admin.dashboard.members', ['chapter' => request()->get('chapter')])"
                     wire:navigate :active=" request()->routeIs('admin.dashboard.members') ? 'true' : 'false' ">
                     All Members
                 </flux:navlist.item>
-
+                @endrole
+                @role(['team-lead', 'lead-assist', 'lead_assist'])
+                <flux:navlist.item icon="users"
+                    :href="route('admin.dashboard.members', ['chapter' => request()->get('chapter')])"
+                    wire:navigate :active=" request()->routeIs('admin.dashboard.members') ? 'true' : 'false' ">
+                    View Members
+                </flux:navlist.item>
+                @endrole
                 <flux:navlist.item icon="user-plus"
                     :href="route('admin.dashboard.members.create', ['chapter' => request()->get('chapter')])"
                     wire:navigate :active=" request()->routeIs('admin.dashboard.members.create') ? 'true' : 'false' ">
                     Create New Member
                 </flux:navlist.item>
-                @role('team-lead')
+                @role(['admin', 'super-admin'])
                 <flux:navlist.item icon="user-group" :href="route('admin.members.add-to-team', ['chapter' => request()->get('chapter')])"
                     wire:navigate :active=" request()->routeIs('admin.members.add-to-team') ? 'true' : 'false' ">
                     Add Member To Team

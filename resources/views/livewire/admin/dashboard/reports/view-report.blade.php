@@ -102,6 +102,11 @@ new #[Layout('components.layouts.admin')] class extends Component
             </div>
             <div class="text-right">
                 @php
+                    $levelLabels = [
+                        'team' => 'Team',
+                        'chapter' => 'Chapter',
+                        'hq' => 'Super Admin',
+                    ];
                     $levelColors = [
                         'team' => 'bg-green-500 text-white',
                         'chapter' => 'bg-blue-500 text-white',
@@ -110,7 +115,7 @@ new #[Layout('components.layouts.admin')] class extends Component
                     $badgeClass = 'px-4 py-2 rounded-full text-sm font-semibold ' . ($levelColors[$report->level] ?? 'bg-zinc-400 text-white');
                 @endphp
                 <span class="{{ $badgeClass }}">
-                    {{ ucfirst($report->level) }} Level
+                    {{ $levelLabels[$report->level] ?? ucfirst($report->level) }} Level
                 </span>
             </div>
         </div>
@@ -188,7 +193,10 @@ new #[Layout('components.layouts.admin')] class extends Component
                                     <i class="fas fa-file-pdf text-red-500 mr-2"></i>
                                     PDF Report Document
                                 </h3>
-                                <x-button wire:click="downloadReport" color="primary" icon="download" label="Download PDF" />
+                                <a href="{{ $fileUrl }}" download class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+                                    <i class="fas fa-download"></i>
+                                    Download PDF
+                                </a>
                             </div>
 
                             {{-- Embedded PDF Viewer --}}

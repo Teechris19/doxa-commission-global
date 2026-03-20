@@ -65,9 +65,9 @@ class MemberPolicy
      */
     public function create(User $user)
     {
-        // Only super admin and admin can create members
-        return $user->hasRole(['super-admin', 'admin']) 
-            ? Response::allow() 
+        // Super admin, admin, and team leads can create members
+        return $user->hasRole(['super-admin', 'admin', 'team-lead', 'lead-assist', 'lead_assist'])
+            ? Response::allow()
             : Response::deny('You do not have permission to create members.');
     }
 
