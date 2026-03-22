@@ -235,19 +235,19 @@ new #[Layout('components.layouts.admin')] class extends Component {
     {
         // Partnerships by status
         $partnershipsByStatus = Partnership::when($this->chapterId, fn($q) => $q->where('chapter_id', $this->chapterId))
-            ->select('approval_status', DB::raw('COUNT(*) as count'))
-            ->groupBy('approval_status')
+            ->select('status', DB::raw('COUNT(*) as count'))
+            ->groupBy('status')
             ->get();
 
         $this->partnershipsByStatus = [
-            'labels' => $partnershipsByStatus->pluck('approval_status')->map(fn($s) => ucfirst($s))->toArray(),
+            'labels' => $partnershipsByStatus->pluck('status')->map(fn($s) => ucfirst($s))->toArray(),
             'data' => $partnershipsByStatus->pluck('count')->toArray()
         ];
 
         // Monthly partnership trend
         $monthlyTrend = Partnership::when($this->chapterId, fn($q) => $q->where('chapter_id', $this->chapterId))
             ->where('created_at', '>=', Carbon::now()->subMonths(6))
-            ->select(DB::raw("strftime('%Y-%m', created_at) as month"), DB::raw('COUNT(*) as count'))
+            ->select(DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month"), DB::raw('COUNT(*) as count'))
             ->groupBy('month')
             ->orderBy('month')
             ->get();
@@ -260,14 +260,14 @@ new #[Layout('components.layouts.admin')] class extends Component {
 
     private function loadOtherAnalytics($startDate)
     {
-        // Prayer requests by status
+        // Prayer requests by addressed status
         $prayerByStatus = PrayerRequest::when($this->chapterId, fn($q) => $q->where('chapter_id', $this->chapterId))
-            ->select('status', DB::raw('COUNT(*) as count'))
-            ->groupBy('status')
+            ->select('is_addressed', DB::raw('COUNT(*) as count'))
+            ->groupBy('is_addressed')
             ->get();
 
         $this->prayerRequestsByStatus = [
-            'labels' => $prayerByStatus->pluck('status')->map(fn($s) => ucfirst($s))->toArray(),
+            'labels' => $prayerByStatus->pluck('is_addressed')->map(fn($s) => $s ? 'Addressed' : 'Pending')->toArray(),
             'data' => $prayerByStatus->pluck('count')->toArray()
         ];
 

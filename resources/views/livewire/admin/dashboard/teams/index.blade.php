@@ -18,6 +18,14 @@ new #[Layout('components.layouts.admin')] class extends Component {
     #[Url(keep:true)]
     public ?string $chapter;
 
+    public function mount()
+    {
+        // Restrict access to team-leads
+        if (auth()->user()->hasRole('team-lead')) {
+            abort(403, 'You do not have permission to access this page.');
+        }
+    }
+
     /**
      * Table headers
      */

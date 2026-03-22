@@ -91,12 +91,14 @@ new #[Layout('components.layouts.admin')] class extends Component {
                 icon="arrow-up-right" position="right" wire:navigate />
         </x-card>
 
+        @if(!auth()->user()->hasRole('team-lead'))
         <x-card header="Teams" minimize class="dark:bg-zinc-800 dark:text-gray-200">
             <div class="text-5xl m-3 font-[montserat] text-slate-900 dark:text-gray-100">{{ $total_teams }}</div>
             <span><small class="text-slate-600 dark:text-gray-400">Active teams in this chapter</small></span>
             <x-link :href="route('admin.dashboard.teams', request()->query())" text="View Teams"
                 icon="arrow-up-right" position="right" wire:navigate />
         </x-card>
+        @endif
 
         <x-card header="Appointments" minimize class="dark:bg-zinc-800 dark:text-gray-200">
             <div class="text-5xl m-3 font-[montserat] text-slate-900 dark:text-gray-100">{{ $total_appointments }}</div>
@@ -105,12 +107,14 @@ new #[Layout('components.layouts.admin')] class extends Component {
                 icon="arrow-up-right" position="right" wire:navigate />
         </x-card>
 
+        @if(!auth()->user()->hasRole('team-lead'))
         <x-card header="Transport Requests" minimize class="dark:bg-zinc-800 dark:text-gray-200">
             <div class="text-5xl m-3 font-[montserat] text-slate-900 dark:text-gray-100">{{ $total_transport_requests }}</div>
             <span><small class="text-slate-600 dark:text-gray-400">Requests awaiting processing</small></span>
             <x-link :href="route('admin.dashboard.transport.index', request()->query())" text="View Requests"
                 icon="arrow-up-right" position="right" wire:navigate />
         </x-card>
+        @endif
     </div>
 
     <div class="grid lg:grid-cols-2 gap-6 mt-6">
@@ -121,11 +125,13 @@ new #[Layout('components.layouts.admin')] class extends Component {
             <div class="flex flex-wrap gap-3">
                 <x-link :href="route('admin.dashboard.members.create', request()->query())" text="Add Member"
                     icon="arrow-up-right" position="right" wire:navigate />
+                @if(!auth()->user()->hasRole('team-lead'))
                 <x-link :href="route('admin.dashboard.teams.create', request()->query())" text="Create Team"
                     icon="arrow-up-right" position="right" wire:navigate />
-                <x-link :href="route('admin.dashboard.appointments.index', request()->query())" text="Appointments"
-                    icon="arrow-up-right" position="right" wire:navigate />
                 <x-link :href="route('admin.dashboard.transport.index', request()->query())" text="Transport"
+                    icon="arrow-up-right" position="right" wire:navigate />
+                @endif
+                <x-link :href="route('admin.dashboard.appointments.index', request()->query())" text="Appointments"
                     icon="arrow-up-right" position="right" wire:navigate />
                 @role('super-admin')
                 <x-link :href="route('super-admin.conclaves.create')" text="New Conclave"

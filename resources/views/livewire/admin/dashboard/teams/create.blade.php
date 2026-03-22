@@ -21,6 +21,11 @@ new #[Layout('components.layouts.admin')] class extends Component {
 
     public function mount()
     {
+        // Restrict access to team-leads
+        if (auth()->user()->hasRole('team-lead')) {
+            abort(403, 'You do not have permission to access this page.');
+        }
+
         $this->chapterId = $this->chapter != null ? Chapter::where('name', $this->chapter)->firstOrFail()->id : null;
     }
 
