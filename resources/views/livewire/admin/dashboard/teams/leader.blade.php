@@ -55,7 +55,10 @@ new #[Layout('components.layouts.admin')] class extends Component {
             ->orderBy('name')
             ->get()
             ->map(function ($team) {
-                $leader = $team->users->first(fn($u) => $u->hasRole('team-lead'));
+                // Find leader for THIS specific team using pivot table
+                $leader = $team->users()
+                    ->wherePivot('role_in_team', 'team-lead')
+                    ->first();
 
                 return [
                     'team' => $team->name,
@@ -74,10 +77,10 @@ new #[Layout('components.layouts.admin')] class extends Component {
             return;
         }
 
-        // Current leader based on Spatie role
+        // Current leader based on pivot table role_in_team for THIS specific team
         $this->currentLeader = $team->users()
-            ->get() // get the collection first
-            ->first(fn($u) => $u->hasRole('team-lead'));
+            ->wherePivot('role_in_team', 'team-lead')
+            ->first();
 
         // Users in team
         $this->teamUsers = $team->users->map(fn($u) => [
@@ -104,6 +107,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
         $userId = $this->selectedUserInTeam ?? $this->selectedUserOutsideTeam;
 
         if (!$this->selectedTeam || !$userId) {
+            $this->toast()->error('Invalid Selection', 'Please select a team and a user to assign as leader.')->send();
             return;
         }
 
@@ -111,23 +115,34 @@ new #[Layout('components.layouts.admin')] class extends Component {
         $newLeader = User::find($userId);
 
         if (!$team || !$newLeader) {
+            $this->toast()->error('Not Found', 'Team or user not found.')->send();
             return;
         }
 
-        // Find current leader in this team (Spatie role)
-        $currentLeader = $team->users->first(fn($u) => $u->hasRole('team-lead'));
+        // Find current leader in THIS SPECIFIC TEAM using pivot table
+        $currentLeaderPivot = $team->users()
+            ->wherePivot('role_in_team', 'team-lead')
+            ->first();
 
-        if ($currentLeader) {
-            // Remove team-lead role from current leader
-            $currentLeader->removeRole('team-lead');
-
-            // Update pivot to 'member'
-            $team->users()->updateExistingPivot($currentLeader->id, [
+        if ($currentLeaderPivot) {
+            // Update pivot to 'member' for the current leader in THIS team only
+            $team->users()->updateExistingPivot($currentLeaderPivot->id, [
                 'role_in_team' => 'member',
             ]);
+
+            // Check if this user is still a team-lead in ANY other team
+            $isStillTeamLeadElsewhere = $currentLeaderPivot->teams()
+                ->wherePivot('role_in_team', 'team-lead')
+                ->where('teams.id', '!=', $team->id)
+                ->exists();
+
+            // Only remove the global team-lead role if they're not leading any other team
+            if (!$isStillTeamLeadElsewhere && $currentLeaderPivot->hasRole('team-lead')) {
+                $currentLeaderPivot->removeRole('team-lead');
+            }
         }
 
-        // Add or update new leader in pivot
+        // Add or update new leader in pivot for THIS team
         if ($team->users()->where('user_id', $newLeader->id)->exists()) {
             $team->users()->updateExistingPivot($newLeader->id, [
                 'role_in_team' => 'team-lead',
@@ -139,8 +154,10 @@ new #[Layout('components.layouts.admin')] class extends Component {
             ]);
         }
 
-        // Assign Spatie role to new leader
-        $newLeader->assignRole('team-lead');
+        // Assign Spatie role to new leader (they need it for dashboard access)
+        if (!$newLeader->hasRole('team-lead')) {
+            $newLeader->assignRole('team-lead');
+        }
 
         $this->toast()->success(
             'Team Leader Assigned',
@@ -155,7 +172,10 @@ new #[Layout('components.layouts.admin')] class extends Component {
             ->orderBy('name')
             ->get()
             ->map(function ($team) {
-                $leader = $team->users->first(fn($u) => $u->hasRole('team-lead'));
+                // Find leader for THIS specific team using pivot
+                $leader = $team->users()
+                    ->wherePivot('role_in_team', 'team-lead')
+                    ->first();
 
                 return [
                     'team' => $team->name,
