@@ -144,7 +144,11 @@ new #[Layout('components.layouts.admin')] class extends Component {
 
         <x-card header="Recent Members" class="dark:bg-zinc-800 dark:text-gray-200">
             <div class="text-sm text-slate-600 dark:text-gray-400 mb-4">
-                Latest registrations in this chapter.
+                @if(auth()->user()->hasRole('team-lead'))
+                    Latest members to join your teams.
+                @else
+                    Latest registrations in this chapter.
+                @endif
             </div>
             <div class="overflow-x-auto">
                 <table class="min-w-full text-sm">
