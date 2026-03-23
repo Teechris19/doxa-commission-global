@@ -247,24 +247,44 @@ new #[Layout('components.layouts.admin')] class extends Component {
         $this->dispatch('$closeModal', 'partnership-category-modal');
     }
 
-    public function deleteCategory(int $id): void
+    public function deleteCategory($id): void
     {
+        // Ensure $id is a scalar value, not an array
+        if (is_array($id)) {
+            $id = $id['id'] ?? $id[0] ?? null;
+        }
+        
+        if (!$id) {
+            $this->toast()->error('Invalid ID', 'No valid ID provided for deletion.')->send();
+            return;
+        }
+
         $this->dialog()
             ->error('Delete this partnership category?')
             ->hook([
                 'ok' => [
                     'method' => 'confirmDeleteCategory',
-                    'params' => [$id],
+                    'params' => [(int) $id],
                 ],
             ])
             ->send();
     }
 
-    public function confirmDeleteCategory(int $id): void
+    public function confirmDeleteCategory($id): void
     {
+        // Ensure $id is a scalar value, not an array
+        if (is_array($id)) {
+            $id = $id['id'] ?? $id[0] ?? null;
+        }
+        
+        if (!$id) {
+            $this->toast()->error('Invalid ID', 'No valid ID provided for deletion.')->send();
+            return;
+        }
+
         $category = PartnershipCategory::query()
             ->where('chapter_id', $this->chapterId)
-            ->findOrFail($id);
+            ->findOrFail((int) $id);
 
         Gate::authorize('delete', $category);
 
@@ -455,24 +475,44 @@ new #[Layout('components.layouts.admin')] class extends Component {
         $this->toast()->success('Updated', 'Partnership intent status updated.')->send();
     }
 
-    public function deleteIntent(int $id): void
+    public function deleteIntent($id): void
     {
+        // Ensure $id is a scalar value, not an array
+        if (is_array($id)) {
+            $id = $id['id'] ?? $id[0] ?? null;
+        }
+        
+        if (!$id) {
+            $this->toast()->error('Invalid ID', 'No valid ID provided for deletion.')->send();
+            return;
+        }
+
         $this->dialog()
             ->error('Are you sure you want to delete this partnership intent?')
             ->hook([
                 'ok' => [
                     'method' => 'confirmDeleteIntent',
-                    'params' => [$id],
+                    'params' => [(int) $id],
                 ],
             ])
             ->send();
     }
 
-    public function confirmDeleteIntent(int $id): void
+    public function confirmDeleteIntent($id): void
     {
+        // Ensure $id is a scalar value, not an array
+        if (is_array($id)) {
+            $id = $id['id'] ?? $id[0] ?? null;
+        }
+        
+        if (!$id) {
+            $this->toast()->error('Invalid ID', 'No valid ID provided for deletion.')->send();
+            return;
+        }
+
         $intent = PartnershipIntent::query()
             ->where('chapter_id', $this->chapterId)
-            ->findOrFail($id);
+            ->findOrFail((int) $id);
 
         Gate::authorize('delete', $intent);
 
