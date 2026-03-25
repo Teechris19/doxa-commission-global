@@ -60,4 +60,9 @@ class Team extends Model
     {
         return $this->belongsToMany(Functions::class, 'team_functions', 'team_id', 'function_id');
     }
+
+    public function teamFunction()
+    {
+        return $this->hasOne(TeamFunction::class, 'team_id');
+    }
 }

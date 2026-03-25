@@ -159,6 +159,16 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
                                     </a>
                                 @endif
 
+                                @if($event->requires_partners && $event->isPartnershipOpen())
+                                    <a
+                                        href="{{ route('home.partnership.index') }}?chapter={{ $event->chapter?->name }}"
+                                        class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-emerald-700 transition hover:bg-emerald-100"
+                                    >
+                                        <i class="fas fa-hand-holding-heart mr-1"></i>
+                                        Partner
+                                    </a>
+                                @endif
+
                                 @if($event->hasStarted())
                                     <a
                                         href="{{ route('events.gallery', ['event' => $event->slug ?? $event->id]) }}"
@@ -242,6 +252,25 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
                         <a href="{{ route('events.register', ['event_id' => $selectedEvent->id]) }}" class="inline-flex items-center rounded-full bg-blue-600 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-blue-700">
                             Register Now
                         </a>
+                    @endif
+
+                    @if($selectedEvent->requires_partners && $selectedEvent->isPartnershipOpen())
+                        <a href="{{ route('home.partnership.index') }}?chapter={{ $selectedEvent->chapter?->name }}" class="inline-flex items-center rounded-full bg-emerald-600 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-emerald-700">
+                            <i class="fas fa-hand-holding-heart mr-2"></i>
+                            Partner for this Event
+                        </a>
+                        @if($selectedEvent->partnership_description)
+                            <p class="mt-3 w-full rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                {{ $selectedEvent->partnership_description }}
+                            </p>
+                        @endif
+                        @if($selectedEvent->partnership_deadline)
+                            <p class="mt-2 w-full text-xs text-emerald-700">
+                                <i class="fas fa-clock mr-1"></i>
+                                Partnership deadline: {{ $selectedEvent->partnership_deadline->format('F d, Y h:i A') }}
+                            </p>
+                        @endif
                     @endif
 
                     @if($selectedEvent->hasStarted())

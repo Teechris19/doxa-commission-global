@@ -30,12 +30,15 @@ class TeamFunctionAccess
             return $next($request);
         }
 
+        // Load teams with pivot data explicitly
+        $user->load('teams');
+        
         $leadersTeam = $user->teams->firstWhere(
             fn($team) => in_array($team->pivot->role_in_team, ['team-lead', 'lead-assist', 'lead_assist'])
         );
 
         if (!$leadersTeam) {
-            abort(403, 'ACCESS DENIED');
+            abort(403, 'ACCESS DENIED - You are not a team lead');
         }
 
         $chapterId = $user->chapter_id;
@@ -59,17 +62,27 @@ class TeamFunctionAccess
                 ->exists();
 
             if (!$assigned) {
-                abort(403, 'ACCESS DENIED');
+                abort(403, 'ACCESS DENIED - Team not assigned to this function');
             }
 
             return $next($request);
         }
 
+        // Load team functions for remaining checks
         $teamFunctions = TeamFunction::where('team_id', $leadersTeam->id)->first();
         $functionMap = $teamFunctions?->function ?? [];
 
+        // Check for partnership function - uses team_functions table
+        if ($functionKey === 'partnerships') {
+            if (empty($functionMap['partnerships'])) {
+                abort(403, 'Your team is not assigned to handle partnerships. Please contact your administrator.');
+            }
+            return $next($request);
+        }
+
+        // Check if the function key exists in the team's function map
         if (empty($functionMap[$functionKey])) {
-            abort(403, 'ACCESS DENIED');
+            abort(403, 'Your team is not assigned to this function. Please contact your administrator.');
         }
 
         return $next($request);

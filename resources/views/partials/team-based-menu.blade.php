@@ -133,6 +133,10 @@
             :active="request()->routeIs('admin.dashboard.partnership.accounts') ? 'true' : 'false'">
             Accounts
         </flux:navlist.item>
+        <flux:navlist.item icon="rectangle-group" :href="route('admin.dashboard.partnership.form-builder', request()->query())" wire:navigate
+            :active="request()->routeIs('admin.dashboard.partnership.form-builder') ? 'true' : 'false'">
+            Form Builder
+        </flux:navlist.item>
     </flux:navlist.group>
 @endif
 @if ($can('believers_academy') && ($isSuperAdmin || $isAdmin || ($leadersTeam && in_array($leadersTeam->id, $believersAcademyTeam))))

@@ -158,6 +158,9 @@ Route::prefix('admin/dashboard')
         Volt::route('partnership/accounts', 'admin.dashboard.partnership.accounts')
             ->middleware('team-function:partnerships')
             ->name('admin.dashboard.partnership.accounts');
+        Volt::route('partnership/form-builder', 'admin.dashboard.partnership.form-builder')
+            ->middleware('team-function:partnerships')
+            ->name('admin.dashboard.partnership.form-builder');
         //--------------------------------------------------------------------
         //             EVENTS SECTION
         //--------------------------------------------------------------------

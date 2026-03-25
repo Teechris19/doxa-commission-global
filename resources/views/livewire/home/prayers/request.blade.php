@@ -45,7 +45,6 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
         $prayerRequest->name = $this->name;
         $prayerRequest->email = $this->email;
         $prayerRequest->request = $this->request;
-        $prayerRequest->title = substr($this->request, 0, 50) . '...';
         $prayerRequest->chapter_id = $this->selectedChapter;
         $prayerRequest->save();
 

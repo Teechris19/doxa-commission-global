@@ -40,6 +40,11 @@ new #[Layout('components.layouts.admin')] class extends Component
     public $status = 'draft';
     public $capacity;
     public $registration_required = false;
+    
+    // Partnership
+    public $requires_partners = false;
+    public $partnership_deadline;
+    public $partnership_description;
 
 
     protected function rules(): array
@@ -61,6 +66,9 @@ new #[Layout('components.layouts.admin')] class extends Component
             'status' => ['required', Rule::in(['draft','published','cancelled','archived'])],
             'capacity' => ['nullable', 'integer', 'min:1'],
             'registration_required' => ['boolean'],
+            'requires_partners' => ['boolean'],
+            'partnership_deadline' => ['nullable', 'date', 'after_or_equal:start_at'],
+            'partnership_description' => ['nullable', 'string', 'max:1000'],
         ];
     }
 
@@ -100,6 +108,9 @@ new #[Layout('components.layouts.admin')] class extends Component
             'status' => $this->status,
             'capacity' => $this->capacity,
             'registration_required' => $this->registration_required,
+            'requires_partners' => $this->requires_partners,
+            'partnership_deadline' => $this->partnership_deadline,
+            'partnership_description' => $this->partnership_description,
         ];
 
         $event = Events::create($data);
@@ -200,7 +211,35 @@ new #[Layout('components.layouts.admin')] class extends Component
                         <input wire:model="registration_required" type="checkbox" class="mr-2" />
                         <span>Registration required</span>
                     </label>
+
+                    <label class="inline-flex items-center">
+                        <input wire:model="requires_partners" type="checkbox" class="mr-2" />
+                        <span>Partners needed</span>
+                    </label>
                 </div>
+
+                @if($requires_partners)
+                    <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                        <h4 class="mb-3 text-sm font-semibold text-emerald-800">
+                            <i class="fas fa-hand-holding-heart mr-2"></i>
+                            Partnership Settings
+                        </h4>
+                        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <div>
+                                <label class="block text-sm font-medium mb-1 text-emerald-900">Partnership Deadline</label>
+                                <input wire:model.lazy="partnership_deadline" type="datetime-local" class="w-full px-3 py-2 rounded-lg bg-white border" />
+                                <p class="mt-1 text-xs text-emerald-700">Deadline for partners to commit</p>
+                                @error('partnership_deadline') <span class="text-xs text-red-400">{{ $message }}</span> @enderror
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1 text-emerald-900">Partnership Description</label>
+                                <textarea wire:model.lazy="partnership_description" rows="3" class="w-full px-3 py-2 rounded-lg bg-white border" placeholder="Describe what kind of partners you're looking for..."></textarea>
+                                <p class="mt-1 text-xs text-emerald-700">Shown on events page to attract partners</p>
+                                @error('partnership_description') <span class="text-xs text-red-400">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
+                    </div>
+                @endif
 
                 <div>
                     <label class="block text-sm font-medium mb-1">Livestream URL</label>

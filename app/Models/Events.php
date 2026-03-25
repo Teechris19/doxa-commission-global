@@ -28,6 +28,9 @@ class Events extends Model
         'status',
         'capacity',
         'registration_required',
+        'requires_partners',
+        'partnership_deadline',
+        'partnership_description',
         'form_schema',
     ];
 
@@ -36,6 +39,8 @@ class Events extends Model
         'end_at' => 'datetime',
         'is_online' => 'boolean',
         'registration_required' => 'boolean',
+        'requires_partners' => 'boolean',
+        'partnership_deadline' => 'datetime',
         'form_schema' => 'array',
     ];
 
@@ -72,6 +77,26 @@ class Events extends Model
     public function partnershipIntents()
     {
         return $this->hasMany(PartnershipIntent::class, 'event_id');
+    }
+
+    /**
+     * Check if partnership is currently open for the event
+     */
+    public function isPartnershipOpen(): bool
+    {
+        if (!$this->requires_partners) {
+            return false;
+        }
+
+        if ($this->partnership_deadline && $this->partnership_deadline->isPast()) {
+            return false;
+        }
+
+        if ($this->start_at->isPast()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**

@@ -19,6 +19,7 @@
                 <h5 class="fw-bold mb-3">Quick Links</h5>
                 <ul class="list-unstyled">
                     <li><a href="{{ route('home') }}" class="text-muted text-decoration-none">Home</a></li>
+                    <li><a href="{{ route('about') }}" class="text-muted text-decoration-none">About Us</a></li>
                     <li><a href="{{ route('sermons.index') }}" class="text-muted text-decoration-none">Messages</a></li>
                     <li><a href="{{ route('events.index') }}" class="text-muted text-decoration-none">Events</a></li>
                     <li><a href="{{ route('believers.academy') }}" class="text-muted text-decoration-none">Believers Academy</a></li>

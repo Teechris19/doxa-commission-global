@@ -153,6 +153,8 @@ class DatabaseSeeder extends Seeder
         // Global Settings (single record)
         // -------------------------------
         $this->call(FooterSettingsSeeder::class);
+        $this->call(PartnershipFormFieldSeeder::class);
+        $this->call(PartnershipCategorySeeder::class);
 
         // -------------------------------
         // Users (at least 30 per chapter)
