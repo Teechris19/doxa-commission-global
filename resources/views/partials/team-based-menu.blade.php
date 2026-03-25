@@ -93,6 +93,17 @@
         </flux:navlist.item>
     </flux:navlist.group>
 @endif
+
+{{-- Testimonies --}}
+@if ($isSuperAdmin || $isAdmin)
+    <flux:navlist.group expandable heading="Testimonies"
+        :expanded="request()->routeIs('admin.dashboard.testimonies.*') ? 'true' : 'false'">
+        <flux:navlist.item icon="chat-bubble-left-ellipsis" :href="route('admin.dashboard.testimonies.index', request()->query())" wire:navigate
+            :active="request()->routeIs('admin.dashboard.testimonies.index') ? 'true' : 'false'">
+            View Testimonies
+        </flux:navlist.item>
+    </flux:navlist.group>
+@endif
 @if($can('team_settings'))
     <flux:navlist.group expandable heading="Team Setting"
         :expanded="request()->routeIs('admin.dashboard.settings.team-functions') ? 'true' : 'false'">

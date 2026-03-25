@@ -151,6 +151,14 @@ new #[Layout('components.layouts.admin')] class extends Component {
         ];
         $this->selectedTestimony = null;
     }
+
+    public function with(): array
+    {
+        return [
+            'stats' => $this->stats(),
+            'testimoniesList' => $this->testimonies(),
+        ];
+    }
 }; ?>
 
 <div>
@@ -169,7 +177,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Total</p>
-                        <p class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{{ $this->stats['total'] }}</p>
+                        <p class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{{ $stats['total'] }}</p>
                     </div>
                     <div class="rounded-full bg-blue-100 p-3 dark:bg-blue-900">
                         <svg class="h-6 w-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -183,7 +191,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Pending</p>
-                        <p class="mt-1 text-2xl font-bold text-amber-600">{{ $this->stats['pending'] }}</p>
+                        <p class="mt-1 text-2xl font-bold text-amber-600">{{ $stats['pending'] }}</p>
                     </div>
                     <div class="rounded-full bg-amber-100 p-3 dark:bg-amber-900">
                         <svg class="h-6 w-6 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -197,7 +205,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Approved</p>
-                        <p class="mt-1 text-2xl font-bold text-emerald-600">{{ $this->stats['approved'] }}</p>
+                        <p class="mt-1 text-2xl font-bold text-emerald-600">{{ $stats['approved'] }}</p>
                     </div>
                     <div class="rounded-full bg-emerald-100 p-3 dark:bg-emerald-900">
                         <svg class="h-6 w-6 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -211,7 +219,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Rejected</p>
-                        <p class="mt-1 text-2xl font-bold text-red-600">{{ $this->stats['rejected'] }}</p>
+                        <p class="mt-1 text-2xl font-bold text-red-600">{{ $stats['rejected'] }}</p>
                     </div>
                     <div class="rounded-full bg-red-100 p-3 dark:bg-red-900">
                         <svg class="h-6 w-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -269,7 +277,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200 dark:divide-zinc-700">
-                        @forelse($this->testimonies as $testimony)
+                        @forelse($testimoniesList as $testimony)
                             <tr class="hover:bg-gray-50 dark:hover:bg-zinc-700">
                                 <td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{{ $testimony->name }}</td>
                                 <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{{ $testimony->email }}</td>
@@ -335,7 +343,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
 
         <!-- Pagination -->
         <div class="mt-4">
-            {{ $this->testimonies->links() }}
+            {{ $testimoniesList->links() }}
         </div>
     </div>
 
