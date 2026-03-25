@@ -336,6 +336,19 @@ new #[Layout('components.layouts.admin')] class extends Component {
         @endif
     </x-card>
 
+    <!-- Meet Our Pastor Settings Card -->
+    <x-card class="mt-6 bg-white text-gray-800">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-xl font-bold text-gray-800">Meet Our Pastor Section</h3>
+                <p class="mt-1 text-sm text-gray-500">Configure the pastor section displayed on the homepage</p>
+            </div>
+            <a href="{{ route('admin.dashboard.settings.pastor', request()->query()) }}" wire:navigate class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+                Configure Pastor Section
+            </a>
+        </div>
+    </x-card>
+
     <x-card class="mt-6 bg-white text-gray-800">
         <h3 class="text-xl font-bold text-gray-800">Hero Section</h3>
         <p class="mt-1 text-sm text-gray-500">This is the top section on the public homepage.</p>
