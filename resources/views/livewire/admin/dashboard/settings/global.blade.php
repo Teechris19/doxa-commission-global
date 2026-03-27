@@ -203,6 +203,7 @@ new   #[Layout('components.layouts.admin')]  class extends Component {
                 <x-input label="Instagram" wire:model="social_links.instagram" />
                 <x-input label="Twitter" wire:model="social_links.twitter" />
                 <x-input label="Telegram" wire:model="social_links.telegram" />
+                <x-input label="WhatsApp" wire:model="social_links.whatsapp" />
                 <x-input label="TikTok" wire:model="social_links.tiktok" />
                 </div>
             </x-tab.items>

@@ -20,6 +20,8 @@ class PastorSetting extends Model
         'x_url',
         'youtube_url',
         'tiktok_url',
+        'telegram_url',
+        'whatsapp_url',
         'is_active',
     ];
 
