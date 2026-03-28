@@ -5,7 +5,7 @@
 //TODO implement bulk action
 //TODO:: allow filter by date to allow print of curent month students
 
-use App\Models\{BeliversAcademy, StudentClasses, AcademyClases, Chapter};
+use App\Models\{BeliversAcademy, StudentClasses, AcademyClases, Chapter, AcademyBatch};
 use App\Notifications\ClassCompletedByStudent;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
@@ -27,7 +27,8 @@ new #[Layout('components.layouts.admin')] class extends Component {
     public ?array $studentProgress = [];
     public $student;
     public $templateFile;
-    // public ?int $selectedUser;
+    public $filterBatch = null;
+    public $batches = [];
 
     #[Url(keep: true)]
     public ?string $chapter;
@@ -46,13 +47,26 @@ new #[Layout('components.layouts.admin')] class extends Component {
             }
         }
         $this->allClasses = $this->academy ? AcademyClases::where('academy_id', $this->academy->id)->get() : collect();
+        $this->batches = $this->academy ? AcademyBatch::where('academy_id', $this->academy->id)->get(['id', 'name'])->toArray() : [];
     }
 
     public function selectedUser($id)
     {
-        $student = StudentClasses::with('batch')->where('user_id', $id)->where('academy_id', $this->academy->id)->first();
+        // Search by user_id across all academies, then filter
+        $student = StudentClasses::with('batch', 'academy')
+            ->where('user_id', $id)
+            ->first();
+        
+        if (!$student) {
+            $this->toast()->error('Error', 'Student not found')->send();
+            return;
+        }
+        
         $this->student = $student;
         $this->studentProgress = json_decode($student->class_completed ?? '[]', true) ?? [];
+        
+        // Load classes for this student's batch
+        $this->loadClasses();
     }
 
     public function loadClasses()
@@ -86,8 +100,9 @@ new #[Layout('components.layouts.admin')] class extends Component {
      */
     public function rows()
     {
-        return StudentClasses::with('user')
+        return StudentClasses::with('user', 'batch')
             ->where('academy_id', $this->academy->id)
+            ->when($this->filterBatch, fn($q) => $q->where('batch_id', $this->filterBatch))
             ->when($this->search, fn($q) => $q->whereHas('user', fn($userQ) => $userQ->where('name', 'like', "%{$this->search}%")))
             ->paginate($this->quantity);
     }
@@ -165,8 +180,38 @@ new #[Layout('components.layouts.admin')] class extends Component {
     </x-card>
 
     <x-card class="relative dark:bg-dark-800">
+        <div class="mb-4 flex items-center justify-between">
+            <h3 class="text-lg font-semibold">Filter by Batch</h3>
+            <button wire:click="$set('filterBatch', null)" class="text-sm text-blue-600 hover:underline">Clear Filter</button>
+        </div>
+        <div class="flex flex-wrap gap-2">
+            <button 
+                wire:click="$set('filterBatch', null)" 
+                class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $filterBatch === null ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200' }}">
+                All Batches
+            </button>
+            @foreach($batches as $batch)
+                <button 
+                    wire:click="$set('filterBatch', {{ $batch['id'] }})" 
+                    class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $filterBatch == $batch['id'] ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200' }}">
+                    {{ $batch['name'] }}
+                </button>
+            @endforeach
+        </div>
+    </x-card>
+
+    <x-card class="relative dark:bg-dark-800">
         <x-table :$headers :$rows :filter="['quantity' => 'quantity', 'search' => 'search']" :quantity="[5, 15, 50, 100, 250]" paginate persistent selectable
             wire:model.live="selected">
+
+            @interact('column_user.name', $row)
+                <div class="flex items-center gap-2">
+                    <span>{{ $row->user->name ?? 'N/A' }}</span>
+                    @if($row->batch)
+                        <span class="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">{{ $row->batch->name }}</span>
+                    @endif
+                </div>
+            @endinteract
 
             @interact('column_action', $row)
                 {{-- Check Progress --}}
@@ -178,6 +223,13 @@ new #[Layout('components.layouts.admin')] class extends Component {
         </x-table>
     </x-card>
     <x-modal title="Academy Classes Progress" z-index="z-10" id="modal-id">
+        @if($student)
+            <div class="mb-4 p-3 bg-blue-50 rounded-lg">
+                <p class="text-sm font-medium text-blue-900">Student: {{ $student->user->name }}</p>
+                <p class="text-sm text-blue-700">Batch: {{ $student->batch?->name ?? 'Not assigned' }}</p>
+                <p class="text-sm text-blue-700">Phone: {{ $student->phone ?? 'N/A' }}</p>
+            </div>
+        @endif
 
         @if ($allClasses != null)
 

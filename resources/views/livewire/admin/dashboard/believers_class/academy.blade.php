@@ -2,7 +2,7 @@
 
 use Livewire\Volt\Component;
 use Livewire\Attributes\{Layout, Url};
-use App\Models\{BeliversAcademy, Chapter, AcademyBatch};
+use App\Models\{BeliversAcademy, Chapter, AcademyBatch, AcademyClases, StudentClasses, User};
 use Livewire\WithFileUploads;
 use TallStackUi\Traits\Interactions;
 
@@ -24,6 +24,15 @@ new #[Layout('components.layouts.admin')] class extends Component {
     public $batches = [];
     public $newBatch = ['name' => '', 'start_date' => '', 'max_students' => '', 'status' => 'open'];
     public $editingBatch = null;
+    
+    // Properties for viewing batch students
+    public $viewingBatch = null;
+    public $batchStudents = [];
+    
+    // Properties for assigning classes to batch
+    public $assigningClassesToBatch = null;
+    public $availableClasses = [];
+    public $selectedClassIds = [];
 
     public function mount()
     {
@@ -76,7 +85,15 @@ new #[Layout('components.layouts.admin')] class extends Component {
     {
         $academy = BeliversAcademy::find($this->academy['id'] ?? null);
         if ($academy) {
-            $this->batches = $academy->batches()->with('classes')->get()->toArray();
+            $this->batches = $academy->batches()
+                ->with(['classes', 'students'])
+                ->get()
+                ->map(function ($batch) {
+                    return array_merge($batch->toArray(), [
+                        'students_count' => $batch->students()->count()
+                    ]);
+                })
+                ->toArray();
         }
     }
 
@@ -151,6 +168,66 @@ new #[Layout('components.layouts.admin')] class extends Component {
             $batch->delete();
             $this->loadBatches();
             $this->toast()->success('Batch deleted successfully');
+        }
+    }
+
+    public function viewBatchStudents($batchId)
+    {
+        $batch = AcademyBatch::with('students.user')->find($batchId);
+        if ($batch) {
+            $this->viewingBatch = $batch->toArray();
+            $this->batchStudents = $batch->students()->with('user')->get()->toArray();
+        }
+    }
+
+    public function closeBatchViewer()
+    {
+        $this->viewingBatch = null;
+        $this->batchStudents = [];
+    }
+
+    public function openAssignClasses($batchId)
+    {
+        $batch = AcademyBatch::find($batchId);
+        if (!$batch) {
+            $this->toast()->error('Error', 'Batch not found')->send();
+            return;
+        }
+
+        $this->assigningClassesToBatch = $batchId;
+        $this->availableClasses = AcademyClases::where('academy_id', $batch->academy_id)->get(['id', 'name', 'description'])->toArray();
+        // Get currently assigned class IDs from the pivot table
+        $this->selectedClassIds = $batch->classes()->pluck('academy_clases.id')->map(fn($id) => (int) $id)->toArray();
+    }
+
+    public function closeAssignClasses()
+    {
+        $this->assigningClassesToBatch = null;
+        $this->availableClasses = [];
+        $this->selectedClassIds = [];
+    }
+
+    public function saveBatchClasses()
+    {
+        if (!$this->assigningClassesToBatch) {
+            return;
+        }
+
+        $batch = AcademyBatch::find($this->assigningClassesToBatch);
+        if ($batch) {
+            $batch->classes()->sync($this->selectedClassIds);
+            $this->toast()->success('Success', 'Classes assigned to batch successfully')->send();
+            $this->loadBatches();
+            $this->closeAssignClasses();
+        }
+    }
+
+    public function toggleClassSelection($classId)
+    {
+        if (in_array($classId, $this->selectedClassIds)) {
+            $this->selectedClassIds = array_diff($this->selectedClassIds, [$classId]);
+        } else {
+            $this->selectedClassIds[] = $classId;
         }
     }
 }; ?>
@@ -325,12 +402,22 @@ new #[Layout('components.layouts.admin')] class extends Component {
                                         </div>
                                         <div class="flex items-center">
                                             <i class="fas fa-user-friends mr-2 text-purple-500"></i>
-                                            Students: {{ count($batch['students'] ?? []) }}{{ $batch['max_students'] ? ' / ' . $batch['max_students'] : '' }}
+                                            Students: {{ $batch['students_count'] ?? 0 }}{{ $batch['max_students'] ? ' / ' . $batch['max_students'] : '' }}
+                                        </div>
+                                        <div class="flex items-center">
+                                            <i class="fas fa-book mr-2 text-green-500"></i>
+                                            Classes: {{ count($batch['classes'] ?? []) }}
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="flex flex-col space-y-2 ml-4">
+                                    <button wire:click="viewBatchStudents({{ $batch['id'] }})" class="inline-flex items-center px-3 py-2 bg-purple-500 text-white text-sm font-medium rounded-lg hover:bg-purple-600 transition-colors">
+                                        <i class="fas fa-eye mr-1"></i>View Students
+                                    </button>
+                                    <button wire:click="openAssignClasses({{ $batch['id'] }})" class="inline-flex items-center px-3 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors">
+                                        <i class="fas fa-book mr-1"></i>Assign Classes
+                                    </button>
                                     <button wire:click="editBatch({{ $batch['id'] }})" class="inline-flex items-center px-3 py-2 bg-yellow-500 text-white text-sm font-medium rounded-lg hover:bg-yellow-600 transition-colors">
                                         <i class="fas fa-edit mr-1"></i>Edit
                                     </button>
@@ -351,4 +438,99 @@ new #[Layout('components.layouts.admin')] class extends Component {
             </div>
         @endif
     </div>
+
+    {{-- Modal: View Batch Students --}}
+    @if($viewingBatch)
+        <div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" wire:click.self="closeBatchViewer">
+            <div class="bg-white rounded-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto" @click.stop>
+                <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900">{{ $viewingBatch['name'] }}</h3>
+                        <p class="text-sm text-gray-600">Registered Students</p>
+                    </div>
+                    <button wire:click="closeBatchViewer" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div class="p-6">
+                    @if(count($batchStudents) > 0)
+                        <div class="space-y-3">
+                            @foreach($batchStudents as $student)
+                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                            <span class="text-blue-600 font-semibold">{{ substr($student['user']['name'] ?? 'N/A', 0, 1) }}</span>
+                                        </div>
+                                        <div>
+                                            <p class="font-medium text-gray-900">{{ $student['user']['name'] ?? 'N/A' }}</p>
+                                            <p class="text-sm text-gray-500">{{ $student['user']['email'] ?? 'N/A' }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-sm text-gray-600">{{ $student['phone'] ?? 'N/A' }}</p>
+                                        <p class="text-xs text-gray-500">Status: <span class="font-medium">{{ ucfirst($student['status']) }}</span></p>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="text-center py-8">
+                            <i class="fas fa-user-slash text-4xl text-gray-300 mb-3"></i>
+                            <p class="text-gray-500">No students registered in this batch yet.</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Modal: Assign Classes to Batch --}}
+    @if($assigningClassesToBatch)
+        <div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" wire:click.self="closeAssignClasses">
+            <div class="bg-white rounded-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto" @click.stop>
+                <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900">Assign Classes</h3>
+                        <p class="text-sm text-gray-600">Select classes for this batch</p>
+                    </div>
+                    <button wire:click="closeAssignClasses" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div class="p-6">
+                    @if(count($availableClasses) > 0)
+                        <div class="space-y-3">
+                            @foreach($availableClasses as $class)
+                                <label class="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                                    <div class="flex items-center gap-3">
+                                        <input type="checkbox" wire:model="selectedClassIds" value="{{ $class['id'] }}" class="w-5 h-5 text-blue-600 rounded">
+                                        <div>
+                                            <p class="font-medium text-gray-900">{{ $class['name'] }}</p>
+                                            <p class="text-sm text-gray-500">{{ Str::limit($class['description'] ?? 'No description', 80) }}</p>
+                                        </div>
+                                    </div>
+                                </label>
+                            @endforeach
+                        </div>
+                        <div class="mt-6 flex justify-end gap-3">
+                            <button wire:click="closeAssignClasses" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                                Cancel
+                            </button>
+                            <button wire:click="saveBatchClasses" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                                <i class="fas fa-save mr-2"></i>Save Changes
+                            </button>
+                        </div>
+                    @else
+                        <div class="text-center py-8">
+                            <i class="fas fa-book text-4xl text-gray-300 mb-3"></i>
+                            <p class="text-gray-500">No classes available. Create classes first.</p>
+                            <a href="{{ route('admin.dashboard.believers_class.index', request()->query()) }}" class="inline-block mt-3 text-blue-600 hover:underline">
+                                Go to Classes →
+                            </a>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    @endif
 </div>
