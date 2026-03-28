@@ -44,23 +44,52 @@ class CertificateController extends Controller
         $pageCount = $pdf->setSourceFile($templatePath);
         $tplIdx = $pdf->importPage(1);
 
-        // Add a page
-        $pdf->AddPage();
+        // Get the size of the imported page and use it
+        $pageWidth = $pdf->getPageWidth($tplIdx);
+        $pageHeight = $pdf->getPageHeight($tplIdx);
+        
+        // Add a page with the same size as the template
+        $pdf->AddPage('L', [$pageWidth, $pageHeight]);
         $pdf->useTemplate($tplIdx);
 
-        // Set font
-        $pdf->SetFont('Arial', 'B', 24);
-        $pdf->SetTextColor(30, 58, 138); // Blue
+        // Set font for name - bold, larger size
+        $pdf->SetFont('Arial', 'B', 28);
+        $pdf->SetTextColor(0, 0, 0); // Black color
 
-        // Add name (adjust position as needed)
-        $pdf->SetXY(50, 100); // Adjust coordinates
-        $pdf->Cell(0, 10, $name, 0, 1, 'C');
+        // Calculate width of name text to center it properly
+        $nameWidth = $pdf->GetStringWidth($name);
+        $pageWidth = $pdf->GetPageWidth();
+        $margin = 20; // Margin from edges
+        
+        // Center the name with proper margins
+        $xPos = ($pageWidth - $nameWidth) / 2;
+        
+        // Ensure name doesn't go beyond margins
+        if ($xPos < $margin) {
+            // If name is too long, reduce font size
+            $pdf->SetFont('Arial', 'B', 20);
+            $nameWidth = $pdf->GetStringWidth($name);
+            $xPos = ($pageWidth - $nameWidth) / 2;
+        }
+        
+        // Add name (adjusted Y position for better spacing)
+        $pdf->SetXY($xPos, 95);
+        $pdf->Cell(0, 12, $name, 0, 1, 'L');
 
-        // Add date
+        // Format date as "28 Mar 2026" (DD Mon YYYY)
+        $formattedDate = \Carbon\Carbon::parse($requestedDate)->format('d M Y');
+
+        // Add date - black color, smaller font
         $pdf->SetFont('Arial', '', 16);
-        $pdf->SetTextColor(220, 38, 38); // Red
-        $pdf->SetXY(50, 120); // Adjust
-        $pdf->Cell(0, 10, 'Completed on: ' . $requestedDate, 0, 1, 'C');
+        $pdf->SetTextColor(0, 0, 0); // Black color
+        
+        $dateText = 'Completed on: ' . $formattedDate;
+        $dateWidth = $pdf->GetStringWidth($dateText);
+        $pageWidth = $pdf->GetPageWidth();
+        $dateXPos = ($pageWidth - $dateWidth) / 2;
+        
+        $pdf->SetXY($dateXPos, 115);
+        $pdf->Cell(0, 10, $dateText, 0, 1, 'L');
 
         // Output the PDF
         $pdf->Output('I', 'certificate.pdf');
