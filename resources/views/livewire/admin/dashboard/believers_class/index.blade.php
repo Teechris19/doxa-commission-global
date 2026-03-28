@@ -115,7 +115,6 @@ new #[Layout('components.layouts.admin')] class extends Component {
                 'time' => $class['time'],
                 'study_material' => $class['study_material'] ?? null,
                 'tutor' => $class['tutor'] ?? null,
-                'chapter_id' => $this->chapterId ?? null,
                 'academy_id' => $this->academy->id,
             ]);
         }
