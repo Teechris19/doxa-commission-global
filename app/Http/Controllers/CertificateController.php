@@ -79,15 +79,17 @@ class CertificateController extends Controller
         // Format date as "28 Mar 2026" (DD Mon YYYY)
         $formattedDate = \Carbon\Carbon::parse($requestedDate)->format('d M Y');
 
-        // Add date on the "Awarded on this day" line - black color, bold
+        // Add date ABOVE the "Awarded on this day" underline - black color, bold
         $pdf->SetFont('Arial', 'B', 18);
         $pdf->SetTextColor(0, 0, 0); // Black color
-        
+
         $dateWidth = $pdf->GetStringWidth($formattedDate);
         $pageWidth = $pdf->GetPageWidth();
         $dateXPos = ($pageWidth - $dateWidth) / 2;
-        
-        $pdf->SetXY($dateXPos, 115);
+
+        // Position date BELOW "Awarded on this day" text but ABOVE the underline
+        // Increase Y value to move date lower on the page
+        $pdf->SetXY($dateXPos, 112);
         $pdf->Cell(0, 10, $formattedDate, 0, 1, 'L');
 
         // Output the PDF
