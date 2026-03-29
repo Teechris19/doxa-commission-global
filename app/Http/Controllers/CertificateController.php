@@ -52,8 +52,8 @@ class CertificateController extends Controller
         $pdf->AddPage('L', [$pageWidth, $pageHeight]);
         $pdf->useTemplate($tplIdx);
 
-        // Set font for name - bold, larger size
-        $pdf->SetFont('Arial', 'B', 28);
+        // Set font for name - Arial Italic for elegant script-like appearance
+        $pdf->SetFont('Arial', 'I', 36);
         $pdf->SetTextColor(0, 0, 0); // Black color
 
         // Calculate width of name text to center it properly
@@ -67,7 +67,7 @@ class CertificateController extends Controller
         // Ensure name doesn't go beyond margins
         if ($xPos < $margin) {
             // If name is too long, reduce font size
-            $pdf->SetFont('Arial', 'B', 20);
+            $pdf->SetFont('Arial', 'I', 24);
             $nameWidth = $pdf->GetStringWidth($name);
             $xPos = ($pageWidth - $nameWidth) / 2;
         }
@@ -79,17 +79,16 @@ class CertificateController extends Controller
         // Format date as "28 Mar 2026" (DD Mon YYYY)
         $formattedDate = \Carbon\Carbon::parse($requestedDate)->format('d M Y');
 
-        // Add date - black color, smaller font
-        $pdf->SetFont('Arial', '', 16);
+        // Add date on the "Awarded on this day" line - black color, bold
+        $pdf->SetFont('Arial', 'B', 18);
         $pdf->SetTextColor(0, 0, 0); // Black color
         
-        $dateText = 'Completed on: ' . $formattedDate;
-        $dateWidth = $pdf->GetStringWidth($dateText);
+        $dateWidth = $pdf->GetStringWidth($formattedDate);
         $pageWidth = $pdf->GetPageWidth();
         $dateXPos = ($pageWidth - $dateWidth) / 2;
         
         $pdf->SetXY($dateXPos, 115);
-        $pdf->Cell(0, 10, $dateText, 0, 1, 'L');
+        $pdf->Cell(0, 10, $formattedDate, 0, 1, 'L');
 
         // Output the PDF
         $pdf->Output('I', 'certificate.pdf');
