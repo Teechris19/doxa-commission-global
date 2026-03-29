@@ -6,10 +6,12 @@ use App\Notifications\TeamMemberAdded;
 use App\Services\NotificationRecipients;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\Volt\Component;
 
 new #[Layout('components.layouts.admin')] class extends Component {
-    public Team $leaderTeam;
+    public ?Team $leaderTeam = null;
+    public $allTeams = [];  // All teams in the chapter for admin to select
 
     public $teamUsers = [];
     public $chapterUsers = [];
@@ -18,20 +20,57 @@ new #[Layout('components.layouts.admin')] class extends Component {
     public string $teamSearch = '';
     public string $chapterSearch = '';
 
-    public function mount()
+    #[Url]
+    public ?string $team_id = null;
+
+    #[Url]
+    public ?string $chapter = null;
+
+    public function mount(): void
     {
         $authUser = Auth::user();
 
-        // Find the first team where this user is a team-lead
-        $leaderTeam = $authUser->teams()
-            ->wherePivotIn('role_in_team', ['team-lead', 'lead-assist', 'lead_assist'])
-            ->first();
+        // Admin and super-admin can access any team
+        if ($authUser->hasRole(['admin', 'super-admin'])) {
+            // Get chapter ID from parameter or user
+            $chapterId = null;
+            if ($this->chapter) {
+                $chapterId = \App\Models\Chapter::where('name', $this->chapter)->value('id');
+            } elseif ($authUser->chapter_id) {
+                $chapterId = $authUser->chapter_id;
+            }
 
-        if (!$leaderTeam) {
-            abort(403, 'You are not a team lead.');
+            if (!$chapterId) {
+                abort(403, 'No chapter found. Please ensure you have a chapter assigned.');
+            }
+
+            // Get all teams in the chapter
+            $this->allTeams = Team::where('chapter_id', $chapterId)->get();
+
+            if ($this->allTeams->isEmpty()) {
+                abort(403, 'No teams found for "' . $this->chapter . '". Please create teams first in the Teams section.');
+            }
+
+            // If a specific team_id is provided via URL, use it
+            if ($this->team_id) {
+                $this->leaderTeam = Team::findOrFail($this->team_id);
+            } else {
+                // Default to first team in chapter
+                $this->leaderTeam = $this->allTeams->first();
+            }
+        } else {
+            // For team leads, find the team where this user is a team-lead
+            $leaderTeam = $authUser->teams()
+                ->wherePivotIn('role_in_team', ['team-lead', 'lead-assist', 'lead_assist'])
+                ->first();
+
+            if (!$leaderTeam) {
+                abort(403, 'You are not a team lead.');
+            }
+
+            $this->leaderTeam = $leaderTeam;
+            $this->allTeams = [$leaderTeam];
         }
-
-        $this->leaderTeam = $leaderTeam;
 
         $this->loadUsers();
     }
@@ -92,6 +131,13 @@ new #[Layout('components.layouts.admin')] class extends Component {
     {
         $this->loadUsers();
     }
+
+    public function selectTeam(int $teamId): void
+    {
+        $this->leaderTeam = Team::findOrFail($teamId);
+        $this->team_id = $teamId;
+        $this->loadUsers();
+    }
 };
 ?>
 <div class="p-6 space-y-6" x-data>
@@ -106,6 +152,23 @@ new #[Layout('components.layouts.admin')] class extends Component {
         </x-button>
 
     </x-fancy-header>
+
+    {{-- Team Selector for Admin/Super Admin --}}
+    @if(auth()->user()->hasRole(['admin', 'super-admin']) && count($allTeams) > 1)
+    <div class="bg-zinc-800 rounded-lg p-4">
+        <label class="block text-sm font-medium text-zinc-300 mb-2">Select Team</label>
+        <select 
+            wire:change="selectTeam($event.target.value)" 
+            class="w-full px-4 py-2 rounded-lg bg-zinc-700 text-zinc-200 border border-zinc-600 focus:ring focus:ring-zinc-500"
+        >
+            @foreach($allTeams as $team)
+                <option value="{{ $team->id }}" {{ $team->id == $leaderTeam->id ? 'selected' : '' }}>
+                    {{ $team->name }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+    @endif
 
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

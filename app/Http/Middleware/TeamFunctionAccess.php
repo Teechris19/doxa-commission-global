@@ -26,13 +26,14 @@ class TeamFunctionAccess
             return $next($request);
         }
 
+        // Only team leads and lead assistants should have access beyond this point
         if (!$user->hasRole(['team-lead', 'lead-assist', 'lead_assist'])) {
-            return $next($request);
+            abort(403, 'ACCESS DENIED - Insufficient permissions');
         }
 
         // Load teams with pivot data explicitly
         $user->load('teams');
-        
+
         $leadersTeam = $user->teams->firstWhere(
             fn($team) => in_array($team->pivot->role_in_team, ['team-lead', 'lead-assist', 'lead_assist'])
         );

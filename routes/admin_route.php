@@ -34,15 +34,15 @@ Route::prefix('admin/dashboard')
         Volt::route('members_create', 'admin.dashboard.members.create')
             ->middleware('team-function:members')
             ->name('admin.dashboard.members.create');
+        Volt::route('members/add-to-team', 'admin.dashboard.members.add-to-team')
+            ->middleware('team-function:members')
+            ->name('admin.members.add-to-team');
         Volt::route('members/{member}/edit', 'admin.dashboard.members.edit')
             ->middleware('team-function:members')
             ->name('admin.dashboard.members.edit');
         Volt::route('members/{member}/edit_teams', 'admin.dashboard.members.edit-team')
             ->middleware('team-function:members')
             ->name('admin.dashboard.edit-team');
-        Volt::route('members/add-to-team', 'admin.dashboard.members.add-to-team')
-            ->middleware('team-function:members')
-            ->name('admin.members.add-to-team');
         // -----------------------------------------------------------------
         //              TEAMS SECTION
         //-------------------------------------------------------------------
