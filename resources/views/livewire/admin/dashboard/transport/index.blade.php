@@ -48,12 +48,12 @@ new #[Layout('components.layouts.admin')] class extends Component {
     {
         // Restrict access to team-leads (unless they are on the transport team)
         if (auth()->user()->hasRole('team-lead')) {
-            $isTransportTeam = auth()->user()->teams()->whereHas('functions', fn($q) => $q->where('name', 'transport'))->exists();
+            $isTransportTeam = auth()->user()->teams()->whereHas('teamFunction', fn($q) => $q->whereJsonContains('function->transport', true))->exists();
             if (!$isTransportTeam) {
                 abort(403, 'You do not have permission to access this page.');
             }
         }
-        
+
         $this->resolveChapterContext();
     }
 

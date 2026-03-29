@@ -56,11 +56,6 @@ class Team extends Model
         return $this->hasOne(TeamUser::class)->where('role_in_team', 'team_lead');
     }
 
-    public function functions()
-    {
-        return $this->belongsToMany(Functions::class, 'team_functions', 'team_id', 'function_id');
-    }
-
     public function teamFunction()
     {
         return $this->hasOne(TeamFunction::class, 'team_id');
