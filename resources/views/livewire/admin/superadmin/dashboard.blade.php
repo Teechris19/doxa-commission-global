@@ -44,9 +44,9 @@ new #[Layout('components.layouts.admin')] class extends Component {
 
 <div class="dark:bg-zinc-900">
     <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <x-card header="Conclaves" minimize class="dark:bg-zinc-800 dark:text-gray-200">
+        <x-card header="Chapters" minimize class="dark:bg-zinc-800 dark:text-gray-200">
             <div class="text-5xl m-3 font-[montserat] text-slate-900 dark:text-gray-100">{{ $total_chapters }}</div>
-            <span><small class="text-slate-600 dark:text-gray-400">Total active conclaves</small></span>
+            <span><small class="text-slate-600 dark:text-gray-400">Total active chapters</small></span>
             <x-link :href="route('super-admin.conclaves')" text="Manage All"
                 icon="arrow-up-right" position="right" wire:navigate />
         </x-card>
@@ -79,7 +79,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
                 Super admin quick actions.
             </div>
             <div class="flex flex-wrap gap-3">
-                <x-link :href="route('super-admin.conclaves.create')" text="New Conclave"
+                <x-link :href="route('super-admin.conclaves.create')" text="New Chapter"
                     icon="plus" position="right" wire:navigate />
                 <x-link :href="route('super-admin.conclaves.add-admin')" text="Assign Admin"
                     icon="user-plus" position="right" wire:navigate />

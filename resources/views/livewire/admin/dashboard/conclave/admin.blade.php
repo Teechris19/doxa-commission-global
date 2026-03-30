@@ -96,9 +96,9 @@ new  #[Layout('components.layouts.admin')]  class extends Component {
 }; ?>
 
 <div>
-    <x-fancy-header title="Conclave Admins" subtitle="Assign or change chapter administrators" :breadcrumbs="[
+    <x-fancy-header title="Chapter Admins" subtitle="Assign or change chapter administrators" :breadcrumbs="[
         ['label' => 'Home', 'url' => route('admin.dashboard', request()->query())],
-        ['label' => 'Conclaves', 'url' => route('super-admin.conclaves', request()->query())],
+        ['label' => 'Chapters', 'url' => route('super-admin.conclaves', request()->query())],
         ['label' => 'Assign Admins']
     ]" class="mb-4">
     </x-fancy-header>
@@ -106,7 +106,7 @@ new  #[Layout('components.layouts.admin')]  class extends Component {
     <x-card class="dark:bg-zinc-900 dark:text-gray-200 text-zinc-900">
         <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
-                <div class="text-lg font-semibold">Chapters (Conclaves)</div>
+                <div class="text-lg font-semibold">Chapters</div>
                 <div class="text-sm text-zinc-600 dark:text-zinc-400">
                     Total of {{ $total_conclaves }} chapters
                 </div>

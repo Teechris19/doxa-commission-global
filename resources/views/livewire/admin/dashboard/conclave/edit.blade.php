@@ -48,7 +48,7 @@ new  #[Layout('components.layouts.admin')]  class extends Component {
         $conclave->save();
 
         $this->toast()
-            ->success('Done!', 'Chapter created successfully!')
+            ->success('Done!', 'Chapter updated successfully!')
             ->flash()
             ->send();
 
@@ -59,6 +59,13 @@ new  #[Layout('components.layouts.admin')]  class extends Component {
 }; ?>
 
 <div>
+    <x-fancy-header title="Edit Chapter" subtitle="Update chapter information" :breadcrumbs="[
+        ['label' => 'Home', 'url' => route('admin.dashboard')],
+        ['label' => 'Chapters', 'url' => route('super-admin.conclaves')],
+        ['label' => 'Edit Chapter']
+    ]" class="mb-4">
+    </x-fancy-header>
+
     <x-card>
         <form wire:submit.prevent='save'>
             <input type="hidden" wire:model='id' value="{{ $id }}">

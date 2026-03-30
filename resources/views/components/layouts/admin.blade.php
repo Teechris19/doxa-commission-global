@@ -135,19 +135,19 @@ TODO: Add Active route indicators
 
             @endrole
             @role('super-admin')
-            <flux:navlist.group expandable heading="Conclaves"
+            <flux:navlist.group expandable heading="Chapters"
                 :expanded="request()->routeIs('super-admin.conclaves*') ? 'true' : 'false'">
                 <flux:navlist.item icon="building-office" :href="route('super-admin.conclaves', request()->query())" wire:navigate
                     :active="request()->routeIs('super-admin.conclaves') ? 'true' : 'false'">
-                    All Conclaves
+                    All Chapters
                 </flux:navlist.item>
                 <flux:navlist.item icon="plus-circle" :href="route('super-admin.conclaves.create', request()->query())" wire:navigate
                     :active="request()->routeIs('super-admin.conclaves.create') ? 'true' : 'false'">
-                    Create Conclave
+                    Create Chapter
                 </flux:navlist.item>
                 <flux:navlist.item icon="user-plus" :href="route('super-admin.conclaves.add-admin', request()->query())" wire:navigate
                     :active="request()->routeIs('super-admin.conclaves.add-admin') ? 'true' : 'false'">
-                    Assign Conclave Admin
+                    Assign Chapter Admin
                 </flux:navlist.item>
             </flux:navlist.group>
             @endrole

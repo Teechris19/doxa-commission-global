@@ -48,6 +48,13 @@ new  #[Layout('components.layouts.admin')]  class extends Component {
 }; ?>
 
 <div>
+    <x-fancy-header title="Create Chapter" subtitle="Add a new chapter location" :breadcrumbs="[
+        ['label' => 'Home', 'url' => route('admin.dashboard')],
+        ['label' => 'Chapters', 'url' => route('super-admin.conclaves')],
+        ['label' => 'Create Chapter']
+    ]" class="mb-4">
+    </x-fancy-header>
+
     <x-card>
         <form wire:submit.prevent='save'>
             <!-- Email Address -->
