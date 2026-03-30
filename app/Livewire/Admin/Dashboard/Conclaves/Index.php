@@ -103,8 +103,8 @@ class Index extends Component
                 'phone' => $validated['phone'] ?? null,
                 'email' => $validated['email'] ?? null,
                 'whatsapp_link' => $validated['whatsapp_link'] ?? null,
-                'latitude' => $validated['latitude'] ?? null,
-                'longitude' => $validated['longitude'] ?? null,
+                'latitude' => !empty($validated['latitude']) ? $validated['latitude'] : null,
+                'longitude' => !empty($validated['longitude']) ? $validated['longitude'] : null,
                 'is_active' => $this->isActive,
             ];
 
