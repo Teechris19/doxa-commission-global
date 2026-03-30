@@ -41,6 +41,8 @@
 
         $primaryNav = [
             ['label' => 'Home', 'route' => 'home', 'active' => request()->routeIs('home'), 'icon' => 'fa-house'],
+            ['label' => 'About', 'route' => 'about', 'active' => request()->routeIs('about'), 'icon' => 'fa-circle-info'],
+            ['label' => 'Conclaves', 'route' => 'conclaves.index', 'active' => request()->routeIs('conclaves.*'), 'icon' => 'fa-map-location-dot'],
             ['label' => 'Events', 'route' => 'events.index', 'active' => request()->routeIs('events.*'), 'icon' => 'fa-calendar-days'],
             ['label' => 'Messages', 'route' => 'sermons.index', 'active' => request()->routeIs('sermons.*'), 'icon' => 'fa-circle-play'],
             ['label' => 'Cells', 'route' => 'cells.index', 'active' => request()->routeIs('cells.*'), 'icon' => 'fa-people-group'],
@@ -265,8 +267,10 @@
                 <h3 class="text-base font-semibold text-white">Quick Links</h3>
                 <ul class="space-y-2 text-sm">
                     <li><a href="{{ route('home') }}" wire:navigate class="text-blue-100 transition hover:text-white">Home</a></li>
-                    <li><a href="{{ route('sermons.index') }}" wire:navigate class="text-blue-100 transition hover:text-white">Messages</a></li>
+                    <li><a href="{{ route('about') }}" wire:navigate class="text-blue-100 transition hover:text-white">About Us</a></li>
+                    <li><a href="{{ route('conclaves.index') }}" wire:navigate class="text-blue-100 transition hover:text-white">Conclaves</a></li>
                     <li><a href="{{ route('events.index') }}" wire:navigate class="text-blue-100 transition hover:text-white">Events</a></li>
+                    <li><a href="{{ route('sermons.index') }}" wire:navigate class="text-blue-100 transition hover:text-white">Messages</a></li>
                     <li><a href="{{ route('cells.index') }}" wire:navigate class="text-blue-100 transition hover:text-white">Cells</a></li>
                     <li><a href="{{ route('location.index') }}" wire:navigate class="text-blue-100 transition hover:text-white">Location</a></li>
                 </ul>

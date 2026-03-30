@@ -349,6 +349,18 @@ new #[Layout('components.layouts.admin')] class extends Component {
         </div>
     </x-card>
 
+    <x-card class="mt-6 bg-white text-gray-800 border-2 border-blue-200">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-xl font-bold text-gray-800">📄 About Page Settings</h3>
+                <p class="mt-1 text-sm text-gray-500">Manage all sections of the public About page including Hero, Pastor, Services, Conclaves preview, and CTA</p>
+            </div>
+            <a href="{{ route('admin.dashboard.settings.about-page', request()->query()) }}" wire:navigate class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+                Configure About Page
+            </a>
+        </div>
+    </x-card>
+
     <x-card class="mt-6 bg-white text-gray-800">
         <h3 class="text-xl font-bold text-gray-800">Hero Section</h3>
         <p class="mt-1 text-sm text-gray-500">This is the top section on the public homepage.</p>
