@@ -25,6 +25,11 @@ Route::prefix('admin/dashboard')
         Volt::route('settings/pastor', 'admin.dashboard.settings.pastor')->name('admin.dashboard.settings.pastor');
         // Settings - Event Teams
         Volt::route('/settings/event-teams', 'admin.dashboard.settings.event-teams')->name('admin.dashboard.settings.event-teams');
+        
+        // -----------------------------------------------------------------
+        //              CONCLAVES SECTION (Separate from Chapters)
+        //-------------------------------------------------------------------
+        Volt::route('/conclaves', \App\Livewire\Admin\Dashboard\Conclaves\Index::class)->name('admin.dashboard.conclaves');
         // -----------------------------------------------------------------
         //              MEMBERS SECTION
         //-------------------------------------------------------------------

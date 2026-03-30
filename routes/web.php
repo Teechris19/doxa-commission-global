@@ -4,8 +4,20 @@ use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\SchedulerController;
+use Illuminate\Support\Facades\DB;
 
 Volt::route('/', 'home.landing')->name('home');
+
+// Quick fix route for about_us table
+Route::get('/fix-about-table', function() {
+    try {
+        DB::statement('ALTER TABLE `about_us` MODIFY `title` VARCHAR(255) NULL');
+        DB::statement('ALTER TABLE `about_us` MODIFY `description` TEXT NULL');
+        return response()->json(['success' => true, 'message' => 'Table fixed! Go back to admin settings.']);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+    }
+})->middleware('auth'); // Only accessible if logged in
 
 // Home Auth Routes (for regular users)
 Route::middleware('guest')->group(function () {

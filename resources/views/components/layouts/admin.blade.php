@@ -150,6 +150,15 @@ TODO: Add Active route indicators
                     Assign Chapter Admin
                 </flux:navlist.item>
             </flux:navlist.group>
+            
+            {{-- Conclaves Management (Separate from Chapters) --}}
+            <flux:navlist.group expandable heading="Conclaves"
+                :expanded="request()->routeIs('admin.dashboard.conclaves*') ? 'true' : 'false'">
+                <flux:navlist.item icon="map" :href="route('admin.dashboard.conclaves', request()->query())" wire:navigate
+                    :active="request()->routeIs('admin.dashboard.conclaves') ? 'true' : 'false'">
+                    All Conclaves
+                </flux:navlist.item>
+            </flux:navlist.group>
             @endrole
             @include('partials.team-based-menu')
 

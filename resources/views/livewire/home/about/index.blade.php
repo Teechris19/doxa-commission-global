@@ -17,14 +17,26 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
 
     public function mount()
     {
-        $chapterName = request()->query('chapter', 'default');
+        $chapterName = request()->query('chapter', 'Calabar Branch');
         $chapter = Chapter::where('name', $chapterName)->first();
+        
+        // If chapter not found by name, try to get the first chapter
+        if (!$chapter) {
+            $chapter = Chapter::first();
+        }
 
         if ($chapter) {
             // Load About Us
             $this->aboutUs = AboutUs::where('chapter_id', $chapter->id)
                 ->where('is_active', true)
                 ->first();
+            
+            // Debug: Log what we found
+            \Log::info('About Page Load', [
+                'chapter' => $chapter->name,
+                'chapter_id' => $chapter->id,
+                'aboutUs' => $this->aboutUs ? $this->aboutUs->toArray() : null,
+            ]);
 
             // Load Church Leaders (legacy - keep for backward compatibility)
             $this->leaders = ChurchLeader::where('chapter_id', $chapter->id)

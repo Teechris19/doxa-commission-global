@@ -161,53 +161,65 @@ new #[Layout('components.layouts.admin')] class extends Component {
 
     public function saveAboutUs(): void
     {
-        $validated = $this->validate([
-            'heroTitle' => 'nullable|string|max:255',
-            'heroSubtitle' => 'nullable|string|max:500',
-            'heroBackgroundImage' => 'nullable|image|max:5120',
-            'whoWeAreDescription' => 'nullable|string',
-            'whoWeAreImage' => 'nullable|image|max:5120',
-            'mission' => 'nullable|string',
-            'vision' => 'nullable|string',
-            'coreValues' => 'nullable|string',
-            'conclavesPreviewCount' => 'nullable|integer|min:1|max:20',
-        ]);
+        try {
+            // Validate text fields only - images are handled separately
+            $validated = $this->validate([
+                'heroTitle' => 'nullable|string|max:255',
+                'heroSubtitle' => 'nullable|string|max:500',
+                'whoWeAreDescription' => 'nullable|string',
+                'mission' => 'nullable|string',
+                'vision' => 'nullable|string',
+                'coreValues' => 'nullable|string',
+                'conclavesPreviewCount' => 'nullable|integer|min:1|max:20',
+            ]);
 
-        if (!$this->aboutUs->exists) {
-            $this->aboutUs->chapter_id = $this->activeChapter?->id;
-            $this->aboutUs->is_active = true;
-        }
-
-        $this->aboutUs->hero_title = $validated['heroTitle'];
-        $this->aboutUs->hero_subtitle = $validated['heroSubtitle'];
-        $this->aboutUs->description = $validated['whoWeAreDescription'];
-        $this->aboutUs->mission = $validated['mission'];
-        $this->aboutUs->vision = $validated['vision'];
-        $this->aboutUs->core_values = $validated['coreValues'];
-        $this->aboutUs->conclaves_preview_count = $validated['conclavesPreviewCount'];
-
-        // Handle hero background image
-        if ($this->heroBackgroundImage) {
-            if ($this->aboutUs->hero_background_image) {
-                Storage::disk('public')->delete($this->aboutUs->hero_background_image);
+            // Create AboutUs record if it doesn't exist
+            if (!$this->aboutUs || !$this->aboutUs->exists) {
+                $this->aboutUs = AboutUs::firstOrCreate(
+                    ['chapter_id' => $this->activeChapter?->id],
+                    [
+                        'is_active' => true,
+                        'title' => 'About Doxa Church',
+                        'hero_title' => $validated['heroTitle'] ?? 'Welcome to Doxa Church',
+                        'hero_subtitle' => $validated['heroSubtitle'] ?? 'A place where faith, hope, and love come together.',
+                        'conclaves_preview_count' => $validated['conclavesPreviewCount'] ?? 6,
+                    ]
+                );
             }
-            $path = $this->heroBackgroundImage->store('about/hero', 'public');
-            $this->aboutUs->hero_background_image = $path;
-        }
 
-        // Handle who we are image
-        if ($this->whoWeAreImage) {
-            if ($this->aboutUs->hero_image) {
-                Storage::disk('public')->delete($this->aboutUs->hero_image);
+            $this->aboutUs->hero_title = $validated['heroTitle'] ?? $this->aboutUs->hero_title;
+            $this->aboutUs->hero_subtitle = $validated['heroSubtitle'] ?? $this->aboutUs->hero_subtitle;
+            $this->aboutUs->description = $validated['whoWeAreDescription'] ?? $this->aboutUs->description;
+            $this->aboutUs->mission = $validated['mission'] ?? $this->aboutUs->mission;
+            $this->aboutUs->vision = $validated['vision'] ?? $this->aboutUs->vision;
+            $this->aboutUs->core_values = $validated['coreValues'] ?? $this->aboutUs->core_values;
+            $this->aboutUs->conclaves_preview_count = $validated['conclavesPreviewCount'] ?? $this->aboutUs->conclaves_preview_count;
+
+            // Handle hero background image upload
+            if ($this->heroBackgroundImage instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile) {
+                if ($this->aboutUs->hero_background_image) {
+                    Storage::disk('public')->delete($this->aboutUs->hero_background_image);
+                }
+                $path = $this->heroBackgroundImage->store('about/hero', 'public');
+                $this->aboutUs->hero_background_image = $path;
             }
-            $path = $this->whoWeAreImage->store('about/who-we-are', 'public');
-            $this->aboutUs->hero_image = $path;
+
+            // Handle who we are image upload
+            if ($this->whoWeAreImage instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile) {
+                if ($this->aboutUs->hero_image) {
+                    Storage::disk('public')->delete($this->aboutUs->hero_image);
+                }
+                $path = $this->whoWeAreImage->store('about/who-we-are', 'public');
+                $this->aboutUs->hero_image = $path;
+            }
+
+            $this->aboutUs->save();
+
+            $this->toast()->success('Saved', 'About Us section updated successfully.')->send();
+            $this->loadAboutUs();
+        } catch (\Exception $e) {
+            $this->toast()->error('Error', 'Failed to save: ' . $e->getMessage())->send();
         }
-
-        $this->aboutUs->save();
-
-        $this->toast()->success('Saved', 'About Us section updated successfully.')->send();
-        $this->loadAboutUs();
     }
 
     public function addHistoryEvent(): void
@@ -226,9 +238,18 @@ new #[Layout('components.layouts.admin')] class extends Component {
 
     public function saveHistoryTimeline(): void
     {
-        $this->aboutUs->history_timeline = array_values($this->historyTimeline);
-        $this->aboutUs->save();
-        $this->toast()->success('Saved', 'History timeline updated successfully.')->send();
+        try {
+            if (!$this->aboutUs || !$this->aboutUs->exists) {
+                $this->toast()->error('Error', 'Please save the About Us section first before adding timeline events.')->send();
+                return;
+            }
+            
+            $this->aboutUs->history_timeline = array_values($this->historyTimeline);
+            $this->aboutUs->save();
+            $this->toast()->success('Saved', 'History timeline updated successfully.')->send();
+        } catch (\Exception $e) {
+            $this->toast()->error('Error', 'Failed to save timeline: ' . $e->getMessage())->send();
+        }
     }
 
     public function addPastor(): void
@@ -254,49 +275,47 @@ new #[Layout('components.layouts.admin')] class extends Component {
 
     public function savePastors(): void
     {
-        foreach ($this->pastors as $index => $pastorData) {
-            $validated = $this->validate([
-                "pastors.{$index}.name" => 'required|string|max:255',
-                "pastors.{$index}.title" => 'nullable|string|max:255',
-                "pastors.{$index}.description" => 'nullable|string',
-                "pastors.{$index}.image" => 'nullable|image|max:5120',
-                "pastors.{$index}.facebook_url" => 'nullable|url|max:255',
-                "pastors.{$index}.instagram_url" => 'nullable|url|max:255',
-                "pastors.{$index}.twitter_url" => 'nullable|url|max:255',
-                "pastors.{$index}.youtube_url" => 'nullable|url|max:255',
-            ]);
-
-            if (isset($pastorData['id']) && $pastorData['id']) {
-                $pastor = Pastor::find($pastorData['id']);
-            } else {
-                $pastor = new Pastor();
-                $pastor->chapter_id = $this->activeChapter?->id;
-                $pastor->order_column = $index;
-            }
-
-            $pastor->name = $validated["pastors.{$index}"]["name"];
-            $pastor->title = $validated["pastors.{$index}"]["title"] ?? 'Lead Pastor';
-            $pastor->description = $validated["pastors.{$index}"]["description"];
-            $pastor->facebook_url = $validated["pastors.{$index}"]["facebook_url"];
-            $pastor->instagram_url = $validated["pastors.{$index}"]["instagram_url"];
-            $pastor->twitter_url = $validated["pastors.{$index}"]["twitter_url"];
-            $pastor->youtube_url = $validated["pastors.{$index}"]["youtube_url"];
-            $pastor->is_active = $pastorData['is_active'] ?? true;
-
-            // Handle image upload (check temp_image if exists)
-            if (isset($pastorData['temp_image']) && $pastorData['temp_image']) {
-                if ($pastor->image) {
-                    Storage::disk('public')->delete($pastor->image);
+        try {
+            foreach ($this->pastors as $index => $pastorData) {
+                // Skip empty pastor entries
+                if (empty($pastorData['name'])) {
+                    continue;
                 }
-                $path = $pastorData['temp_image']->store('pastors', 'public');
-                $pastor->image = $path;
+
+                if (isset($pastorData['id']) && $pastorData['id']) {
+                    $pastor = Pastor::find($pastorData['id']);
+                } else {
+                    $pastor = new Pastor();
+                    $pastor->chapter_id = $this->activeChapter?->id;
+                    $pastor->order_column = $index;
+                }
+
+                $pastor->name = $pastorData['name'] ?? '';
+                $pastor->title = $pastorData['title'] ?? 'Lead Pastor';
+                $pastor->description = $pastorData['description'] ?? '';
+                $pastor->facebook_url = $pastorData['facebook_url'] ?? '';
+                $pastor->instagram_url = $pastorData['instagram_url'] ?? '';
+                $pastor->twitter_url = $pastorData['twitter_url'] ?? '';
+                $pastor->youtube_url = $pastorData['youtube_url'] ?? '';
+                $pastor->is_active = $pastorData['is_active'] ?? true;
+
+                // Handle image upload
+                if (isset($pastorData['temp_image']) && $pastorData['temp_image']) {
+                    if ($pastor->image) {
+                        Storage::disk('public')->delete($pastor->image);
+                    }
+                    $path = $pastorData['temp_image']->store('pastors', 'public');
+                    $pastor->image = $path;
+                }
+
+                $pastor->save();
             }
 
-            $pastor->save();
+            $this->toast()->success('Saved', 'Pastor section updated successfully.')->send();
+            $this->loadPastors();
+        } catch (\Exception $e) {
+            $this->toast()->error('Error', 'Failed to save pastors: ' . $e->getMessage())->send();
         }
-
-        $this->toast()->success('Saved', 'Pastor section updated successfully.')->send();
-        $this->loadPastors();
     }
 
     public function addSundayService(): void
@@ -329,77 +348,75 @@ new #[Layout('components.layouts.admin')] class extends Component {
 
     public function saveServiceTimes(): void
     {
-        // Save Sunday services
-        foreach ($this->sundayServices as $index => $serviceData) {
-            $validated = $this->validate([
-                "sundayServices.{$index}.service_name" => 'required|string|max:255',
-                "sundayServices.{$index}.time" => 'required|string|max:255',
-            ]);
-
-            if (isset($serviceData['id']) && $serviceData['id']) {
-                $service = ServiceTime::find($serviceData['id']);
-            } else {
+        try {
+            // Delete existing services for this chapter first
+            ServiceTime::where('chapter_id', $this->activeChapter?->id)->delete();
+            
+            // Save Sunday services
+            foreach ($this->sundayServices as $index => $serviceData) {
+                if (empty($serviceData['service_name'])) {
+                    continue;
+                }
+                
                 $service = new ServiceTime();
                 $service->chapter_id = $this->activeChapter?->id;
                 $service->category = 'sunday';
+                $service->service_name = $serviceData['service_name'] ?? '';
+                $service->time = $serviceData['time'] ?? '';
                 $service->order_column = $index;
+                $service->is_active = true;
+                $service->save();
             }
 
-            $service->service_name = $validated["sundayServices.{$index}"]["service_name"];
-            $service->time = $validated["sundayServices.{$index}"]["time"];
-            $service->is_active = true;
-            $service->save();
-        }
-
-        // Save Thursday services
-        foreach ($this->thursdayServices as $index => $serviceData) {
-            $validated = $this->validate([
-                "thursdayServices.{$index}.service_name" => 'required|string|max:255',
-                "thursdayServices.{$index}.time" => 'required|string|max:255',
-            ]);
-
-            if (isset($serviceData['id']) && $serviceData['id']) {
-                $service = ServiceTime::find($serviceData['id']);
-            } else {
+            // Save Thursday services
+            foreach ($this->thursdayServices as $index => $serviceData) {
+                if (empty($serviceData['service_name'])) {
+                    continue;
+                }
+                
                 $service = new ServiceTime();
                 $service->chapter_id = $this->activeChapter?->id;
                 $service->category = 'thursday';
+                $service->service_name = $serviceData['service_name'] ?? '';
+                $service->time = $serviceData['time'] ?? '';
                 $service->order_column = $index;
+                $service->is_active = true;
+                $service->save();
             }
 
-            $service->service_name = $validated["thursdayServices.{$index}"]["service_name"];
-            $service->time = $validated["thursdayServices.{$index}"]["time"];
-            $service->is_active = true;
-            $service->save();
+            $this->toast()->success('Saved', 'Service times updated successfully.')->send();
+            $this->loadServiceTimes();
+        } catch (\Exception $e) {
+            $this->toast()->error('Error', 'Failed to save service times: ' . $e->getMessage())->send();
         }
-
-        $this->toast()->success('Saved', 'Service times updated successfully.')->send();
-        $this->loadServiceTimes();
     }
 
     public function saveCtaSection(): void
     {
-        $validated = $this->validate([
-            'ctaTitle' => 'required|string|max:255',
-            'ctaDescription' => 'nullable|string',
-            'ctaButtonText' => 'required|string|max:100',
-            'ctaButtonLink' => 'required|url|max:255',
-        ]);
+        try {
+            $validated = $this->validate([
+                'ctaTitle' => 'required|string|max:255',
+                'ctaDescription' => 'nullable|string',
+                'ctaButtonText' => 'required|string|max:100',
+                'ctaButtonLink' => 'required|url|max:255',
+            ]);
 
-        if (!$this->ctaSection) {
-            $this->ctaSection = new CtaSection();
-            $this->ctaSection->chapter_id = $this->activeChapter?->id;
-            $this->ctaSection->is_active = true;
+            $this->ctaSection = CtaSection::updateOrCreate(
+                ['chapter_id' => $this->activeChapter?->id],
+                [
+                    'title' => $validated['ctaTitle'],
+                    'description' => $validated['ctaDescription'] ?? '',
+                    'button_text' => $validated['ctaButtonText'],
+                    'button_link' => $validated['ctaButtonLink'],
+                    'is_active' => true,
+                ]
+            );
+
+            $this->toast()->success('Saved', 'CTA section updated successfully.')->send();
+            $this->loadCtaSection();
+        } catch (\Exception $e) {
+            $this->toast()->error('Error', 'Failed to save CTA: ' . $e->getMessage())->send();
         }
-
-        $this->ctaSection->title = $validated['ctaTitle'];
-        $this->ctaSection->description = $validated['ctaDescription'];
-        $this->ctaSection->button_text = $validated['ctaButtonText'];
-        $this->ctaSection->button_link = $validated['ctaButtonLink'];
-        $this->ctaSection->save();
-
-        $this->toast()->success('Saved', 'CTA section updated successfully.')->send();
-        $this->loadCtaSection();
     }
 
     public function updatedChapter(): void

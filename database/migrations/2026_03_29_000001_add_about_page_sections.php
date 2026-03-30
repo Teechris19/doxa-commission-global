@@ -63,6 +63,8 @@ return new class extends Migration
             $table->string('hero_title')->nullable()->after('title'); // Hero section title
             $table->text('hero_subtitle')->nullable()->after('hero_title'); // Hero section subtitle
             $table->string('hero_background_image')->nullable()->after('hero_subtitle'); // Hero background image
+            $table->string('title')->nullable()->change(); // Make title nullable
+            $table->text('description')->nullable()->change(); // Make description nullable
         });
     }
 
