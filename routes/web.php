@@ -33,6 +33,7 @@ Volt::route('sermons', 'home.sermons.index')->name('sermons.index');
 Volt::route('sermons/series', 'home.sermons.series')->name('sermons.series');
 Volt::route('sermons/series/{id}', 'home.sermons.series-detail')->name('sermons.series-detail');
 Volt::route('about', 'home.about.index')->name('about');
+Volt::route('conclaves', 'home.conclaves.index')->name('conclaves.index');
 Volt::route('testimonies', 'home.testimonies.index')->name('testimonies.index');
 Volt::route('missions', 'home.missions.index')->name('missions.index');
 Volt::route('cells', 'home.cells.index')->name('cells.index');

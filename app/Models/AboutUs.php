@@ -19,6 +19,10 @@ class AboutUs extends Model
         'hero_image',
         'history_timeline',
         'is_active',
+        'conclaves_preview_count',
+        'hero_title',
+        'hero_subtitle',
+        'hero_background_image',
     ];
 
     protected $casts = [
@@ -29,5 +33,20 @@ class AboutUs extends Model
     public function chapter(): BelongsTo
     {
         return $this->belongsTo(Chapter::class);
+    }
+
+    public function pastors()
+    {
+        return $this->hasMany(Pastor::class, 'chapter_id')->orderBy('order_column');
+    }
+
+    public function serviceTimes()
+    {
+        return $this->hasMany(ServiceTime::class, 'chapter_id')->orderBy('order_column');
+    }
+
+    public function ctaSection()
+    {
+        return $this->hasOne(CtaSection::class, 'chapter_id');
     }
 }

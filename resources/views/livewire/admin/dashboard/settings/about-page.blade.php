@@ -1,0 +1,640 @@
+<?php
+
+use App\Models\AboutUs;
+use App\Models\Chapter;
+use App\Models\Conclave;
+use App\Models\CtaSection;
+use App\Models\Pastor;
+use App\Models\ServiceTime;
+use Illuminate\Support\Facades\Storage;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
+use Livewire\Volt\Component;
+use Livewire\WithFileUploads;
+use TallStackUi\Traits\Interactions;
+
+new #[Layout('components.layouts.admin')] class extends Component {
+    use Interactions, WithFileUploads;
+
+    #[Url]
+    public ?string $chapter = null;
+
+    public ?Chapter $activeChapter = null;
+    
+    // About Us Section
+    public ?AboutUs $aboutUs = null;
+    public ?string $heroTitle = null;
+    public ?string $heroSubtitle = null;
+    public $heroBackgroundImage = null;
+    public ?string $existingHeroImage = null;
+    public ?string $whoWeAreImage = null;
+    public ?string $existingWhoWeAreImage = null;
+    public ?string $whoWeAreDescription = null;
+    public ?string $mission = null;
+    public ?string $vision = null;
+    public ?string $coreValues = null;
+    public array $historyTimeline = [];
+    public int $conclavesPreviewCount = 6;
+    
+    // Pastor Section
+    public array $pastors = [];
+    
+    // Service Times
+    public array $sundayServices = [];
+    public array $thursdayServices = [];
+    
+    // CTA Section
+    public ?CtaSection $ctaSection = null;
+    public ?string $ctaTitle = null;
+    public ?string $ctaDescription = null;
+    public ?string $ctaButtonText = null;
+    public ?string $ctaButtonLink = null;
+
+    public function mount(): void
+    {
+        if (!auth()->user()->hasRole('super-admin')) {
+            abort(403, 'Unauthorized access.');
+        }
+
+        $this->resolveChapter();
+        $this->loadAboutUs();
+        $this->loadPastors();
+        $this->loadServiceTimes();
+        $this->loadCtaSection();
+    }
+
+    protected function resolveChapter(): void
+    {
+        if ($this->chapter) {
+            $this->activeChapter = Chapter::where('name', $this->chapter)->first();
+        }
+        
+        if (!$this->activeChapter) {
+            $this->activeChapter = Chapter::orderBy('name')->first();
+            $this->chapter = $this->activeChapter?->name;
+        }
+    }
+
+    protected function loadAboutUs(): void
+    {
+        $this->aboutUs = AboutUs::where('chapter_id', $this->activeChapter?->id)
+            ->where('is_active', true)
+            ->first();
+
+        if (!$this->aboutUs) {
+            $this->aboutUs = new AboutUs(['chapter_id' => $this->activeChapter?->id]);
+        }
+
+        $this->heroTitle = $this->aboutUs->hero_title;
+        $this->heroSubtitle = $this->aboutUs->hero_subtitle;
+        $this->existingHeroImage = $this->aboutUs->hero_background_image;
+        $this->whoWeAreDescription = $this->aboutUs->description;
+        $this->existingWhoWeAreImage = $this->aboutUs->hero_image;
+        $this->mission = $this->aboutUs->mission;
+        $this->vision = $this->aboutUs->vision;
+        $this->coreValues = $this->aboutUs->core_values;
+        $this->historyTimeline = $this->aboutUs->history_timeline ?? [];
+        $this->conclavesPreviewCount = $this->aboutUs->conclaves_preview_count ?? 6;
+    }
+
+    protected function loadPastors(): void
+    {
+        $this->pastors = Pastor::where('chapter_id', $this->activeChapter?->id)
+            ->orderBy('order_column')
+            ->get()
+            ->map(function ($pastor) {
+                return [
+                    'id' => $pastor->id,
+                    'name' => $pastor->name,
+                    'title' => $pastor->title,
+                    'description' => $pastor->description,
+                    'image' => $pastor->image,
+                    'facebook_url' => $pastor->facebook_url,
+                    'instagram_url' => $pastor->instagram_url,
+                    'twitter_url' => $pastor->twitter_url,
+                    'youtube_url' => $pastor->youtube_url,
+                    'is_active' => $pastor->is_active,
+                ];
+            })
+            ->toArray();
+    }
+
+    protected function loadServiceTimes(): void
+    {
+        $services = ServiceTime::where('chapter_id', $this->activeChapter?->id)
+            ->where('is_active', true)
+            ->orderBy('order_column')
+            ->get();
+
+        $this->sundayServices = $services->where('category', 'sunday')->map(function ($service) {
+            return [
+                'id' => $service->id,
+                'service_name' => $service->service_name,
+                'time' => $service->time,
+                'order_column' => $service->order_column,
+            ];
+        })->values()->toArray();
+
+        $this->thursdayServices = $services->where('category', 'thursday')->map(function ($service) {
+            return [
+                'id' => $service->id,
+                'service_name' => $service->service_name,
+                'time' => $service->time,
+                'order_column' => $service->order_column,
+            ];
+        })->values()->toArray();
+    }
+
+    protected function loadCtaSection(): void
+    {
+        $this->ctaSection = CtaSection::where('chapter_id', $this->activeChapter?->id)
+            ->where('is_active', true)
+            ->first();
+
+        if ($this->ctaSection) {
+            $this->ctaTitle = $this->ctaSection->title;
+            $this->ctaDescription = $this->ctaSection->description;
+            $this->ctaButtonText = $this->ctaSection->button_text;
+            $this->ctaButtonLink = $this->ctaSection->button_link;
+        }
+    }
+
+    public function saveAboutUs(): void
+    {
+        $validated = $this->validate([
+            'heroTitle' => 'nullable|string|max:255',
+            'heroSubtitle' => 'nullable|string|max:500',
+            'heroBackgroundImage' => 'nullable|image|max:5120',
+            'whoWeAreDescription' => 'nullable|string',
+            'whoWeAreImage' => 'nullable|image|max:5120',
+            'mission' => 'nullable|string',
+            'vision' => 'nullable|string',
+            'coreValues' => 'nullable|string',
+            'conclavesPreviewCount' => 'nullable|integer|min:1|max:20',
+        ]);
+
+        if (!$this->aboutUs->exists) {
+            $this->aboutUs->chapter_id = $this->activeChapter?->id;
+            $this->aboutUs->is_active = true;
+        }
+
+        $this->aboutUs->hero_title = $validated['heroTitle'];
+        $this->aboutUs->hero_subtitle = $validated['heroSubtitle'];
+        $this->aboutUs->description = $validated['whoWeAreDescription'];
+        $this->aboutUs->mission = $validated['mission'];
+        $this->aboutUs->vision = $validated['vision'];
+        $this->aboutUs->core_values = $validated['coreValues'];
+        $this->aboutUs->conclaves_preview_count = $validated['conclavesPreviewCount'];
+
+        // Handle hero background image
+        if ($this->heroBackgroundImage) {
+            if ($this->aboutUs->hero_background_image) {
+                Storage::disk('public')->delete($this->aboutUs->hero_background_image);
+            }
+            $path = $this->heroBackgroundImage->store('about/hero', 'public');
+            $this->aboutUs->hero_background_image = $path;
+        }
+
+        // Handle who we are image
+        if ($this->whoWeAreImage) {
+            if ($this->aboutUs->hero_image) {
+                Storage::disk('public')->delete($this->aboutUs->hero_image);
+            }
+            $path = $this->whoWeAreImage->store('about/who-we-are', 'public');
+            $this->aboutUs->hero_image = $path;
+        }
+
+        $this->aboutUs->save();
+
+        $this->toast()->success('Saved', 'About Us section updated successfully.')->send();
+        $this->loadAboutUs();
+    }
+
+    public function addHistoryEvent(): void
+    {
+        $this->historyTimeline[] = [
+            'year' => '',
+            'event' => '',
+        ];
+    }
+
+    public function removeHistoryEvent(int $index): void
+    {
+        unset($this->historyTimeline[$index]);
+        $this->historyTimeline = array_values($this->historyTimeline);
+    }
+
+    public function saveHistoryTimeline(): void
+    {
+        $this->aboutUs->history_timeline = array_values($this->historyTimeline);
+        $this->aboutUs->save();
+        $this->toast()->success('Saved', 'History timeline updated successfully.')->send();
+    }
+
+    public function addPastor(): void
+    {
+        $this->pastors[] = [
+            'name' => '',
+            'title' => 'Lead Pastor',
+            'description' => '',
+            'image' => null,
+            'facebook_url' => '',
+            'instagram_url' => '',
+            'twitter_url' => '',
+            'youtube_url' => '',
+            'is_active' => true,
+        ];
+    }
+
+    public function removePastor(int $index): void
+    {
+        unset($this->pastors[$index]);
+        $this->pastors = array_values($this->pastors);
+    }
+
+    public function savePastors(): void
+    {
+        foreach ($this->pastors as $index => $pastorData) {
+            $validated = $this->validate([
+                "pastors.{$index}.name" => 'required|string|max:255',
+                "pastors.{$index}.title" => 'nullable|string|max:255',
+                "pastors.{$index}.description" => 'nullable|string',
+                "pastors.{$index}.image" => 'nullable|image|max:5120',
+                "pastors.{$index}.facebook_url" => 'nullable|url|max:255',
+                "pastors.{$index}.instagram_url" => 'nullable|url|max:255',
+                "pastors.{$index}.twitter_url" => 'nullable|url|max:255',
+                "pastors.{$index}.youtube_url" => 'nullable|url|max:255',
+            ]);
+
+            if (isset($pastorData['id']) && $pastorData['id']) {
+                $pastor = Pastor::find($pastorData['id']);
+            } else {
+                $pastor = new Pastor();
+                $pastor->chapter_id = $this->activeChapter?->id;
+                $pastor->order_column = $index;
+            }
+
+            $pastor->name = $validated["pastors.{$index}"]["name"];
+            $pastor->title = $validated["pastors.{$index}"]["title"] ?? 'Lead Pastor';
+            $pastor->description = $validated["pastors.{$index}"]["description"];
+            $pastor->facebook_url = $validated["pastors.{$index}"]["facebook_url"];
+            $pastor->instagram_url = $validated["pastors.{$index}"]["instagram_url"];
+            $pastor->twitter_url = $validated["pastors.{$index}"]["twitter_url"];
+            $pastor->youtube_url = $validated["pastors.{$index}"]["youtube_url"];
+            $pastor->is_active = $pastorData['is_active'] ?? true;
+
+            // Handle image upload (check temp_image if exists)
+            if (isset($pastorData['temp_image']) && $pastorData['temp_image']) {
+                if ($pastor->image) {
+                    Storage::disk('public')->delete($pastor->image);
+                }
+                $path = $pastorData['temp_image']->store('pastors', 'public');
+                $pastor->image = $path;
+            }
+
+            $pastor->save();
+        }
+
+        $this->toast()->success('Saved', 'Pastor section updated successfully.')->send();
+        $this->loadPastors();
+    }
+
+    public function addSundayService(): void
+    {
+        $this->sundayServices[] = [
+            'service_name' => '',
+            'time' => '',
+        ];
+    }
+
+    public function removeSundayService(int $index): void
+    {
+        unset($this->sundayServices[$index]);
+        $this->sundayServices = array_values($this->sundayServices);
+    }
+
+    public function addThursdayService(): void
+    {
+        $this->thursdayServices[] = [
+            'service_name' => '',
+            'time' => '',
+        ];
+    }
+
+    public function removeThursdayService(int $index): void
+    {
+        unset($this->thursdayServices[$index]);
+        $this->thursdayServices = array_values($this->thursdayServices);
+    }
+
+    public function saveServiceTimes(): void
+    {
+        // Save Sunday services
+        foreach ($this->sundayServices as $index => $serviceData) {
+            $validated = $this->validate([
+                "sundayServices.{$index}.service_name" => 'required|string|max:255',
+                "sundayServices.{$index}.time" => 'required|string|max:255',
+            ]);
+
+            if (isset($serviceData['id']) && $serviceData['id']) {
+                $service = ServiceTime::find($serviceData['id']);
+            } else {
+                $service = new ServiceTime();
+                $service->chapter_id = $this->activeChapter?->id;
+                $service->category = 'sunday';
+                $service->order_column = $index;
+            }
+
+            $service->service_name = $validated["sundayServices.{$index}"]["service_name"];
+            $service->time = $validated["sundayServices.{$index}"]["time"];
+            $service->is_active = true;
+            $service->save();
+        }
+
+        // Save Thursday services
+        foreach ($this->thursdayServices as $index => $serviceData) {
+            $validated = $this->validate([
+                "thursdayServices.{$index}.service_name" => 'required|string|max:255',
+                "thursdayServices.{$index}.time" => 'required|string|max:255',
+            ]);
+
+            if (isset($serviceData['id']) && $serviceData['id']) {
+                $service = ServiceTime::find($serviceData['id']);
+            } else {
+                $service = new ServiceTime();
+                $service->chapter_id = $this->activeChapter?->id;
+                $service->category = 'thursday';
+                $service->order_column = $index;
+            }
+
+            $service->service_name = $validated["thursdayServices.{$index}"]["service_name"];
+            $service->time = $validated["thursdayServices.{$index}"]["time"];
+            $service->is_active = true;
+            $service->save();
+        }
+
+        $this->toast()->success('Saved', 'Service times updated successfully.')->send();
+        $this->loadServiceTimes();
+    }
+
+    public function saveCtaSection(): void
+    {
+        $validated = $this->validate([
+            'ctaTitle' => 'required|string|max:255',
+            'ctaDescription' => 'nullable|string',
+            'ctaButtonText' => 'required|string|max:100',
+            'ctaButtonLink' => 'required|url|max:255',
+        ]);
+
+        if (!$this->ctaSection) {
+            $this->ctaSection = new CtaSection();
+            $this->ctaSection->chapter_id = $this->activeChapter?->id;
+            $this->ctaSection->is_active = true;
+        }
+
+        $this->ctaSection->title = $validated['ctaTitle'];
+        $this->ctaSection->description = $validated['ctaDescription'];
+        $this->ctaSection->button_text = $validated['ctaButtonText'];
+        $this->ctaSection->button_link = $validated['ctaButtonLink'];
+        $this->ctaSection->save();
+
+        $this->toast()->success('Saved', 'CTA section updated successfully.')->send();
+        $this->loadCtaSection();
+    }
+
+    public function updatedChapter(): void
+    {
+        $this->resolveChapter();
+        $this->loadAboutUs();
+        $this->loadPastors();
+        $this->loadServiceTimes();
+        $this->loadCtaSection();
+    }
+}; ?>
+
+<div class="space-y-6">
+    <x-fancy-header title="About Page Settings" subtitle="Manage all sections of the public about page" :breadcrumbs="[
+        ['label' => 'Home', 'url' => route('admin.dashboard')],
+        ['label' => 'Settings'],
+        ['label' => 'About Page']
+    ]">
+        <div class="mt-4 max-w-sm">
+            <form method="GET" action="{{ route('admin.dashboard.settings.about-page') }}" class="space-y-2">
+                <label for="scope-chapter" class="block text-xs font-semibold uppercase tracking-[0.15em] text-gray-600">Choose Chapter</label>
+                <div class="flex gap-2">
+                    <select id="scope-chapter" name="chapter" class="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
+                        @foreach(Chapter::orderBy('name')->pluck('name') as $chapterName)
+                            <option value="{{ $chapterName }}" @selected($chapter === $chapterName)>
+                                {{ $chapterName }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <button type="submit" class="rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-900">
+                        Apply
+                    </button>
+                </div>
+            </form>
+        </div>
+    </x-fancy-header>
+
+    <!-- Hero Section -->
+    <x-card>
+        <div class="mb-4 flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-semibold">1. Hero Section</h3>
+                <p class="text-sm text-slate-500">Top banner section of the about page</p>
+            </div>
+            <x-button wire:click="saveAboutUs" class="bg-blue-600 hover:bg-blue-700">Save Hero</x-button>
+        </div>
+        <div class="space-y-4">
+            <flux:input wire:model="heroTitle" label="Hero Title" type="text" placeholder="Welcome to Doxa Church" />
+            <flux:textarea wire:model="heroSubtitle" label="Hero Subtitle" rows="2" placeholder="A place where faith, hope, and love come together." />
+            <div>
+                <label class="mb-1 block text-sm font-medium">Hero Background Image</label>
+                @if($existingHeroImage)
+                    <div class="mb-2">
+                        <img src="{{ Storage::url($existingHeroImage) }}" alt="Hero" class="h-32 rounded object-cover" />
+                    </div>
+                @endif
+                <input type="file" wire:model="heroBackgroundImage" accept="image/*" class="w-full rounded-lg border px-3 py-2" />
+            </div>
+        </div>
+    </x-card>
+
+    <!-- Who We Are Section -->
+    <x-card>
+        <div class="mb-4 flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-semibold">2. Who We Are</h3>
+                <p class="text-sm text-slate-500">Main description section</p>
+            </div>
+            <x-button wire:click="saveAboutUs" class="bg-blue-600 hover:bg-blue-700">Save Section</x-button>
+        </div>
+        <div class="space-y-4">
+            <div>
+                <label class="mb-1 block text-sm font-medium">Section Image</label>
+                @if($existingWhoWeAreImage)
+                    <div class="mb-2">
+                        <img src="{{ Storage::url($existingWhoWeAreImage) }}" alt="Who We Are" class="h-32 rounded object-cover" />
+                    </div>
+                @endif
+                <input type="file" wire:model="whoWeAreImage" accept="image/*" class="w-full rounded-lg border px-3 py-2" />
+            </div>
+            <flux:textarea wire:model="whoWeAreDescription" label="Description" rows="5" placeholder="Enter the main description..." />
+        </div>
+    </x-card>
+
+    <!-- Our Foundation Section -->
+    <x-card>
+        <div class="mb-4 flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-semibold">3. Our Foundation</h3>
+                <p class="text-sm text-slate-500">Mission, Vision, and Core Values</p>
+            </div>
+            <x-button wire:click="saveAboutUs" class="bg-blue-600 hover:bg-blue-700">Save Section</x-button>
+        </div>
+        <div class="space-y-4">
+            <flux:textarea wire:model="mission" label="Mission" rows="3" placeholder="Our mission..." />
+            <flux:textarea wire:model="vision" label="Vision" rows="3" placeholder="Our vision..." />
+            <flux:textarea wire:model="coreValues" label="Core Values" rows="3" placeholder="Our core values..." />
+        </div>
+    </x-card>
+
+    <!-- History Timeline -->
+    <x-card>
+        <div class="mb-4 flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-semibold">4. Our Journey (History Timeline)</h3>
+                <p class="text-sm text-slate-500">Add significant events in church history</p>
+            </div>
+            <div class="flex gap-2">
+                <x-button wire:click="addHistoryEvent" class="bg-green-600 hover:bg-green-700">+ Add Event</x-button>
+                <x-button wire:click="saveHistoryTimeline" class="bg-blue-600 hover:bg-blue-700">Save Timeline</x-button>
+            </div>
+        </div>
+        <div class="space-y-3">
+            @foreach($historyTimeline as $index => $event)
+                <div class="flex items-center gap-3 rounded-lg border border-gray-200 p-3">
+                    <flux:input wire:model="historyTimeline.{{ $index }}.year" label="Year" type="text" placeholder="e.g., 2010" class="w-32" />
+                    <flux:input wire:model="historyTimeline.{{ $index }}.event" label="Event" type="text" placeholder="Event description" class="flex-1" />
+                    <x-button wire:click="removeHistoryEvent({{ $index }})" class="bg-red-600 hover:bg-red-700">Remove</x-button>
+                </div>
+            @endforeach
+        </div>
+    </x-card>
+
+    <!-- Our Pastor Section -->
+    <x-card>
+        <div class="mb-4 flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-semibold">5. Our Pastor</h3>
+                <p class="text-sm text-slate-500">Pastor information and social links</p>
+            </div>
+            <div class="flex gap-2">
+                <x-button wire:click="addPastor" class="bg-green-600 hover:bg-green-700">+ Add Pastor</x-button>
+                <x-button wire:click="savePastors" class="bg-blue-600 hover:bg-blue-700">Save Pastors</x-button>
+            </div>
+        </div>
+        <div class="space-y-4">
+            @foreach($pastors as $index => $pastor)
+                <div class="rounded-lg border border-gray-200 p-4">
+                    <div class="mb-3 flex items-center justify-between">
+                        <h4 class="font-medium">Pastor #{{ $index + 1 }}</h4>
+                        <x-button wire:click="removePastor({{ $index }})" class="bg-red-600 hover:bg-red-700">Remove</x-button>
+                    </div>
+                    <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+                        <flux:input wire:model="pastors.{{ $index }}.name" label="Name" type="text" />
+                        <flux:input wire:model="pastors.{{ $index }}.title" label="Title" type="text" />
+                        <flux:textarea wire:model="pastors.{{ $index }}.description" label="Description" rows="3" />
+                        <div class="md:col-span-2">
+                            <label class="mb-1 block text-sm font-medium">Image</label>
+                            @if(isset($pastor['image']))
+                                <div class="mb-2">
+                                    <img src="{{ Storage::url($pastor['image']) }}" alt="Pastor" class="h-24 w-24 rounded object-cover" />
+                                </div>
+                            @endif
+                            <input type="file" wire:model="pastors.{{ $index }}.temp_image" accept="image/*" class="w-full rounded-lg border px-3 py-2" />
+                        </div>
+                        <flux:input wire:model="pastors.{{ $index }}.facebook_url" label="Facebook URL" type="url" />
+                        <flux:input wire:model="pastors.{{ $index }}.instagram_url" label="Instagram URL" type="url" />
+                        <flux:input wire:model="pastors.{{ $index }}.twitter_url" label="Twitter/X URL" type="url" />
+                        <flux:input wire:model="pastors.{{ $index }}.youtube_url" label="YouTube URL" type="url" />
+                        <div class="flex items-center gap-2">
+                            <flux:checkbox wire:model="pastors.{{ $index }}.is_active" label="Active" />
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </x-card>
+
+    <!-- Service Times -->
+    <x-card>
+        <div class="mb-4 flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-semibold">6. Service Times</h3>
+                <p class="text-sm text-slate-500">Sunday and Thursday service schedules</p>
+            </div>
+            <x-button wire:click="saveServiceTimes" class="bg-blue-600 hover:bg-blue-700">Save Services</x-button>
+        </div>
+        <div class="space-y-6">
+            <!-- Sunday Services -->
+            <div>
+                <div class="mb-3 flex items-center justify-between">
+                    <h4 class="font-medium text-blue-700">Sunday Services</h4>
+                    <x-button wire:click="addSundayService" class="bg-green-600 hover:bg-green-700">+ Add Service</x-button>
+                </div>
+                @foreach($sundayServices as $index => $service)
+                    <div class="mb-2 flex items-center gap-3 rounded-lg border border-gray-200 p-3">
+                        <flux:input wire:model="sundayServices.{{ $index }}.service_name" label="Service Name" type="text" placeholder="e.g., 1st Service" class="flex-1" />
+                        <flux:input wire:model="sundayServices.{{ $index }}.time" label="Time" type="text" placeholder="e.g., 7:00 AM - 9:00 AM" class="w-48" />
+                        <x-button wire:click="removeSundayService({{ $index }})" class="bg-red-600 hover:bg-red-700">Remove</x-button>
+                    </div>
+                @endforeach
+            </div>
+            <!-- Thursday Services -->
+            <div>
+                <div class="mb-3 flex items-center justify-between">
+                    <h4 class="font-medium text-blue-700">Thursday Services</h4>
+                    <x-button wire:click="addThursdayService" class="bg-green-600 hover:bg-green-700">+ Add Service</x-button>
+                </div>
+                @foreach($thursdayServices as $index => $service)
+                    <div class="mb-2 flex items-center gap-3 rounded-lg border border-gray-200 p-3">
+                        <flux:input wire:model="thursdayServices.{{ $index }}.service_name" label="Service Name" type="text" placeholder="e.g., Bible Study" class="flex-1" />
+                        <flux:input wire:model="thursdayServices.{{ $index }}.time" label="Time" type="text" placeholder="e.g., 6:00 PM - 8:00 PM" class="w-48" />
+                        <x-button wire:click="removeThursdayService({{ $index }})" class="bg-red-600 hover:bg-red-700">Remove</x-button>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </x-card>
+
+    <!-- Conclaves Preview Settings -->
+    <x-card>
+        <div class="mb-4 flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-semibold">7. Conclaves Preview</h3>
+                <p class="text-sm text-slate-500">Number of conclaves to show on about page</p>
+            </div>
+            <x-button wire:click="saveAboutUs" class="bg-blue-600 hover:bg-blue-700">Save Setting</x-button>
+        </div>
+        <flux:input wire:model="conclavesPreviewCount" label="Number of Conclaves to Display" type="number" min="1" max="20" />
+    </x-card>
+
+    <!-- Join Community CTA -->
+    <x-card>
+        <div class="mb-4 flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-semibold">8. Join Community (CTA)</h3>
+                <p class="text-sm text-slate-500">Call-to-action section at the bottom</p>
+            </div>
+            <x-button wire:click="saveCtaSection" class="bg-blue-600 hover:bg-blue-700">Save CTA</x-button>
+        </div>
+        <div class="space-y-4">
+            <flux:input wire:model="ctaTitle" label="Title" type="text" placeholder="Join Our Community" />
+            <flux:textarea wire:model="ctaDescription" label="Description" rows="2" placeholder="Experience the love of Christ..." />
+            <flux:input wire:model="ctaButtonText" label="Button Text" type="text" placeholder="Visit Us" />
+            <flux:input wire:model="ctaButtonLink" label="Button Link" type="url" placeholder="/contact" />
+        </div>
+    </x-card>
+</div>

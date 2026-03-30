@@ -1,13 +1,18 @@
 <?php
 
-use App\Models\{AboutUs, ChurchLeader, Conclave, Chapter};
+use App\Models\{AboutUs, ChurchLeader, Conclave, Chapter, Pastor, ServiceTime, CtaSection};
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
 new #[Layout('components.layouts.tailwind-layout')] class extends Component {
     public $aboutUs;
     public $leaders;
+    public $pastors;
+    public $sundayServices;
+    public $thursdayServices;
+    public $ctaSection;
     public $conclaves;
+    public $conclavesPreviewCount = 6;
     public $selectedConclave = null;
 
     public function mount()
@@ -16,19 +21,51 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
         $chapter = Chapter::where('name', $chapterName)->first();
 
         if ($chapter) {
+            // Load About Us
             $this->aboutUs = AboutUs::where('chapter_id', $chapter->id)
                 ->where('is_active', true)
                 ->first();
 
+            // Load Church Leaders (legacy - keep for backward compatibility)
             $this->leaders = ChurchLeader::where('chapter_id', $chapter->id)
                 ->where('is_active', true)
                 ->orderBy('order_column')
                 ->get();
+
+            // Load Pastors (new system)
+            $this->pastors = Pastor::where('chapter_id', $chapter->id)
+                ->where('is_active', true)
+                ->orderBy('order_column')
+                ->get();
+
+            // Load Service Times
+            $services = ServiceTime::where('chapter_id', $chapter->id)
+                ->where('is_active', true)
+                ->orderBy('order_column')
+                ->get();
+
+            $this->sundayServices = $services->where('category', 'sunday');
+            $this->thursdayServices = $services->where('category', 'thursday');
+
+            // Load CTA Section
+            $this->ctaSection = CtaSection::where('chapter_id', $chapter->id)
+                ->where('is_active', true)
+                ->first();
+
+            // Load Conclaves preview count
+            if ($this->aboutUs) {
+                $this->conclavesPreviewCount = $this->aboutUs->conclaves_preview_count ?? 6;
+            }
         } else {
             $this->aboutUs = null;
             $this->leaders = collect();
+            $this->pastors = collect();
+            $this->sundayServices = collect();
+            $this->thursdayServices = collect();
+            $this->ctaSection = null;
         }
 
+        // Load all active conclaves
         $this->conclaves = Conclave::where('is_active', true)->get();
     }
 
@@ -39,17 +76,27 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
 }; ?>
 
 <div class="bg-white pb-10">
-    <section class="border-b border-blue-100 bg-gradient-to-b from-blue-50 to-white">
+    {{-- Hero Section --}}
+    <section class="border-b border-blue-100" 
+        @if($aboutUs?->hero_background_image)
+            style="background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('{{ Storage::url($aboutUs->hero_background_image) }}'); background-size: cover; background-position: center;"
+        @else
+            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"
+        @endif
+    >
         <div class="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8 lg:py-20">
-            <p class="text-xs font-semibold uppercase tracking-[0.3em] text-blue-600">About Doxa</p>
-            <h1 class="mt-3 text-3xl font-semibold text-slate-900 sm:text-4xl">A church family rooted in Christ and mission.</h1>
-            <p class="mt-4 max-w-3xl text-base text-slate-600">
-                {{ $aboutUs?->title ?: 'Welcome to Doxa Church. We are committed to worship, discipleship, and community impact.' }}
+            <p class="text-xs font-semibold uppercase tracking-[0.3em] text-blue-200">About Doxa</p>
+            <h1 class="mt-3 text-3xl font-semibold text-white sm:text-4xl">
+                {{ $aboutUs?->hero_title ?: 'Welcome to Doxa Church' }}
+            </h1>
+            <p class="mt-4 max-w-3xl text-base text-blue-100">
+                {{ $aboutUs?->hero_subtitle ?: 'A place where faith, hope, and love come together.' }}
             </p>
         </div>
     </section>
 
-    @if($aboutUs)
+    @if($aboutUs && ($aboutUs->hero_image || $aboutUs->description))
+        {{-- Who We Are Section --}}
         <section class="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
             <div class="grid gap-8 lg:grid-cols-2 lg:items-center">
                 <div class="overflow-hidden rounded-3xl border border-blue-100 bg-white shadow-sm">
@@ -70,6 +117,7 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
     @endif
 
     @if($aboutUs && ($aboutUs->mission || $aboutUs->vision || $aboutUs->core_values))
+        {{-- Our Foundation Section --}}
         <section class="border-y border-blue-100 bg-blue-50/40 py-12">
             <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
                 <h2 class="text-center text-2xl font-semibold text-slate-900">Our Foundation</h2>
@@ -99,7 +147,8 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
         </section>
     @endif
 
-    @if($aboutUs && $aboutUs->history_timeline)
+    @if($aboutUs && $aboutUs->history_timeline && count($aboutUs->history_timeline) > 0)
+        {{-- Our Journey (History Timeline) Section --}}
         <section class="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
             <h2 class="text-center text-2xl font-semibold text-slate-900">Our Journey</h2>
             <div class="mx-auto mt-8 max-w-3xl border-l-2 border-blue-200 pl-6">
@@ -114,36 +163,37 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
         </section>
     @endif
 
-    @if($leaders->count() > 0)
+    {{-- Our Pastor Section (New System) --}}
+    @if($pastors && $pastors->count() > 0)
         <section class="border-y border-blue-100 bg-blue-50/40 py-12">
             <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-                <h2 class="text-center text-2xl font-semibold text-slate-900">Our Leadership</h2>
+                <h2 class="text-center text-2xl font-semibold text-slate-900">Our Pastor</h2>
                 <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                    @foreach($leaders as $leader)
+                    @foreach($pastors as $pastor)
                         <article class="overflow-hidden rounded-2xl border border-blue-100 bg-white shadow-sm">
-                            @if($leader->photo)
-                                <img src="{{ Storage::url($leader->photo) }}" alt="{{ $leader->name }}" class="h-56 w-full object-cover">
+                            @if($pastor->image)
+                                <img src="{{ Storage::url($pastor->image) }}" alt="{{ $pastor->name }}" class="h-56 w-full object-cover">
                             @else
-                                <img src="https://via.placeholder.com/600x400?text={{ urlencode($leader->name) }}" alt="{{ $leader->name }}" class="h-56 w-full object-cover">
+                                <img src="https://via.placeholder.com/600x400?text={{ urlencode($pastor->name) }}" alt="{{ $pastor->name }}" class="h-56 w-full object-cover">
                             @endif
                             <div class="p-5">
-                                <h3 class="text-lg font-semibold text-slate-900">{{ $leader->name }}</h3>
-                                <p class="text-sm text-blue-700">{{ $leader->position }}</p>
-                                @if($leader->bio)
-                                    <p class="mt-3 text-sm leading-7 text-slate-600">{{ Str::limit($leader->bio, 140) }}</p>
+                                <h3 class="text-lg font-semibold text-slate-900">{{ $pastor->name }}</h3>
+                                <p class="text-sm text-blue-700">{{ $pastor->title ?? 'Pastor' }}</p>
+                                @if($pastor->description)
+                                    <p class="mt-3 text-sm leading-7 text-slate-600">{{ Str::limit($pastor->description, 140) }}</p>
                                 @endif
                                 <div class="mt-4 flex flex-wrap gap-2 text-xs">
-                                    @if($leader->facebook_url)
-                                        <a href="{{ $leader->facebook_url }}" target="_blank" class="rounded-full border border-blue-200 px-3 py-1.5 text-blue-700 transition hover:border-blue-300 hover:bg-blue-50">Facebook</a>
+                                    @if($pastor->facebook_url)
+                                        <a href="{{ $pastor->facebook_url }}" target="_blank" class="rounded-full border border-blue-200 px-3 py-1.5 text-blue-700 transition hover:border-blue-300 hover:bg-blue-50">Facebook</a>
                                     @endif
-                                    @if($leader->twitter_url)
-                                        <a href="{{ $leader->twitter_url }}" target="_blank" class="rounded-full border border-blue-200 px-3 py-1.5 text-blue-700 transition hover:border-blue-300 hover:bg-blue-50">X</a>
+                                    @if($pastor->twitter_url)
+                                        <a href="{{ $pastor->twitter_url }}" target="_blank" class="rounded-full border border-blue-200 px-3 py-1.5 text-blue-700 transition hover:border-blue-300 hover:bg-blue-50">X</a>
                                     @endif
-                                    @if($leader->instagram_url)
-                                        <a href="{{ $leader->instagram_url }}" target="_blank" class="rounded-full border border-blue-200 px-3 py-1.5 text-blue-700 transition hover:border-blue-300 hover:bg-blue-50">Instagram</a>
+                                    @if($pastor->instagram_url)
+                                        <a href="{{ $pastor->instagram_url }}" target="_blank" class="rounded-full border border-blue-200 px-3 py-1.5 text-blue-700 transition hover:border-blue-300 hover:bg-blue-50">Instagram</a>
                                     @endif
-                                    @if($leader->linkedin_url)
-                                        <a href="{{ $leader->linkedin_url }}" target="_blank" class="rounded-full border border-blue-200 px-3 py-1.5 text-blue-700 transition hover:border-blue-300 hover:bg-blue-50">LinkedIn</a>
+                                    @if($pastor->youtube_url)
+                                        <a href="{{ $pastor->youtube_url }}" target="_blank" class="rounded-full border border-blue-200 px-3 py-1.5 text-blue-700 transition hover:border-blue-300 hover:bg-blue-50">YouTube</a>
                                     @endif
                                 </div>
                             </div>
@@ -154,21 +204,36 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
         </section>
     @endif
 
-    <section class="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
-        <h2 class="text-center text-2xl font-semibold text-slate-900">Service Times</h2>
-        <div class="mx-auto mt-8 grid max-w-3xl gap-4">
-            <article class="rounded-2xl border border-blue-100 bg-white p-6 shadow-sm">
-                <p class="text-xs font-semibold uppercase tracking-[0.25em] text-blue-600">Sunday Service</p>
-                <p class="mt-3 text-sm text-slate-700">First Service: 7:00 AM - 9:00 AM</p>
-                <p class="text-sm text-slate-700">Second Service: 9:30 AM - 11:30 AM</p>
-            </article>
-            <article class="rounded-2xl border border-blue-100 bg-white p-6 shadow-sm">
-                <p class="text-xs font-semibold uppercase tracking-[0.25em] text-blue-600">Thursday Service</p>
-                <p class="mt-3 text-sm text-slate-700">Bible Study: 6:00 PM - 8:00 PM</p>
-            </article>
-        </div>
-    </section>
+    {{-- Service Times Section --}}
+    @if($sundayServices->count() > 0 || $thursdayServices->count() > 0)
+        <section class="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
+            <h2 class="text-center text-2xl font-semibold text-slate-900">Service Times</h2>
+            <div class="mx-auto mt-8 grid max-w-3xl gap-4">
+                @if($sundayServices->count() > 0)
+                    <article class="rounded-2xl border border-blue-100 bg-white p-6 shadow-sm">
+                        <p class="text-xs font-semibold uppercase tracking-[0.25em] text-blue-600">Sunday Services</p>
+                        <div class="mt-3 space-y-2">
+                            @foreach($sundayServices as $service)
+                                <p class="text-sm text-slate-700">{{ $service->service_name }}: {{ $service->time }}</p>
+                            @endforeach
+                        </div>
+                    </article>
+                @endif
+                @if($thursdayServices->count() > 0)
+                    <article class="rounded-2xl border border-blue-100 bg-white p-6 shadow-sm">
+                        <p class="text-xs font-semibold uppercase tracking-[0.25em] text-blue-600">Thursday Services</p>
+                        <div class="mt-3 space-y-2">
+                            @foreach($thursdayServices as $service)
+                                <p class="text-sm text-slate-700">{{ $service->service_name }}: {{ $service->time }}</p>
+                            @endforeach
+                        </div>
+                    </article>
+                @endif
+            </div>
+        </section>
+    @endif
 
+    {{-- Conclaves Preview Section --}}
     @if($conclaves->count() > 0)
         <section class="border-y border-blue-100 bg-blue-50/40 py-12">
             <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
@@ -177,7 +242,7 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
                     <p class="text-sm text-slate-500">Select a conclave to view details.</p>
                 </div>
                 <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                    @foreach($conclaves as $conclave)
+                    @foreach($conclaves->take($conclavesPreviewCount) as $conclave)
                         <article class="overflow-hidden rounded-2xl border border-blue-100 bg-white shadow-sm">
                             @if($conclave->image)
                                 <img src="{{ Storage::url($conclave->image) }}" alt="{{ $conclave->name }}" class="h-48 w-full object-cover">
@@ -199,20 +264,42 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
                         </article>
                     @endforeach
                 </div>
+                @if($conclaves->count() > $conclavesPreviewCount)
+                    <div class="mt-8 text-center">
+                        <a href="{{ route('conclaves.index') }}" class="inline-flex items-center rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-700">
+                            View All Conclaves
+                        </a>
+                    </div>
+                @endif
             </div>
         </section>
     @endif
 
-    <section class="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
-        <div class="rounded-3xl border border-blue-200 bg-blue-600 px-6 py-10 text-center text-white sm:px-10">
-            <h2 class="text-2xl font-semibold">Join Our Community</h2>
-            <p class="mt-3 text-sm text-blue-100">Experience the love of Christ in a welcoming environment.</p>
-            <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
-                <a href="{{ route('home') }}" wire:navigate class="rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-50">Visit Us</a>
-                <a href="{{ route('home') }}" wire:navigate class="rounded-full border border-blue-200 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-500">Get Connected</a>
+    {{-- Join Community CTA Section --}}
+    @if($ctaSection)
+        <section class="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
+            <div class="rounded-3xl border border-blue-200 bg-blue-600 px-6 py-10 text-center text-white sm:px-10">
+                <h2 class="text-2xl font-semibold">{{ $ctaSection->title }}</h2>
+                <p class="mt-3 text-sm text-blue-100">{{ $ctaSection->description }}</p>
+                <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
+                    <a href="{{ $ctaSection->button_link }}" class="rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-50">{{ $ctaSection->button_text }}</a>
+                    <a href="{{ route('home') }}" wire:navigate class="rounded-full border border-blue-200 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-500">Get Connected</a>
+                </div>
             </div>
-        </div>
-    </section>
+        </section>
+    @else
+        {{-- Default CTA if none configured --}}
+        <section class="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
+            <div class="rounded-3xl border border-blue-200 bg-blue-600 px-6 py-10 text-center text-white sm:px-10">
+                <h2 class="text-2xl font-semibold">Join Our Community</h2>
+                <p class="mt-3 text-sm text-blue-100">Experience the love of Christ in a welcoming environment.</p>
+                <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
+                    <a href="{{ route('home') }}" wire:navigate class="rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-50">Visit Us</a>
+                    <a href="{{ route('home') }}" wire:navigate class="rounded-full border border-blue-200 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-500">Get Connected</a>
+                </div>
+            </div>
+        </section>
+    @endif
 
     @if($selectedConclave)
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4" wire:click="$set('selectedConclave', null)">
@@ -255,6 +342,16 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
                         <div>
                             <p class="text-xs font-semibold uppercase tracking-[0.2em] text-blue-600">Email</p>
                             <a href="mailto:{{ $selectedConclave->email }}" class="mt-2 inline-block text-sm text-slate-600 hover:text-blue-700">{{ $selectedConclave->email }}</a>
+                        </div>
+                    @endif
+
+                    @if($selectedConclave->whatsapp_link)
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-blue-600">WhatsApp</p>
+                            <a href="{{ $selectedConclave->whatsapp_link }}" target="_blank" class="mt-2 inline-flex items-center gap-1 text-sm text-green-600 hover:text-green-700">
+                                <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                                Join WhatsApp Group
+                            </a>
                         </div>
                     @endif
                 </div>

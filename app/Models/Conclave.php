@@ -13,6 +13,7 @@ class Conclave extends Model
         'address',
         'phone',
         'email',
+        'whatsapp_link',
         'latitude',
         'longitude',
         'image',
@@ -24,4 +25,9 @@ class Conclave extends Model
         'latitude' => 'decimal:8',
         'longitude' => 'decimal:8',
     ];
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
 }

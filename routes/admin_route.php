@@ -14,6 +14,7 @@ Route::prefix('admin/dashboard')
             Volt::route('/settings', 'admin.dashboard.settings.index')->name('admin.dashboard.settings.index');
             Volt::route('/settings/landing', 'admin.dashboard.settings.landing')->name('admin.dashboard.settings.landing');
             Volt::route('/settings/global', 'admin.dashboard.settings.global')->name('admin.dashboard.settings.global');
+            Volt::route('/settings/about-page', 'admin.dashboard.settings.about-page')->name('admin.dashboard.settings.about-page');
         });
         
         // Other Settings (Accessible by admins with appropriate team functions)
