@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\AppointmentTeams;
+use App\Models\AttendanceTeams;
 use App\Models\BelieversAcademyTeams;
 use App\Models\Chapter;
 use App\Models\EventTeam;
@@ -42,6 +43,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
         'prayer_requests' => PrayerRequestTeam::class,
         'believers_academy' => BelieversAcademyTeams::class,
         'events' => EventTeam::class,
+        'attendance' => AttendanceTeams::class,
     ];
 
     public function mount(): void

@@ -49,6 +49,22 @@ class User extends Authenticatable
         return $this->hasMany(TeamUser::class);
     }
 
+    public function attendanceRecords()
+    {
+        return $this->hasMany(AttendanceRecord::class);
+    }
+
+    public function subunitMemberships()
+    {
+        return $this->belongsToMany(Subunit::class, 'subunit_members')
+            ->withTimestamps();
+    }
+
+    public function ledSubunits()
+    {
+        return $this->hasMany(Subunit::class, 'leader_id');
+    }
+
 
     public function profile()
     {

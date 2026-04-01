@@ -123,7 +123,6 @@ new #[Layout('components.layouts.auth')] class extends Component {
                 'believers_academy' => 'admin.dashboard.believers_class.academy',
                 'reports' => 'admin.dashboard.reports.index',
                 'analytics' => 'admin.dashboard.analytics.index',
-                'attendance' => 'admin.dashboard.attendance.manage',
                 'events' => 'admin.dashboard.events.index',
                 'media' => 'admin.dashboard.sermons.index',
             ];

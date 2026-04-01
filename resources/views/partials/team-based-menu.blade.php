@@ -196,23 +196,32 @@
 </flux:navlist.group>
 @endif
 
-@if($can('attendance'))
-    <flux:navlist.group expandable heading="Attendance"
-        :expanded="request()->routeIs('admin.dashboard.attendance.*') ? 'true' : 'false'">
-        <flux:navlist.item icon="clipboard-document-check" :href="route('admin.dashboard.attendance.manage', request()->query())" wire:navigate
-            :active="request()->routeIs('admin.dashboard.attendance.manage') ? 'true' : 'false'">
-            Manage Attendance
-        </flux:navlist.item>
-        <flux:navlist.item icon="check-circle" :href="route('admin.dashboard.attendance.checkin', request()->query())" wire:navigate
-            :active="request()->routeIs('admin.dashboard.attendance.checkin') ? 'true' : 'false'">
-            Check-in
-        </flux:navlist.item>
-        <flux:navlist.item icon="document-chart-bar" :href="route('admin.dashboard.attendance.reports.index', request()->query())" wire:navigate
-            :active="request()->routeIs('admin.dashboard.attendance.reports.index') ? 'true' : 'false'">
-            Reports
-        </flux:navlist.item>
-    </flux:navlist.group>
-@endif
+{{-- Attendance Management System --}}
+<flux:navlist.group expandable heading="Attendance" icon="clipboard-document-check"
+    :expanded="request()->routeIs('admin.dashboard.attendance.*') ? 'true' : 'false'">
+    <flux:navlist.item icon="calendar" :href="route('admin.dashboard.attendance.manage', request()->query())" wire:navigate
+        :active="request()->routeIs('admin.dashboard.attendance.manage') ? 'true' : 'false'">
+        Manage Attendance
+    </flux:navlist.item>
+    <flux:navlist.item icon="check-circle" :href="route('admin.dashboard.attendance.checkin', request()->query())" wire:navigate
+        :active="request()->routeIs('admin.dashboard.attendance.checkin') ? 'true' : 'false'">
+        Check-in
+    </flux:navlist.item>
+    <flux:navlist.item icon="document-chart-bar" :href="route('admin.dashboard.attendance.reports', request()->query())" wire:navigate
+        :active="request()->routeIs('admin.dashboard.attendance.reports') ? 'true' : 'false'">
+        Reports
+    </flux:navlist.item>
+    <flux:navlist.item icon="users" :href="route('admin.dashboard.attendance.members', request()->query())" wire:navigate
+        :active="request()->routeIs('admin.dashboard.attendance.members') ? 'true' : 'false'">
+        Team Members
+    </flux:navlist.item>
+    @role(['team-lead'])
+    <flux:navlist.item icon="building-office" :href="route('admin.dashboard.attendance.subunits', request()->query())" wire:navigate
+        :active="request()->routeIs('admin.dashboard.attendance.subunits') ? 'true' : 'false'">
+        Subunits
+    </flux:navlist.item>
+    @endrole
+</flux:navlist.group>
 
 @if ($can('events') && ($isSuperAdmin || $isAdmin || ($leadersTeam && in_array($leadersTeam->id, $eventTeams))))
     <flux:navlist.group expandable heading="Events"

@@ -60,4 +60,14 @@ class Team extends Model
     {
         return $this->hasOne(TeamFunction::class, 'team_id');
     }
+
+    public function attendanceRecords()
+    {
+        return $this->hasMany(AttendanceRecord::class);
+    }
+
+    public function subunits()
+    {
+        return $this->hasMany(Subunit::class);
+    }
 }

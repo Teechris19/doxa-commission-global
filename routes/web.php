@@ -68,7 +68,6 @@ Route::middleware('auth')->group(function () {
 //------------------------------------------------------------------------------------
 Volt::route('partnership', 'home.partnership.index')->name('home.partnership.index');
 Volt::route('giving', 'home.giving.index')->name('giving.index');
-Volt::route('attendance', 'home.attendance.index')->name('attendance.index');
 //------------------------------------------------------------------------------------
 //EVENT ROUTES
 //====================================================================================

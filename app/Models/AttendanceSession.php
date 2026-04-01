@@ -2,17 +2,23 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class AttendanceSession extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
-        'attendance_event_id',
+        'chapter_id',
+        'created_by',
+        'session_type',
+        'session_name',
+        'service_id',
+        'event_id',
+        'location',
         'date',
         'status',
-        'location',
-        'notes',
-        'opened_by',
         'closed_at',
     ];
 
@@ -21,18 +27,71 @@ class AttendanceSession extends Model
         'closed_at' => 'datetime',
     ];
 
-    public function attendanceEvent()
+    // Relationships
+    public function chapter()
     {
-        return $this->belongsTo(AttendanceEvent::class);
+        return $this->belongsTo(Chapter::class);
     }
 
-    public function checkins()
+    public function creator()
     {
-        return $this->hasMany(AttendanceCheckin::class);
+        return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function opener()
+    public function service()
     {
-        return $this->belongsTo(User::class, 'opened_by');
+        return $this->belongsTo(Service::class);
+    }
+
+    public function event()
+    {
+        return $this->belongsTo(Events::class);
+    }
+
+    public function records()
+    {
+        return $this->hasMany(AttendanceRecord::class);
+    }
+
+    // Scopes
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'open');
+    }
+
+    public function scopeByChapter($query, $chapterId)
+    {
+        return $query->where('chapter_id', $chapterId);
+    }
+
+    public function scopeByDate($query, $date)
+    {
+        return $query->where('date', $date);
+    }
+
+    public function scopeByType($query, $type)
+    {
+        return $query->where('session_type', $type);
+    }
+
+    // Accessors
+    public function getRecordsCountAttribute()
+    {
+        return $this->records()->count();
+    }
+
+    public function getPresentCountAttribute()
+    {
+        return $this->records()->where('status', 'present')->count();
+    }
+
+    public function getAbsentCountAttribute()
+    {
+        return $this->records()->where('status', 'absent')->count();
+    }
+
+    public function getLateCountAttribute()
+    {
+        return $this->records()->where('status', 'late')->count();
     }
 }
