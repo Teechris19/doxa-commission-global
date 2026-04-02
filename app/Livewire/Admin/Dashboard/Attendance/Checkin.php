@@ -28,7 +28,17 @@ class Checkin extends Component {
     public $guestPhone = '';
     public $guestEmail = '';
     public $guestTime = '';
-    public $guestStatus = 'present';
+
+    // For member time tracking
+    public $memberTimes = [];
+
+    // Bulk selection
+    public $selectedMembers = [];
+    public $selectAll = false;
+
+    // Marked members modal
+    public $showMarkedMembersModal = false;
+    public $markedFilter = 'all'; // all, members, guests
 
     protected $userCache = [];
 
@@ -58,7 +68,7 @@ class Checkin extends Component {
     public function toggleGuestForm()
     {
         $this->showGuestForm = !$this->showGuestForm;
-        $this->reset(['guestName', 'guestPhone', 'guestEmail', 'guestTime', 'guestStatus']);
+        $this->reset(['guestName', 'guestPhone', 'guestEmail', 'guestTime']);
     }
 
     public function markGuestAttendance()
@@ -73,7 +83,6 @@ class Checkin extends Component {
             'guestPhone' => 'nullable|string|max:50',
             'guestEmail' => 'nullable|email|max:255',
             'guestTime' => 'nullable|date_format:H:i',
-            'guestStatus' => 'required|in:present,late,absent',
         ]);
 
         AttendanceGuest::create([
@@ -81,14 +90,14 @@ class Checkin extends Component {
             'name' => $validated['guestName'],
             'phone' => $validated['guestPhone'] ?: null,
             'email' => $validated['guestEmail'] ?: null,
-            'status' => $validated['guestStatus'],
+            'status' => 'present', // Always present when checking in
             'time' => $validated['guestTime'] ?: null,
             'marked_by' => Auth::id(),
         ]);
 
-        $this->toast()->success('Guest checked in', "{$validated['guestName']} has been checked in as {$validated['guestStatus']}.")->send();
-        
-        $this->reset(['showGuestForm', 'guestName', 'guestPhone', 'guestEmail', 'guestTime', 'guestStatus']);
+        $this->toast()->success('Guest checked in', "{$validated['guestName']} has been checked in." . ($validated['guestTime'] ? " Time: {$validated['guestTime']}" : ""))->send();
+
+        $this->reset(['showGuestForm', 'guestName', 'guestPhone', 'guestEmail', 'guestTime']);
     }
 
     public function markAttendance($status)
@@ -178,6 +187,9 @@ class Checkin extends Component {
         $teamId = $user->teams()->first()?->id ?? 1;
         $role = $user->role ?? 'Member';
         $chapterId = $user->chapter_id ?? $this->getChapterId();
+        
+        // Get time for this member (if entered)
+        $time = $this->memberTimes[$userId] ?? null;
 
         AttendanceRecord::create([
             'attendance_session_id' => $this->selectedSessionId,
@@ -186,10 +198,11 @@ class Checkin extends Component {
             'chapter_id' => $chapterId,
             'role' => $role,
             'status' => $status,
+            'time' => $time ?: null,
             'marked_by' => Auth::id(),
         ]);
 
-        $this->toast()->success('Success', "{$user->name} marked as {$status}.")->send();
+        $this->toast()->success('Success', "{$user->name} marked as {$status}." . ($time ? " Time: {$time}" : ""))->send();
     }
 
     private function getChapterId()
@@ -239,7 +252,30 @@ class Checkin extends Component {
             $query->where('name', 'like', "%{$this->searchName}%");
         }
 
-        return $query->with('teams')->orderBy('name')->limit(50)->get();
+        return $query->with('teams')->orderBy('name')->limit(100)->get();
+    }
+
+    public function getMarkedMembersProperty()
+    {
+        if (!$this->selectedSessionId) {
+            return collect();
+        }
+
+        return AttendanceRecord::with('user.teams')
+            ->where('attendance_session_id', $this->selectedSessionId)
+            ->orderBy('status', 'desc')
+            ->orderBy('time')
+            ->get();
+    }
+
+    public function getMarkedMembersCountProperty()
+    {
+        return $this->markedMembers->count();
+    }
+
+    public function setMarkedFilter($filter)
+    {
+        $this->markedFilter = $filter;
     }
 
     public function getSelectedUserProperty()
@@ -277,6 +313,16 @@ class Checkin extends Component {
             $guestCount = AttendanceGuest::where('attendance_session_id', $this->selectedSessionId)->count();
         }
 
+        // Get marked members for modal
+        $markedMembers = collect();
+        if ($this->selectedSessionId) {
+            $markedMembers = AttendanceRecord::with('user.teams')
+                ->where('attendance_session_id', $this->selectedSessionId)
+                ->orderBy('status', 'desc')
+                ->orderBy('time')
+                ->get();
+        }
+
         // Get selected user details
         $selectedUser = null;
         if ($this->selectedUserId) {
@@ -290,6 +336,7 @@ class Checkin extends Component {
             'markedUserIds' => $markedUserIds,
             'guestCount' => $guestCount,
             'selectedUser' => $selectedUser,
+            'markedMembers' => $markedMembers,
         ]);
     }
 }

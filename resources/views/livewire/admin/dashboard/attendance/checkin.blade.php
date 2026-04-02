@@ -84,6 +84,7 @@
                                 <tr>
                                     <th class="px-4 py-3">Member</th>
                                     <th class="px-4 py-3">Team</th>
+                                    <th class="px-4 py-3">Time</th>
                                     <th class="px-4 py-3">Status</th>
                                     <th class="px-4 py-3 text-right">Action</th>
                                 </tr>
@@ -114,6 +115,16 @@
                                             @endif
                                         </td>
                                         <td class="px-4 py-3">
+                                            @if(!in_array($member->id, $markedUserIds))
+                                                <input type="time" 
+                                                    wire:model="memberTimes.{{ $member->id }}" 
+                                                    class="rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 py-1 text-xs text-gray-900 dark:text-white"
+                                                />
+                                            @else
+                                                <span class="text-xs text-gray-400">-</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-4 py-3">
                                             @if(in_array($member->id, $markedUserIds))
                                                 <span class="inline-flex items-center gap-1 rounded-full bg-green-100 dark:bg-green-900/30 px-2.5 py-1 text-xs font-semibold text-green-700 dark:text-green-400">
                                                     <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
@@ -129,14 +140,11 @@
                                             @if(in_array($member->id, $markedUserIds))
                                                 <span class="text-xs text-gray-400">Already marked</span>
                                             @else
-                                                <div class="flex justify-end gap-1">
-                                                    <button wire:click="markMemberAttendance({{ $member->id }}, 'present')" title="Mark Present" class="rounded bg-green-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-green-700">
+                                                <div class="flex justify-end gap-2">
+                                                    <button wire:click="markMemberAttendance({{ $member->id }}, 'present')" title="Mark Present" class="rounded bg-green-600 p-2 text-sm font-semibold text-white transition hover:bg-green-700">
                                                         ✓
                                                     </button>
-                                                    <button wire:click="markMemberAttendance({{ $member->id }}, 'late')" title="Mark Late" class="rounded bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-amber-700">
-                                                        ⏰
-                                                    </button>
-                                                    <button wire:click="markMemberAttendance({{ $member->id }}, 'absent')" title="Mark Absent" class="rounded bg-red-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-red-700">
+                                                    <button wire:click="markMemberAttendance({{ $member->id }}, 'absent')" title="Mark Absent" class="rounded bg-red-600 p-2 text-sm font-semibold text-white transition hover:bg-red-700">
                                                         ✗
                                                     </button>
                                                 </div>
@@ -145,7 +153,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="py-12 text-center text-gray-500 dark:text-gray-400">
+                                        <td colspan="5" class="py-12 text-center text-gray-500 dark:text-gray-400">
                                             <svg class="mx-auto h-12 w-12 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                                             </svg>
@@ -164,7 +172,7 @@
                 {{-- Guest Check-in --}}
                 <x-card>
                     <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Guest Check-in</h2>
-                    
+
                     <div class="space-y-3">
                         <div>
                             <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Guest Name *</label>
@@ -183,14 +191,6 @@
                         <div>
                             <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Time</label>
                             <input type="time" wire:model="guestTime" class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white" />
-                        </div>
-                        <div>
-                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
-                            <select wire:model="guestStatus" class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white">
-                                <option value="present">Present</option>
-                                <option value="late">Late</option>
-                                <option value="absent">Absent</option>
-                            </select>
                         </div>
                         <button wire:click="markGuestAttendance" class="mt-2 w-full rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-700">
                             ✓ Check-in Guest
@@ -214,20 +214,6 @@
                             </div>
                             <span class="text-lg font-bold text-green-700 dark:text-green-400">
                                 {{ \App\Models\AttendanceRecord::where('attendance_session_id', $selectedSessionId)->where('status', 'present')->count() }}
-                            </span>
-                        </div>
-
-                        <div class="flex items-center justify-between rounded-lg bg-amber-50 dark:bg-amber-900/20 p-3">
-                            <div class="flex items-center gap-2">
-                                <div class="rounded-full bg-amber-100 dark:bg-amber-800 p-1.5">
-                                    <svg class="h-4 w-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
-                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Late</span>
-                            </div>
-                            <span class="text-lg font-bold text-amber-700 dark:text-amber-400">
-                                {{ \App\Models\AttendanceRecord::where('attendance_session_id', $selectedSessionId)->where('status', 'late')->count() }}
                             </span>
                         </div>
 
@@ -265,9 +251,188 @@
                                 </span>
                             </div>
                         </div>
+
+                        <button wire:click="$toggle('showMarkedMembersModal')" class="mt-4 w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700">
+                            📋 View All Marked Members
+                        </button>
                     </div>
                 </x-card>
             </div>
         </div>
+
+        {{-- Marked Members Modal --}}
+        @if($showMarkedMembersModal)
+            <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" wire:click="$toggle('showMarkedMembersModal')">
+                <div class="w-full max-w-4xl max-h-[80vh] overflow-y-auto rounded-2xl bg-white dark:bg-gray-900 p-6 shadow-2xl" wire:click.stop>
+                    <div class="mb-4 flex items-center justify-between">
+                        <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+                            Marked Members for: {{ $sessions->find($selectedSessionId)?->session_name ?? 'Session' }}
+                        </h2>
+                        <button wire:click="$toggle('showMarkedMembersModal')" class="text-gray-400 hover:text-gray-600">
+                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    {{-- Filters --}}
+                    <div class="mb-4 flex gap-2">
+                        <button wire:click="setMarkedFilter('all')" class="rounded-lg px-4 py-2 text-sm font-semibold {{ $markedFilter === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300' }}">
+                            All ({{ count($markedMembers) }})
+                        </button>
+                        <button wire:click="setMarkedFilter('members')" class="rounded-lg px-4 py-2 text-sm font-semibold {{ $markedFilter === 'members' ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300' }}">
+                            Members ({{ count($markedMembers) }})
+                        </button>
+                        <button wire:click="setMarkedFilter('guests')" class="rounded-lg px-4 py-2 text-sm font-semibold {{ $markedFilter === 'guests' ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300' }}">
+                            Guests ({{ $guestCount }})
+                        </button>
+                    </div>
+
+                    {{-- Members Table --}}
+                    @if($markedFilter === 'members' || $markedFilter === 'all')
+                        <div class="mb-6">
+                            <h3 class="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Members</h3>
+                            <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                                <table class="min-w-full">
+                                    <thead class="bg-gray-50 dark:bg-gray-800">
+                                        <tr>
+                                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Name</th>
+                                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Team</th>
+                                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Status</th>
+                                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Time</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-900">
+                                        @forelse($markedMembers as $record)
+                                            <tr>
+                                                <td class="px-4 py-3">
+                                                    <div class="flex items-center gap-3">
+                                                        <div class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-xs font-bold text-white">
+                                                            {{ strtoupper(substr($record->user->name, 0, 1)) }}
+                                                        </div>
+                                                        <span class="font-medium text-gray-900 dark:text-white">{{ $record->user->name }}</span>
+                                                    </div>
+                                                </td>
+                                                <td class="px-4 py-3">
+                                                    @if($record->user->teams->isNotEmpty())
+                                                        <span class="inline-flex items-center rounded-full bg-gray-100 dark:bg-gray-700 px-2.5 py-0.5 text-xs font-medium text-gray-800 dark:text-gray-300">
+                                                            {{ $record->user->teams->first()->name }}
+                                                        </span>
+                                                    @else
+                                                        <span class="text-xs text-gray-400">No team</span>
+                                                    @endif
+                                                </td>
+                                                <td class="px-4 py-3">
+                                                    @if($record->status === 'present')
+                                                        <span class="inline-flex items-center gap-1 rounded-full bg-green-100 dark:bg-green-900/30 px-2.5 py-1 text-xs font-semibold text-green-700 dark:text-green-400">
+                                                            <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                                            </svg>
+                                                            Present
+                                                        </span>
+                                                    @else
+                                                        <span class="inline-flex items-center gap-1 rounded-full bg-red-100 dark:bg-red-900/30 px-2.5 py-1 text-xs font-semibold text-red-700 dark:text-red-400">
+                                                            <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                                            </svg>
+                                                            Absent
+                                                        </span>
+                                                    @endif
+                                                </td>
+                                                <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
+                                                    {{ $record->time ?? '-' }}
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="4" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                                                    No members marked yet
+                                                </td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- Guests Table --}}
+                    @if($markedFilter === 'guests' || $markedFilter === 'all')
+                        <div>
+                            <h3 class="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Guests</h3>
+                            <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                                <table class="min-w-full">
+                                    <thead class="bg-gray-50 dark:bg-gray-800">
+                                        <tr>
+                                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Name</th>
+                                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Contact</th>
+                                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Status</th>
+                                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Time</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-900">
+                                        @php
+                                            $markedGuests = \App\Models\AttendanceGuest::where('attendance_session_id', $selectedSessionId)->get();
+                                        @endphp
+                                        @forelse($markedGuests as $guest)
+                                            <tr>
+                                                <td class="px-4 py-3">
+                                                    <div class="flex items-center gap-3">
+                                                        <div class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-teal-600 text-xs font-bold text-white">
+                                                            {{ strtoupper(substr($guest->name, 0, 1)) }}
+                                                        </div>
+                                                        <span class="font-medium text-gray-900 dark:text-white">{{ $guest->name }}</span>
+                                                    </div>
+                                                </td>
+                                                <td class="px-4 py-3">
+                                                    @if($guest->phone || $guest->email)
+                                                        <div class="text-xs text-gray-600 dark:text-gray-400">
+                                                            @if($guest->phone)
+                                                                <p>📞 {{ $guest->phone }}</p>
+                                                            @endif
+                                                            @if($guest->email)
+                                                                <p>✉️ {{ $guest->email }}</p>
+                                                            @endif
+                                                        </div>
+                                                    @else
+                                                        <span class="text-xs text-gray-400">No contact info</span>
+                                                    @endif
+                                                </td>
+                                                <td class="px-4 py-3">
+                                                    @if($guest->status === 'present')
+                                                        <span class="inline-flex items-center gap-1 rounded-full bg-green-100 dark:bg-green-900/30 px-2.5 py-1 text-xs font-semibold text-green-700 dark:text-green-400">
+                                                            <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                                            </svg>
+                                                            Present
+                                                        </span>
+                                                    @else
+                                                        <span class="inline-flex items-center gap-1 rounded-full bg-red-100 dark:bg-red-900/30 px-2.5 py-1 text-xs font-semibold text-red-700 dark:text-red-400">
+                                                            <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                                            </svg>
+                                                            Absent
+                                                        </span>
+                                                    @endif
+                                                </td>
+                                                <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
+                                                    {{ $guest->time ?? '-' }}
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="4" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                                                    No guests marked yet
+                                                </td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        @endif
     @endif
 </div>
