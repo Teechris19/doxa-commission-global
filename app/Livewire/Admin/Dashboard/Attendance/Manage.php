@@ -4,13 +4,13 @@ namespace App\Livewire\Admin\Dashboard\Attendance;
 
 use App\Models\{AttendanceSession, Chapter, Service, Events};
 use Livewire\Attributes\Layout;
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Livewire\WithPagination;
 use TallStackUi\Traits\Interactions;
 use Illuminate\Support\Facades\Auth;
 
 #[Layout('components.layouts.admin')]
-new class extends Component {
+class Manage extends Component {
     use Interactions, WithPagination;
 
     public $chapter;
@@ -144,7 +144,7 @@ new class extends Component {
             ->paginate(15);
     }
 
-    public function with(): array
+    public function render()
     {
         $user = Auth::user();
         $chapterId = $this->chapter ? Chapter::where('name', $this->chapter)->first()?->id : $user->chapter_id;
@@ -154,11 +154,11 @@ new class extends Component {
         $events = Events::where('chapter_id', $chapterId)->latest()->get();
         $sessions = $this->getSessions();
 
-        return [
+        return view('livewire.admin.dashboard.attendance.manage', [
             'chapters' => $chapters,
             'services' => $services,
             'events' => $events,
             'sessions' => $sessions,
-        ];
+        ]);
     }
-};
+}

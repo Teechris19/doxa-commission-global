@@ -4,12 +4,12 @@ namespace App\Livewire\Admin\Dashboard\Attendance;
 
 use App\Models\{AttendanceSession, AttendanceRecord, Chapter, User, Team};
 use Livewire\Attributes\Layout;
-use Livewire\Volt\Component;
+use Livewire\Component;
 use TallStackUi\Traits\Interactions;
 use Illuminate\Support\Facades\Auth;
 
 #[Layout('components.layouts.admin')]
-new class extends Component {
+class Checkin extends Component {
     use Interactions;
 
     public $chapter;
@@ -164,7 +164,7 @@ new class extends Component {
         return $user;
     }
 
-    public function with(): array
+    public function render()
     {
         $sessions = $this->getSessions();
         $teams = $this->getTeams();
@@ -178,11 +178,11 @@ new class extends Component {
                 ->toArray();
         }
 
-        return [
+        return view('livewire.admin.dashboard.attendance.checkin', [
             'sessions' => $sessions,
             'teams' => $teams,
             'members' => $members,
             'markedUserIds' => $markedUserIds,
-        ];
+        ]);
     }
-};
+}

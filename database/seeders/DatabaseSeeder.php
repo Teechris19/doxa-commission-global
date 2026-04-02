@@ -22,6 +22,7 @@ use App\Models\Minute;
 use App\Models\MinuteReport;
 use App\Models\Announcement;
 use App\Models\AnnouncementReport;
+use App\Models\Subunit;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
@@ -607,8 +608,13 @@ class DatabaseSeeder extends Seeder
                     'notes' => $faker->sentence(),
                 ]);
 
-             
+
             }
         }
+
+        // Populate Subunits with members and leaders
+        $this->command->newLine();
+        $this->command->info('📦 Running Subunits Population Seeder...');
+        $this->call(PopulateSubunitsSeeder::class);
     }
 }

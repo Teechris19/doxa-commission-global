@@ -4,14 +4,14 @@ namespace App\Livewire\Admin\Dashboard\Attendance;
 
 use App\Models\{Chapter, User, Team};
 use Livewire\Attributes\Layout;
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use TallStackUi\Traits\Interactions;
 
 #[Layout('components.layouts.admin')]
-new class extends Component {
+class Members extends Component {
     use WithPagination, Interactions;
 
     public $chapter;
@@ -90,17 +90,17 @@ new class extends Component {
         return $query->orderBy('name')->paginate($this->perPage);
     }
 
-    public function with(): array
+    public function render()
     {
         $chapterId = $this->getChapterId();
         $chapters = Chapter::orderBy('name')->get();
         $teams = Team::where('chapter_id', $chapterId)->orderBy('name')->get();
         $members = $this->getMembers();
 
-        return [
+        return view('livewire.admin.dashboard.attendance.members', [
             'chapters' => $chapters,
             'teams' => $teams,
             'members' => $members,
-        ];
+        ]);
     }
-};
+}

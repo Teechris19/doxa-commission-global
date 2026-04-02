@@ -3,10 +3,12 @@
 namespace App\Livewire\Admin\Dashboard\Subunits;
 
 use App\Models\{Chapter, Subunit, SubunitMember, Team, User};
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 use TallStackUi\Traits\Interactions;
 use Illuminate\Support\Facades\Auth;
 
+#[Layout('components.layouts.admin')]
 class Index extends Component
 {
     use Interactions;
@@ -23,6 +25,7 @@ class Index extends Component
     // Add members to subunit
     public $selectedSubunitId = '';
     public $memberIds = [];
+    public $addingMembersToSubunit = null;
 
     public function mount()
     {
@@ -30,6 +33,20 @@ class Index extends Component
         if (!$this->chapter && $user) {
             $this->chapter = Chapter::find($user->chapter_id)?->name;
         }
+    }
+
+    public function startAddingMembers($subunitId)
+    {
+        $this->selectedSubunitId = $subunitId;
+        $this->addingMembersToSubunit = $subunitId;
+        $this->memberIds = [];
+    }
+
+    public function cancelAddingMembers()
+    {
+        $this->addingMembersToSubunit = null;
+        $this->selectedSubunitId = null;
+        $this->memberIds = [];
     }
 
     public function getChapterId()
@@ -109,7 +126,7 @@ class Index extends Component
 
         $this->toast()->success('Members added', "{$added} member(s) added to subunit.")->send();
 
-        $this->reset(['selectedSubunitId', 'memberIds']);
+        $this->cancelAddingMembers();
     }
 
     public function assignLeader($subunitId, $userId)

@@ -4,12 +4,12 @@ namespace App\Livewire\Admin\Dashboard\Attendance;
 
 use App\Models\{AttendanceRecord, AttendanceSession, Chapter, User, Team};
 use Livewire\Attributes\Layout;
-use Livewire\Volt\Component;
+use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 #[Layout('components.layouts.admin')]
-new class extends Component {
+class Reports extends Component {
     public $chapter;
     public $dateFilter = '30'; // 7, 30, 180, 365 days
 
@@ -196,17 +196,17 @@ new class extends Component {
             });
     }
 
-    public function with(): array
+    public function render()
     {
         $chapters = Chapter::orderBy('name')->get();
         
-        return [
+        return view('livewire.admin.dashboard.attendance.reports', [
             'chapters' => $chapters,
             'overallStats' => $this->overallStats,
             'teamStats' => $this->teamStats,
             'memberStats' => $this->memberStats,
             'trendData' => $this->trendData,
             'roleBreakdown' => $this->roleBreakdown,
-        ];
+        ]);
     }
-};
+}
