@@ -13,3 +13,8 @@
 
 @vite(['resources/css/app.css', 'resources/js/app.js'])
 @fluxAppearance
+
+{{-- Custom Attendance Styles --}}
+@if(request()->routeIs('admin.dashboard.attendance.*'))
+    <link rel="stylesheet" href="/css/attendance.css">
+@endif

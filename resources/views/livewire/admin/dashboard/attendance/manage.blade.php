@@ -12,7 +12,7 @@
             @if(auth()->user()->hasRole('super-admin'))
                 <div class="md:col-span-2">
                     <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Chapter</label>
-                    <select wire:model="chapter" class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white">
+                    <select wire:model.live="chapter" class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white">
                         @foreach($chapters as $chap)
                             <option value="{{ $chap->name }}">{{ $chap->name }}</option>
                         @endforeach
@@ -22,51 +22,70 @@
 
             <div>
                 <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Session Date</label>
-                <input type="date" wire:model="sessionDate" class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white" />
+                <input type="date" wire:model.live="sessionDate" class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white" />
             </div>
 
             <div>
                 <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Session Type</label>
-                <select wire:model="sessionType" class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white">
+                <select wire:model.live="sessionType" class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white">
+                    <option value="">-- Select Type --</option>
                     <option value="service">Service</option>
                     <option value="event">Event</option>
                     <option value="custom">Custom</option>
                 </select>
             </div>
 
+            {{-- Service Selection --}}
             @if($sessionType === 'service')
-                <div class="md:col-span-2" wire:key="service-select">
+                <div class="md:col-span-2 animate-fade-in">
                     <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Select Service</label>
-                    <select wire:model="selectedServiceId" class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white">
-                        <option value="">Choose a service...</option>
+                    <select wire:model="selectedServiceId" class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">-- Choose a service... --</option>
                         @foreach($services as $service)
                             <option value="{{ $service->id }}">{{ $service->name }} ({{ $service->time }})</option>
                         @endforeach
                     </select>
+                    @error('selectedServiceId')
+                        <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
                 </div>
-            @elseif($sessionType === 'event')
-                <div class="md:col-span-2" wire:key="event-select">
+            @endif
+
+            {{-- Event Selection --}}
+            @if($sessionType === 'event')
+                <div class="md:col-span-2 animate-fade-in">
                     <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Select Event</label>
-                    <select wire:model="selectedEventId" class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white">
-                        <option value="">Choose an event...</option>
+                    <select wire:model="selectedEventId" class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">-- Choose an event... --</option>
                         @foreach($events as $event)
                             <option value="{{ $event->id }}">{{ $event->title }} - {{ $event->event_date?->format('M d, Y') }}</option>
                         @endforeach
                     </select>
+                    @error('selectedEventId')
+                        <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
                 </div>
-            @else
-                <div class="md:col-span-2" wire:key="custom-name">
-                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Custom Session Name</label>
-                    <input type="text" wire:model="customName" class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white" placeholder="e.g., Sunday 1st Service, Youth Meeting" />
-                </div>
-                <div class="md:col-span-2" wire:key="custom-location">
-                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Location (Optional)</label>
-                    <input type="text" wire:model="customLocation" class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white" placeholder="e.g., Main Auditorium" />
+            @endif
+
+            {{-- Custom Input --}}
+            @if($sessionType === 'custom')
+                <div class="md:col-span-2 space-y-4 animate-fade-in">
+                    <div>
+                        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Custom Session Name</label>
+                        <input type="text" wire:model="customName" class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., Sunday 1st Service, Youth Meeting, Bible Study" />
+                        @error('customName')
+                            <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Location (Optional)</label>
+                        <input type="text" wire:model="customLocation" class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., Main Auditorium, Hall B, Online" />
+                    </div>
                 </div>
             @endif
 
             <div class="md:col-span-2">
-                <button wire:click="createSession" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+                <button wire:click="createSession" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition">
                     Create Session
                 </button>
             </div>
