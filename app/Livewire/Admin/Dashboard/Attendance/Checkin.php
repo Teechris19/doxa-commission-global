@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Admin\Dashboard\Attendance;
 
-use App\Models\{AttendanceSession, AttendanceRecord, Chapter, User, Team};
+use App\Models\{AttendanceSession, AttendanceRecord, AttendanceGuest, Chapter, User, Team};
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use TallStackUi\Traits\Interactions;
@@ -18,9 +18,17 @@ class Checkin extends Component {
     public $filterTeamId = '';
     public $showAlreadyMarked = false;
 
-    // For marking attendance
+    // For marking attendance (registered members)
     public $selectedUserId;
     public $manualTime = '';
+
+    // For guest check-in
+    public $showGuestForm = false;
+    public $guestName = '';
+    public $guestPhone = '';
+    public $guestEmail = '';
+    public $guestTime = '';
+    public $guestStatus = 'present';
 
     protected $userCache = [];
 
@@ -45,6 +53,42 @@ class Checkin extends Component {
     public function clearSelection()
     {
         $this->reset(['selectedUserId', 'manualTime']);
+    }
+
+    public function toggleGuestForm()
+    {
+        $this->showGuestForm = !$this->showGuestForm;
+        $this->reset(['guestName', 'guestPhone', 'guestEmail', 'guestTime', 'guestStatus']);
+    }
+
+    public function markGuestAttendance()
+    {
+        if (!$this->selectedSessionId) {
+            $this->toast()->error('No session selected', 'Please select an attendance session first.')->send();
+            return;
+        }
+
+        $validated = $this->validate([
+            'guestName' => 'required|string|min:2|max:255',
+            'guestPhone' => 'nullable|string|max:50',
+            'guestEmail' => 'nullable|email|max:255',
+            'guestTime' => 'nullable|date_format:H:i',
+            'guestStatus' => 'required|in:present,late,absent',
+        ]);
+
+        AttendanceGuest::create([
+            'attendance_session_id' => $this->selectedSessionId,
+            'name' => $validated['guestName'],
+            'phone' => $validated['guestPhone'] ?: null,
+            'email' => $validated['guestEmail'] ?: null,
+            'status' => $validated['guestStatus'],
+            'time' => $validated['guestTime'] ?: null,
+            'marked_by' => Auth::id(),
+        ]);
+
+        $this->toast()->success('Guest checked in', "{$validated['guestName']} has been checked in as {$validated['guestStatus']}.")->send();
+        
+        $this->reset(['showGuestForm', 'guestName', 'guestPhone', 'guestEmail', 'guestTime', 'guestStatus']);
     }
 
     public function markAttendance($status)
@@ -103,9 +147,55 @@ class Checkin extends Component {
         ]);
 
         $this->toast()->success('Attendance marked', "{$user->name} marked as {$status}.")->send();
-        
-        // Reset selection but keep session
-        $this->reset(['selectedUserId', 'manualTime', 'searchName']);
+
+        // Refresh the page to show updated status
+    }
+
+    public function markMemberAttendance($userId, $status)
+    {
+        if (!$this->selectedSessionId) {
+            $this->toast()->error('No session selected', 'Please select an attendance session first.')->send();
+            return;
+        }
+
+        $user = User::find($userId);
+        if (!$user) {
+            $this->toast()->error('User not found', 'The selected member does not exist.')->send();
+            return;
+        }
+
+        // Check if already marked
+        $existing = AttendanceRecord::where('attendance_session_id', $this->selectedSessionId)
+            ->where('user_id', $userId)
+            ->first();
+
+        if ($existing) {
+            $this->toast()->warning('Already marked', 'This member already has attendance recorded.')->send();
+            return;
+        }
+
+        // Get user's team
+        $teamId = $user->teams()->first()?->id ?? 1;
+        $role = $user->role ?? 'Member';
+        $chapterId = $user->chapter_id ?? $this->getChapterId();
+
+        AttendanceRecord::create([
+            'attendance_session_id' => $this->selectedSessionId,
+            'user_id' => $userId,
+            'team_id' => $teamId,
+            'chapter_id' => $chapterId,
+            'role' => $role,
+            'status' => $status,
+            'marked_by' => Auth::id(),
+        ]);
+
+        $this->toast()->success('Success', "{$user->name} marked as {$status}.")->send();
+    }
+
+    private function getChapterId()
+    {
+        $user = Auth::user();
+        return $this->chapter ? Chapter::where('name', $this->chapter)->first()?->id : $user->chapter_id;
     }
 
     private function getSessions()
@@ -135,18 +225,21 @@ class Checkin extends Component {
         $user = Auth::user();
         $chapterId = $this->chapter ? Chapter::where('name', $this->chapter)->first()?->id : $user->chapter_id;
 
-        $query = User::where('chapter_id', $chapterId)
-            ->whereHas('teams');
+        // Get all users in the chapter (with or without teams)
+        $query = User::where('chapter_id', $chapterId);
 
         if ($this->filterTeamId) {
             $query->whereHas('teams', fn($q) => $q->where('teams.id', $this->filterTeamId));
+        } else {
+            // If no filter, still show all members but eager load teams
+            $query->with('teams');
         }
 
         if ($this->searchName) {
             $query->where('name', 'like', "%{$this->searchName}%");
         }
 
-        return $query->with('teams')->limit(50)->get();
+        return $query->with('teams')->orderBy('name')->limit(50)->get();
     }
 
     public function getSelectedUserProperty()
@@ -178,11 +271,25 @@ class Checkin extends Component {
                 ->toArray();
         }
 
+        // Get guest check-ins count for current session
+        $guestCount = 0;
+        if ($this->selectedSessionId) {
+            $guestCount = AttendanceGuest::where('attendance_session_id', $this->selectedSessionId)->count();
+        }
+
+        // Get selected user details
+        $selectedUser = null;
+        if ($this->selectedUserId) {
+            $selectedUser = User::with('teams')->find($this->selectedUserId);
+        }
+
         return view('livewire.admin.dashboard.attendance.checkin', [
             'sessions' => $sessions,
             'teams' => $teams,
             'members' => $members,
             'markedUserIds' => $markedUserIds,
+            'guestCount' => $guestCount,
+            'selectedUser' => $selectedUser,
         ]);
     }
 }
