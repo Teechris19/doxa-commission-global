@@ -15,6 +15,7 @@
             'prayerRequestTeams' => \App\Models\PrayerRequestTeam::class,
             'believersAcademyTeam' => \App\Models\BelieversAcademyTeams::class,
             'eventTeams' => \App\Models\EventTeam::class,
+            'attendanceTeams' => \App\Models\AttendanceTeams::class,
         ];
 
         foreach ($relations as $var => $model) {
@@ -196,7 +197,8 @@
 </flux:navlist.group>
 @endif
 
-{{-- Attendance Management System --}}
+{{-- Attendance Management System - Only for assigned teams --}}
+@if($isSuperAdmin || $isAdmin || ($leadersTeam && in_array($leadersTeam->id, $attendanceTeams ?? [])))
 <flux:navlist.group expandable heading="Attendance" icon="clipboard-document-check"
     :expanded="request()->routeIs('admin.dashboard.attendance.*') ? 'true' : 'false'">
     <flux:navlist.item icon="calendar" :href="route('admin.dashboard.attendance.manage', request()->query())" wire:navigate
@@ -215,13 +217,19 @@
         :active="request()->routeIs('admin.dashboard.attendance.members') ? 'true' : 'false'">
         Team Members
     </flux:navlist.item>
-    @role(['team-lead'])
-    <flux:navlist.item icon="building-office" :href="route('admin.dashboard.attendance.subunits', request()->query())" wire:navigate
-        :active="request()->routeIs('admin.dashboard.attendance.subunits') ? 'true' : 'false'">
-        Subunits
-    </flux:navlist.item>
-    @endrole
 </flux:navlist.group>
+@endif
+
+{{-- Subunits Management - Team Lead Only (Separate from Attendance) --}}
+@role(['team-lead'])
+<flux:navlist.group expandable heading="Subunits" icon="building-office"
+    :expanded="request()->routeIs('admin.dashboard.subunits.*') ? 'true' : 'false'">
+    <flux:navlist.item icon="rectangle-group" :href="route('admin.dashboard.subunits.index', request()->query())" wire:navigate
+        :active="request()->routeIs('admin.dashboard.subunits.index') ? 'true' : 'false'">
+        Manage Subunits
+    </flux:navlist.item>
+</flux:navlist.group>
+@endrole
 
 @if ($can('events') && ($isSuperAdmin || $isAdmin || ($leadersTeam && in_array($leadersTeam->id, $eventTeams))))
     <flux:navlist.group expandable heading="Events"

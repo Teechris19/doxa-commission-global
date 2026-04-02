@@ -133,22 +133,28 @@ Route::prefix('admin/dashboard')
         // -----------------------------------------------------------------
         //              ATTENDANCE MANAGEMENT SYSTEM
         //-------------------------------------------------------------------
-        // Main Attendance Routes (accessible by Super Admin, Admin, Team Lead)
+        // Main Attendance Routes (accessible by Super Admin, Admin, and assigned Team Leads)
         Volt::route('attendance/manage', 'admin.dashboard.attendance.manage')
+            ->middleware('team-function:attendance')
             ->name('admin.dashboard.attendance.manage');
-        
+
         Volt::route('attendance/checkin', 'admin.dashboard.attendance.checkin')
+            ->middleware('team-function:attendance')
             ->name('admin.dashboard.attendance.checkin');
-        
+
         Volt::route('attendance/reports', 'admin.dashboard.attendance.reports')
+            ->middleware('team-function:attendance')
             ->name('admin.dashboard.attendance.reports');
-        
+
+        // Members page - accessible to all team leads (they manage their team members)
         Volt::route('attendance/members', 'admin.dashboard.attendance.members')
             ->name('admin.dashboard.attendance.members');
-        
-        // Subunit Management (Team Lead only)
-        Volt::route('attendance/subunits', 'admin.dashboard.attendance.subunits')
-            ->name('admin.dashboard.attendance.subunits');
+
+        // -----------------------------------------------------------------
+        //              SUBUNITS MANAGEMENT (Team Lead Only - Separate Section)
+        //-------------------------------------------------------------------
+        Volt::route('subunits', 'admin.dashboard.subunits.index')
+            ->name('admin.dashboard.subunits.index');
 
         // -----------------------------------------------------------------
         //              CELL GROUPS

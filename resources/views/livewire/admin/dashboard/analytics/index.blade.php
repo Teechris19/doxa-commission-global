@@ -112,8 +112,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
             ->distinct('user_id')
             ->count('user_id');
 
-        $this->totalPartnerships = Partnership::when($this->chapterId, fn($q) => $q->where('chapter_id', $this->chapterId))
-            ->when($startDate, fn($q) => $q->where('created_at', '>=', $startDate))
+        $this->totalPartnerships = Partnership::when($startDate, fn($q) => $q->where('created_at', '>=', $startDate))
             ->count();
 
         $this->totalPrayerRequests = PrayerRequest::when($this->chapterId, fn($q) => $q->where('chapter_id', $this->chapterId))

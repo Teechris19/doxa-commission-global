@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\AppointmentTeams;
+use App\Models\AttendanceTeams;
 use App\Models\BelieversAcademyTeams;
 use App\Models\EventTeam;
 use App\Models\PrayerRequestTeam;
@@ -49,6 +50,7 @@ class TeamFunctionAccess
             'prayer_requests' => PrayerRequestTeam::class,
             'believers_academy' => BelieversAcademyTeams::class,
             'events' => EventTeam::class,
+            'attendance' => AttendanceTeams::class,
         ];
 
         // Members is always accessible to team leaders (they manage their own team members)
