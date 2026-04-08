@@ -27,6 +27,14 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
         $user = Auth::user();
         $chapterId = $user?->chapter_id;
 
+        // Fallback: If user has no chapter_id on their account, get it from their team
+        if (!$chapterId && $user) {
+            $team = $user->teams()->first();
+            if ($team) {
+                $chapterId = $team->chapter_id;
+            }
+        }
+
         $this->pageSettings = CellPageSetting::where('chapter_id', $chapterId)->first();
     }
 
@@ -34,6 +42,14 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
     {
         $user = Auth::user();
         $chapterId = $user?->chapter_id;
+
+        // Fallback: If user has no chapter_id on their account, get it from their team
+        if (!$chapterId && $user) {
+            $team = $user->teams()->first();
+            if ($team) {
+                $chapterId = $team->chapter_id;
+            }
+        }
 
         $limit = $this->pageSettings?->cells_to_display ?? 3;
 
@@ -147,7 +163,7 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
     @if($pageSettings?->center_image)
     <section class="py-12 bg-white">
         <div class="container mx-auto px-4 flex justify-center">
-            <img src="{{ Storage::url($pageSettings->center_image) }}" alt="Cell Community" class="w-[60%] h-[40vh] object-cover rounded-2xl shadow-xl" />
+            <img src="{{ Storage::url($pageSettings->center_image) }}" alt="Cell Community" class="w-[80%] h-[60vh] object-cover rounded-2xl shadow-xl" />
         </div>
     </section>
     @endif

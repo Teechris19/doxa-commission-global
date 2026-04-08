@@ -42,7 +42,7 @@ TODO: Add Active route indicators
     $isAdmin = $user && $user->hasRole('admin');
     $isTeamLeader = $user && $user->hasRole(['team-lead', 'lead-assist', 'lead_assist']);
     $sidebarLabel = $isSuperAdmin ? 'Super Admin' : ($isTeamLeader ? 'Team Lead' : 'Admin');
-    
+
     // Check if user is an attendance team lead
     $isAttendanceTeamLead = false;
     $leadersTeam = null;

@@ -21,7 +21,6 @@ new #[Layout('components.layouts.admin')] class extends Component {
 
     public ?int $selectedCellId = null;
     public ?int $selectedUserId = null;
-    public bool $is_primary = false;
 
     public function mount(): void
     {
@@ -62,7 +61,6 @@ new #[Layout('components.layouts.admin')] class extends Component {
 
         $this->cellLeaders = CellLeader::with(['cellGroup', 'user'])
             ->whereHas('cellGroup', fn($q) => $q->where('chapter_id', $this->chapterId))
-            ->orderBy('is_primary', 'desc')
             ->orderBy('name')
             ->get()
             ->map(fn($leader) => [
@@ -73,7 +71,6 @@ new #[Layout('components.layouts.admin')] class extends Component {
                 'user_id' => $leader->user_id,
                 'phone' => $leader->user?->phone ?? $leader->phone ?? 'N/A',
                 'email' => $leader->user?->email ?? $leader->email ?? 'N/A',
-                'is_primary' => $leader->is_primary,
             ])
             ->toArray();
     }
@@ -94,8 +91,25 @@ new #[Layout('components.layouts.admin')] class extends Component {
         $this->editingLeaderId = $id;
         $this->selectedCellId = $leader->cell_group_id;
         $this->selectedUserId = $leader->user_id;
-        $this->is_primary = (bool) $leader->is_primary;
         $this->showAddModal = true;
+    }
+
+    public function cellSelected(): void
+    {
+        if (!$this->selectedCellId) {
+            $this->selectedUserId = null;
+            return;
+        }
+
+        // Auto-populate the current leader when a cell is selected
+        $currentLeader = CellLeader::where('cell_group_id', $this->selectedCellId)->first();
+        if ($currentLeader) {
+            $this->selectedUserId = $currentLeader->user_id;
+            $this->editingLeaderId = $currentLeader->id;
+        } else {
+            $this->selectedUserId = null;
+            $this->editingLeaderId = null;
+        }
     }
 
     public function closeModal(): void
@@ -109,7 +123,6 @@ new #[Layout('components.layouts.admin')] class extends Component {
         $this->editingLeaderId = null;
         $this->selectedCellId = null;
         $this->selectedUserId = null;
-        $this->is_primary = false;
     }
 
     public function saveLeader(): void
@@ -117,7 +130,6 @@ new #[Layout('components.layouts.admin')] class extends Component {
         $validated = $this->validate([
             'selectedCellId' => 'required|integer|exists:cell_groups,id',
             'selectedUserId' => 'required|integer|exists:users,id',
-            'is_primary' => 'boolean',
         ]);
 
         $user = User::find($validated['selectedUserId']);
@@ -128,45 +140,26 @@ new #[Layout('components.layouts.admin')] class extends Component {
             return;
         }
 
-        // If setting as primary, unset other primaries for this cell
-        if ($validated['is_primary']) {
-            CellLeader::where('cell_group_id', $validated['selectedCellId'])
-                ->update(['is_primary' => false]);
-        }
+        // Find existing leader for this cell
+        $existingLeader = CellLeader::where('cell_group_id', $validated['selectedCellId'])->first();
 
-        if ($this->editingLeaderId) {
-            // Update existing
-            $leader = CellLeader::find($this->editingLeaderId);
-            if ($leader) {
-                $leader->update([
-                    'cell_group_id' => $validated['selectedCellId'],
-                    'user_id' => $validated['selectedUserId'],
-                    'name' => $user->name,
-                    'phone' => $user->phone ?? '',
-                    'email' => $user->email ?? '',
-                    'is_primary' => $validated['is_primary'],
-                ]);
-            }
+        if ($existingLeader) {
+            // Update the existing leader instead of creating a duplicate
+            $existingLeader->update([
+                'user_id' => $validated['selectedUserId'],
+                'name' => $user->name,
+                'phone' => $user->phone ?? '',
+                'email' => $user->email ?? '',
+            ]);
             $this->toast()->success('Updated', 'Cell leader updated successfully.')->send();
         } else {
-            // Check if already a leader for this cell
-            $existing = CellLeader::where('cell_group_id', $validated['selectedCellId'])
-                ->where('user_id', $validated['selectedUserId'])
-                ->first();
-
-            if ($existing) {
-                $this->toast()->warning('Already Added', 'This user is already a leader for this cell.')->send();
-                return;
-            }
-
-            // Create new
+            // Create new leader
             CellLeader::create([
                 'cell_group_id' => $validated['selectedCellId'],
                 'user_id' => $validated['selectedUserId'],
                 'name' => $user->name,
                 'phone' => $user->phone ?? '',
                 'email' => $user->email ?? '',
-                'is_primary' => $validated['is_primary'],
             ]);
             $this->toast()->success('Added', 'Cell leader added successfully.')->send();
         }
@@ -175,27 +168,35 @@ new #[Layout('components.layouts.admin')] class extends Component {
         $this->loadCellLeaders();
     }
 
+    public ?int $deleteId = null;
+
     public function deleteLeader(int $id): void
     {
+        $this->deleteId = $id;
         $this->dialog()
             ->error('Are you sure you want to remove this cell leader?')
             ->hook([
                 'ok' => [
                     'method' => 'confirmDeleteLeader',
-                    'params' => [$id],
                 ],
             ])
             ->send();
     }
 
-    public function confirmDeleteLeader(int $id): void
+    public function confirmDeleteLeader(): void
     {
-        $leader = CellLeader::find($id);
+        if (!$this->deleteId) {
+            return;
+        }
+
+        $leader = CellLeader::find($this->deleteId);
         if ($leader) {
             $leader->delete();
             $this->toast()->success('Removed', 'Cell leader removed successfully.')->send();
             $this->loadCellLeaders();
         }
+
+        $this->deleteId = null;
     }
 
     public function getCellsProperty()
@@ -274,11 +275,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
                             <p class="text-xs text-slate-500 dark:text-slate-500">{{ $leader['email'] }}</p>
                         </td>
                         <td class="px-4 py-3.5">
-                            @if($leader['is_primary'])
-                                <span class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">Primary Leader</span>
-                            @else
-                                <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-700 dark:text-slate-400">Co-Leader</span>
-                            @endif
+                            <span class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">Leader</span>
                         </td>
                         <td class="px-4 py-3.5 text-right">
                             <div class="flex justify-end gap-2">
@@ -307,7 +304,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
                 <div class="space-y-4 p-6">
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Cell Group</label>
-                        <select wire:model="selectedCellId" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100">
+                        <select wire:model="selectedCellId" wire:change="cellSelected" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100">
                             <option value="">Select cell group</option>
                             @foreach($this->cells as $cell)
                                 <option value="{{ $cell->id }}">{{ $cell->name }}</option>
@@ -325,11 +322,6 @@ new #[Layout('components.layouts.admin')] class extends Component {
                             @endforeach
                         </select>
                         @error('selectedUserId') <span class="mt-1 block text-xs text-red-500">{{ $message }}</span> @enderror
-                    </div>
-
-                    <div class="flex items-center gap-3">
-                        <input id="is_primary" type="checkbox" wire:model="is_primary" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-700" />
-                        <label for="is_primary" class="text-sm font-medium text-slate-700 dark:text-slate-300">Primary Leader</label>
                     </div>
                 </div>
 

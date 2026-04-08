@@ -54,6 +54,14 @@ new #[Layout('components.layouts.admin')] class extends Component {
             }
         } else {
             $this->chapterId = $user?->chapter_id;
+
+            // Fallback: If user has no chapter_id on their account, get it from their team
+            if (!$this->chapterId && $user) {
+                $team = $user->teams()->first();
+                if ($team) {
+                    $this->chapterId = $team->chapter_id;
+                }
+            }
         }
 
         $this->loadSettings();
