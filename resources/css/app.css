@@ -1,0 +1,179 @@
+@import 'tailwindcss';
+@import '../../vendor/livewire/flux/dist/flux.css';
+
+@source '../views';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../vendor/livewire/flux-pro/stubs/**/*.blade.php';
+@source '../../vendor/livewire/flux/stubs/**/*.blade.php';
+
+
+@import '../../vendor/tallstackui/tallstackui/css/v4.css';
+
+@plugin '@tailwindcss/forms';
+
+@source '../../vendor/tallstackui/tallstackui/**/*.php';
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+
+    --color-zinc-50: #fafafa;
+    --color-zinc-100: #f5f5f5;
+    --color-zinc-200: #e5e5e5;
+    --color-zinc-300: #d4d4d4;
+    --color-zinc-400: #a3a3a3;
+    --color-zinc-500: #737373;
+    --color-zinc-600: #525252;
+    --color-zinc-700: #404040;
+    --color-zinc-800: #262626;
+    --color-zinc-900: #171717;
+    --color-zinc-950: #0a0a0a;
+
+    --color-accent: var(--color-neutral-800);
+    --color-accent-content: var(--color-neutral-800);
+    --color-accent-foreground: var(--color-white);
+
+    --color-dark-50: #fcfcfc;
+    /* lighter than zinc-50 */
+    --color-dark-100: #f8f8f8;
+    /* lighter than zinc-100 */
+    --color-dark-200: #eeeeee;
+    /* lighter than zinc-200 */
+    --color-dark-300: #dddddd;
+    /* lighter than zinc-300 */
+    --color-dark-400: #b0b0b0;
+    /* lighter than zinc-400 */
+    --color-dark-500: #808080;
+    /* lighter than zinc-500 */
+    --color-dark-600: #5e5e5e;
+    /* lighter than zinc-600 */
+    --color-dark-700: #4a4a4a;
+    /* lighter than zinc-700 */
+    --color-dark-800: #2e2e2e;
+    /* lighter than zinc-800 */
+    --color-dark-900: #1c1c1c;
+    /* lighter than zinc-900 */
+    --color-dark-950: #0f0f0f;
+    /* lighter than zinc-950 */
+
+
+}
+
+@layer theme {}
+
+@layer base {
+
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        border-color: var(--color-gray-200, currentColor);
+    }
+}
+
+[data-flux-field]:not(ui-radio, ui-checkbox) {
+    @apply grid gap-2;
+}
+
+[data-flux-label] {
+    @apply  !mb-0 !leading-tight;
+}
+
+input:focus[data-flux-control],
+textarea:focus[data-flux-control],
+select:focus[data-flux-control] {
+    @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
+}
+
+@font-face {
+    font-family: montserat;
+    src: url('/Montserrat/Montserrat-Italic-VariableFont_wght.ttf');
+}
+
+@font-face {
+    font-family: sigmar;
+    src: url('/Sigmar/Sigmar-Regular.ttf');
+}
+
+@font-face {
+    font-family: oswald;
+    src: url('/Oswald/Oswald-VariableFont_wght.ttf');
+}
+
+/* \[:where(&)\]:size-4 {
+    @apply size-4;
+} */
+:root {
+    --site-bg: #ffffff;
+    --site-surface: #ffffff;
+    --site-text: #0f172a;
+    --site-muted: #475569;
+    --site-border: #dbeafe;
+    --site-accent: #1877f2;
+}
+
+@layer base {
+    body.site-shell {
+        color: var(--site-text);
+        background-color: var(--site-bg);
+        background-image: linear-gradient(to bottom, #f1f6ff 0%, #ffffff 35%);
+        min-height: 100vh;
+        font-family: 'Poppins', ui-sans-serif, system-ui, sans-serif;
+        font-size: 0.95rem;
+    }
+}
+
+@layer components {
+    .mobile-nav-offset {
+        padding-bottom: calc(var(--mobile-nav-height, 4.1rem) + env(safe-area-inset-bottom, 0px) + 0.5rem);
+    }
+
+    .mobile-floating-nav {
+        position: fixed;
+        bottom: calc(env(safe-area-inset-bottom, 0px) + 0.5rem);
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 60;
+        width: min(94%, 440px);
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 0.15rem;
+        border-radius: 1rem;
+        border: 1px solid rgba(24, 119, 242, 0.26);
+        background: rgba(255, 255, 255, 0.96);
+        backdrop-filter: blur(16px);
+        box-shadow: 0 18px 40px -22px rgba(24, 119, 242, 0.4);
+        padding: 0.25rem;
+    }
+
+    .mobile-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.1rem;
+        border-radius: 0.85rem;
+        color: #64748b;
+        font-size: 0.6rem;
+        font-weight: 600;
+        line-height: 1.1;
+        min-height: 3.2rem;
+        transition: color 160ms ease, background-color 160ms ease;
+    }
+
+    .mobile-nav-item:hover {
+        color: #1877f2;
+        background: #eff6ff;
+    }
+
+    .mobile-nav-item.is-active {
+        color: #ffffff;
+        background: #1877f2;
+    }
+}
+
+@media (min-width: 1024px) {
+    .mobile-nav-offset {
+        padding-bottom: 0;
+    }
+}
