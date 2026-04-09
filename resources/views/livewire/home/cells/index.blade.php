@@ -27,7 +27,6 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
         $user = Auth::user();
         $chapterId = $user?->chapter_id;
 
-        // Fallback: If user has no chapter_id on their account, get it from their team
         if (!$chapterId && $user) {
             $team = $user->teams()->first();
             if ($team) {
@@ -43,7 +42,6 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
         $user = Auth::user();
         $chapterId = $user?->chapter_id;
 
-        // Fallback: If user has no chapter_id on their account, get it from their team
         if (!$chapterId && $user) {
             $team = $user->teams()->first();
             if ($team) {
@@ -233,7 +231,6 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
                     <div class="col-span-3 text-center py-16">
                         <i class="bi bi-people text-8xl text-gray-400 mb-4"></i>
                         <p class="text-xl text-gray-600">No active cell groups available at the moment</p>
-                        <p class="text-gray-500 mt-2">Please check back later or contact us for more information</p>
                     </div>
                 @endforelse
             </div>
@@ -247,6 +244,17 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
                         </svg>
                     </a>
                 </div>
+            @else
+                @if(count($displayCells) > 0)
+                    <div class="mt-12 text-center">
+                        <a href="{{ route('cells.all') }}" class="inline-flex items-center rounded-full border border-blue-200 bg-white px-8 py-3 text-lg font-semibold text-blue-700 transition hover:bg-blue-50 hover:border-blue-300">
+                            View All Cells
+                            <svg class="ml-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                            </svg>
+                        </a>
+                    </div>
+                @endif
             @endif
         </div>
     </section>
