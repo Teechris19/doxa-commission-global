@@ -150,6 +150,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
                 'name' => $user->name,
                 'phone' => $user->phone ?? '',
                 'email' => $user->email ?? '',
+                'is_primary' => true,
             ]);
             $this->toast()->success('Updated', 'Cell leader updated successfully.')->send();
         } else {
@@ -160,6 +161,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
                 'name' => $user->name,
                 'phone' => $user->phone ?? '',
                 'email' => $user->email ?? '',
+                'is_primary' => true,
             ]);
             $this->toast()->success('Added', 'Cell leader added successfully.')->send();
         }

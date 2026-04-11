@@ -25,7 +25,7 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
             }
         }
 
-        $this->allCells = CellGroup::with(['primaryLeader'])
+        $this->allCells = CellGroup::with(['primaryLeader.user'])
             ->withCount('activeMembers')
             ->where('is_active', true)
             ->where('name', '!=', 'Cell Settings')
@@ -37,7 +37,7 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
 
     public function openJoinModal($cellId)
     {
-        $this->selectedCell = CellGroup::with('primaryLeader')->findOrFail($cellId);
+        $this->selectedCell = CellGroup::with(['primaryLeader.user'])->findOrFail($cellId);
         $this->showJoinModal = true;
     }
 
@@ -89,7 +89,9 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
                     'id' => $c->id,
                     'name' => $c->name,
                     'location' => $c->location ?? '',
-                    'leader' => $c->primaryLeader ? $c->primaryLeader->name : 'No leader assigned',
+                    'leader' => optional($c->primaryLeader)->name ?? 'No leader assigned',
+                    'leaderPhone' => optional($c->primaryLeader)->phone ?? '',
+                    'leaderEmail' => optional($c->primaryLeader)->email ?? '',
                     'lat' => $c->latitude,
                     'lng' => $c->longitude,
                 ])->values(),
@@ -142,13 +144,27 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
                             <div class="p-5">
                                 <h3 class="text-xl font-bold text-gray-900 mb-2">{{ $cell->name }}</h3>
 
+                                @if($cell->description)
+                                    <p class="text-gray-600 text-sm mb-3">{{ Str::limit($cell->description, 100) }}</p>
+                                @endif
+
                                 @if($cell->primaryLeader)
-                                    <div class="flex items-center text-gray-700 mb-3">
-                                        <i class="bi bi-person-badge text-blue-600 mr-2 text-lg"></i>
-                                        <div>
-                                            <p class="text-xs text-gray-500">Cell Leader</p>
-                                            <p class="font-semibold text-sm">{{ $cell->primaryLeader->name }}</p>
+                                    <div class="bg-blue-50 rounded-lg p-3 mb-3">
+                                        <div class="flex items-center text-gray-700 mb-2">
+                                            <i class="bi bi-person-badge text-blue-600 mr-2 text-lg"></i>
+                                            <div>
+                                                <p class="text-xs text-gray-500">Cell Leader</p>
+                                                <p class="font-semibold text-sm">{{ $cell->primaryLeader->name }}</p>
+                                            </div>
                                         </div>
+                                        @php
+                                            $phone = $cell->primaryLeader->phone ?: optional($cell->primaryLeader->user)->phone;
+                                        @endphp
+                                        @if($phone)
+                                            <a href="tel:{{ $phone }}" class="flex items-center text-xs text-gray-600 hover:text-blue-600">
+                                                <i class="bi bi-telephone mr-1"></i> {{ $phone }}
+                                            </a>
+                                        @endif
                                     </div>
                                 @endif
 
@@ -173,7 +189,7 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
                                 @endif
 
                                 <div class="flex gap-2">
-                                    <button wire:click="openJoinModal({{ $cell->id }})"
+                                    <button @click="$event.stopPropagation(); $wire.openJoinModal({{ $cell->id }})"
                                             class="flex-1 py-2.5 px-4 rounded-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 transition text-sm">
                                         Join Cell
                                     </button>
@@ -219,24 +235,30 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
     @if($showJoinModal && $selectedCell)
         <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div class="bg-white rounded-xl max-w-md w-full p-8">
-                <h3 class="text-2xl font-bold mb-4">Join {{ $selectedCell->name }}?</h3>
+                <h3 class="text-2xl font-bold mb-2">Join {{ $selectedCell->name }}?</h3>
 
-                <div class="mb-6">
-                    <p class="text-gray-600 mb-4">You're about to join this cell group. After confirming, you'll be directed to the cell's WhatsApp group to connect with members.</p>
-                    <ul class="list-disc list-inside space-y-2 text-gray-700">
-                        <li>Meets regularly for fellowship</li>
-                        <li>Studies the Word together</li>
-                        <li>Prays and supports one another</li>
-                        <li>Builds lasting friendships</li>
-                    </ul>
-                </div>
+                @if($selectedCell->description)
+                    <p class="text-gray-600 mb-4 text-sm">{{ Str::limit($selectedCell->description, 150) }}</p>
+                @endif
+
+                <p class="text-gray-600 mb-4">You're about to join this cell group. After confirming, you'll be directed to the cell's WhatsApp group to connect with members.</p>
+
+                <ul class="list-disc list-inside space-y-2 text-gray-700 mb-6">
+                    <li>Meets regularly for fellowship</li>
+                    <li>Studies the Word together</li>
+                    <li>Prays and supports one another</li>
+                    <li>Builds lasting friendships</li>
+                </ul>
 
                 @if($selectedCell->primaryLeader)
                     <div class="bg-blue-50 rounded-lg p-4 mb-6">
                         <p class="text-sm text-gray-600 mb-1">Your Cell Leader</p>
                         <p class="font-semibold text-gray-900">{{ $selectedCell->primaryLeader->name }}</p>
-                        @if($selectedCell->primaryLeader->phone)
-                            <p class="text-sm text-gray-600">{{ $selectedCell->primaryLeader->phone }}</p>
+                        @php
+                            $leaderPhone = $selectedCell->primaryLeader->phone ?: optional($selectedCell->primaryLeader->user)->phone;
+                        @endphp
+                        @if($leaderPhone)
+                            <p class="text-sm text-gray-600"><i class="bi bi-telephone"></i> {{ $leaderPhone }}</p>
                         @endif
                     </div>
                 @endif

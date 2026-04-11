@@ -22,10 +22,14 @@
             $$var = $model::where('chapter_id', $chapterId)->pluck('team_id')->all();
         }
 
-        $isPartnershipTeamMember = $user->teams()
+        // Check if user's teams have the partnerships function enabled
+        $userTeamIds = $user->teams()
             ->where('teams.chapter_id', $chapterId)
-            ->whereRaw('LOWER(teams.name) LIKE ?', ['%partnership%'])
-            ->exists();
+            ->pluck('teams.id');
+
+        $isPartnershipTeamMember = \App\Models\TeamFunction::whereIn('team_id', $userTeamIds)
+            ->get()
+            ->contains(fn($tf) => !empty($tf->function['partnerships']));
     } else {
         $appointment_teams = $prayerRequestTeams = $believersAcademyTeam = $eventTeams = [];
         $isPartnershipTeamMember = false;

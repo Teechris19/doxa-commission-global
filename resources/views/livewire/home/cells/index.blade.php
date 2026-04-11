@@ -51,7 +51,7 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
 
         $limit = $this->pageSettings?->cells_to_display ?? 3;
 
-        $allCells = CellGroup::with(['primaryLeader'])
+        $allCells = CellGroup::with(['primaryLeader.user'])
             ->withCount('activeMembers')
             ->where('is_active', true)
             ->where('name', '!=', 'Cell Settings')
@@ -65,7 +65,7 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
 
     public function openJoinModal($cellId)
     {
-        $this->selectedCell = CellGroup::with('primaryLeader')->findOrFail($cellId);
+        $this->selectedCell = CellGroup::with(['primaryLeader.user'])->findOrFail($cellId);
         $this->showJoinModal = true;
     }
 
@@ -189,42 +189,62 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
                                 <p class="text-gray-600 mb-4">{{ Str::limit($cell->description, 120) }}</p>
                             @endif
 
-                            <div class="space-y-3 mb-6">
-                                @if($cell->primaryLeader)
-                                    <div class="flex items-center text-gray-700">
+                            @if($cell->primaryLeader)
+                                <div class="bg-blue-50 rounded-lg p-4 mb-4">
+                                    <div class="flex items-center text-gray-700 mb-2">
                                         <i class="bi bi-person-badge text-blue-600 mr-3 text-xl"></i>
                                         <div>
                                             <p class="text-sm text-gray-500">Cell Leader</p>
                                             <p class="font-semibold">{{ $cell->primaryLeader->name }}</p>
                                         </div>
                                     </div>
-                                @endif
+                                    @php
+                                        $phone = $cell->primaryLeader->phone ?: optional($cell->primaryLeader->user)->phone;
+                                    @endphp
+                                    @if($phone)
+                                        <a href="tel:{{ $phone }}" class="flex items-center text-sm text-gray-600 hover:text-blue-600">
+                                            <i class="bi bi-telephone mr-1.5"></i> {{ $phone }}
+                                        </a>
+                                    @endif
+                                </div>
+                            @endif
 
-                                @if($cell->meeting_day && $cell->meeting_time)
-                                    <div class="flex items-center text-gray-700">
-                                        <i class="bi bi-calendar-event text-green-600 mr-3 text-xl"></i>
-                                        <div>
-                                            <p class="text-sm text-gray-500">Meetings</p>
-                                            <p class="font-semibold">{{ $cell->meeting_day }}s at {{ \Carbon\Carbon::parse($cell->meeting_time)->format('g:i A') }}</p>
-                                        </div>
+                            @if($cell->meeting_day && $cell->meeting_time)
+                                <div class="flex items-center text-gray-700 mb-3">
+                                    <i class="bi bi-calendar-event text-green-600 mr-3 text-xl"></i>
+                                    <div>
+                                        <p class="text-sm text-gray-500">Meetings</p>
+                                        <p class="font-semibold">{{ $cell->meeting_day }}s at {{ \Carbon\Carbon::parse($cell->meeting_time)->format('g:i A') }}</p>
                                     </div>
-                                @endif
+                                </div>
+                            @endif
 
-                                @if($cell->location)
-                                    <div class="flex items-center text-gray-700">
-                                        <i class="bi bi-geo-alt text-red-600 mr-3 text-xl"></i>
-                                        <div>
-                                            <p class="text-sm text-gray-500">Location</p>
-                                            <p class="font-semibold">{{ $cell->location }}</p>
-                                        </div>
+                            @if($cell->location)
+                                <div class="flex items-center text-gray-700 mb-6">
+                                    <i class="bi bi-geo-alt text-red-600 mr-3 text-xl"></i>
+                                    <div>
+                                        <p class="text-sm text-gray-500">Location</p>
+                                        <p class="font-semibold">{{ $cell->location }}</p>
                                     </div>
+                                </div>
+                            @endif
+
+                            <div class="flex gap-2">
+                                <button wire:click="openJoinModal({{ $cell->id }})"
+                                        class="flex-1 py-3 px-6 rounded-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 transition text-sm">
+                                    Join Cell
+                                </button>
+                                @if($cell->latitude && $cell->longitude)
+                                    <a href="https://www.google.com/maps/dir/?api=1&destination={{ $cell->latitude }},{{ $cell->longitude }}" target="_blank"
+                                       class="flex-1 py-3 px-6 rounded-lg font-semibold bg-white border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-blue-300 hover:text-blue-700 transition text-center text-sm">
+                                        Get Directions
+                                    </a>
+                                @else
+                                    <span class="flex-1 py-3 px-6 rounded-lg font-semibold bg-slate-100 text-slate-400 text-center text-sm cursor-not-allowed" title="Location not set">
+                                        Get Directions
+                                    </span>
                                 @endif
                             </div>
-
-                            <button wire:click="openJoinModal({{ $cell->id }})"
-                                    class="w-full py-3 px-6 rounded-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 transition">
-                                Join This Cell
-                            </button>
                         </div>
                     </div>
                 @empty
@@ -288,24 +308,30 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
     @if($showJoinModal && $selectedCell)
         <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div class="bg-white rounded-xl max-w-md w-full p-8">
-                <h3 class="text-2xl font-bold mb-4">Join {{ $selectedCell->name }}?</h3>
+                <h3 class="text-2xl font-bold mb-2">Join {{ $selectedCell->name }}?</h3>
 
-                <div class="mb-6">
-                    <p class="text-gray-600 mb-4">You're about to join this cell group. After confirming, you'll be directed to the cell's WhatsApp group to connect with members.</p>
-                    <ul class="list-disc list-inside space-y-2 text-gray-700">
-                        <li>Meets regularly for fellowship</li>
-                        <li>Studies the Word together</li>
-                        <li>Prays and supports one another</li>
-                        <li>Builds lasting friendships</li>
-                    </ul>
-                </div>
+                @if($selectedCell->description)
+                    <p class="text-gray-600 mb-4 text-sm">{{ Str::limit($selectedCell->description, 150) }}</p>
+                @endif
+
+                <p class="text-gray-600 mb-4">You're about to join this cell group. After confirming, you'll be directed to the cell's WhatsApp group to connect with members.</p>
+
+                <ul class="list-disc list-inside space-y-2 text-gray-700 mb-6">
+                    <li>Meets regularly for fellowship</li>
+                    <li>Studies the Word together</li>
+                    <li>Prays and supports one another</li>
+                    <li>Builds lasting friendships</li>
+                </ul>
 
                 @if($selectedCell->primaryLeader)
                     <div class="bg-blue-50 rounded-lg p-4 mb-6">
                         <p class="text-sm text-gray-600 mb-1">Your Cell Leader</p>
                         <p class="font-semibold text-gray-900">{{ $selectedCell->primaryLeader->name }}</p>
-                        @if($selectedCell->primaryLeader->phone)
-                            <p class="text-sm text-gray-600">{{ $selectedCell->primaryLeader->phone }}</p>
+                        @php
+                            $leaderPhone = $selectedCell->primaryLeader->phone ?: optional($selectedCell->primaryLeader->user)->phone;
+                        @endphp
+                        @if($leaderPhone)
+                            <p class="text-sm text-gray-600"><i class="bi bi-telephone"></i> {{ $leaderPhone }}</p>
                         @endif
                     </div>
                 @endif

@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Models\PartnershipCategory;
+use App\Models\TeamFunction;
 use App\Models\User;
 
 class PartnershipCategoryPolicy
@@ -52,15 +53,17 @@ class PartnershipCategoryPolicy
 
     protected function isPartnershipTeamMember(User $user, ?int $chapterId = null): bool
     {
-        $teams = $user->teams();
+        $userTeamIds = $user->teams()
+            ->when($chapterId, fn($q) => $q->where('teams.chapter_id', $chapterId))
+            ->pluck('teams.id');
 
-        if ($chapterId) {
-            $teams->where('chapter_id', $chapterId);
+        if ($userTeamIds->isEmpty()) {
+            return false;
         }
 
-        return $teams
-            ->whereRaw('LOWER(name) LIKE ?', ['%partnership%'])
-            ->exists();
+        return TeamFunction::whereIn('team_id', $userTeamIds)
+            ->get()
+            ->contains(fn($tf) => !empty($tf->function['partnerships']));
     }
 }
 

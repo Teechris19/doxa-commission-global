@@ -52,10 +52,10 @@ class CellGroup extends Model
         return $this->hasMany(CellMember::class);
     }
 
-    // Primary leader
+    // Primary leader (single leader per cell)
     public function primaryLeader()
     {
-        return $this->hasOne(CellLeader::class)->where('is_primary', true);
+        return $this->hasOne(CellLeader::class)->latest();
     }
 
     // Active members

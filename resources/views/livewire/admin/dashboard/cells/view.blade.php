@@ -115,10 +115,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
                     @forelse($cell->leaders as $leader)
                         <div class="rounded-lg border px-3 py-2">
                             <p class="text-sm font-semibold text-zinc-800">{{ $leader->name }}</p>
-                            <p class="text-xs text-zinc-500">{{ $leader->phone }}</p>
-                            @if($leader->email)
-                                <p class="text-xs text-zinc-500">{{ $leader->email }}</p>
-                            @endif
+                            <p class="text-xs text-zinc-500">{{ $leader->phone ?? 'No phone' }}</p>
                             @if($leader->is_primary)
                                 <span class="mt-2 inline-flex rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700">Primary</span>
                             @endif
