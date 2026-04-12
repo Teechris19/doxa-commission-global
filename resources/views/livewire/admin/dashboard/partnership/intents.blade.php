@@ -674,7 +674,8 @@ new #[Layout('components.layouts.admin')] class extends Component {
         </div>
     </x-fancy-header>
 
-    <div class="mb-6 flex flex-wrap items-center gap-3 text-sm">
+    {{-- Stats Bar --}}
+    <div class="mb-8 flex flex-wrap items-center gap-3 text-sm">
         <span class="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-blue-700 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-400">Chapter: {{ $chapterName }}</span>
         <span class="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-amber-700 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-400">Pending Intents: {{ $intentStats['pending'] ?? 0 }}</span>
         <span class="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-indigo-700 dark:border-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400">Reviewing: {{ $intentStats['reviewing'] ?? 0 }}</span>
@@ -682,8 +683,9 @@ new #[Layout('components.layouts.admin')] class extends Component {
         <span class="rounded-full border border-zinc-300 bg-zinc-100 px-3 py-1 text-zinc-700 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">Withdrawn: {{ $intentStats['withdrawn'] ?? 0 }}</span>
     </div>
 
-    <x-card class="mb-6 dark:bg-zinc-900">
-        <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+    {{-- Categories Section --}}
+    <x-card class="mb-8 dark:bg-zinc-900">
+        <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
             <div>
                 <h2 class="text-lg font-semibold text-slate-900 dark:text-gray-200">Partnership Categories</h2>
                 <p class="text-sm text-slate-500 dark:text-gray-400">Categorize intents as general, event-based, or project-based tracks.</p>
@@ -759,8 +761,9 @@ new #[Layout('components.layouts.admin')] class extends Component {
         </div>
     </x-card>
 
-    <x-card class="dark:bg-zinc-900">
-        <div class="mb-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    {{-- Intents Section --}}
+    <x-card class="mb-8 dark:bg-zinc-900">
+        <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
                 <h2 class="text-lg font-semibold text-slate-900 dark:text-gray-200">Partnership Intents</h2>
                 <p class="text-sm text-slate-500 dark:text-gray-400">Intent records are pledges only, not transactions. Intents can be updated or withdrawn.</p>

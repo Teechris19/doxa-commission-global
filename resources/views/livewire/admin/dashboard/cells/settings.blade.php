@@ -1,21 +1,14 @@
 <?php
 
-use App\Models\{Chapter, CellPageSetting};
-use Livewire\Attributes\{Layout, Url};
+use App\Models\{CellPageSetting};
+use Livewire\Attributes\{Layout};
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use TallStackUi\Traits\Interactions;
 
 new #[Layout('components.layouts.admin')] class extends Component {
     use Interactions, WithFileUploads;
-
-    #[Url(keep: true)]
-    public ?string $chapter = null;
-
-    public ?int $chapterId = null;
-    public array $chapters = [];
 
     // Hero Section
     public string $hero_title = 'Join a Cell Group';
@@ -41,50 +34,12 @@ new #[Layout('components.layouts.admin')] class extends Component {
 
     public function mount(): void
     {
-        $user = Auth::user();
-
-        if ($user->hasRole('super-admin')) {
-            $this->chapters = Chapter::orderBy('name')->get()->all();
-            if ($this->chapter) {
-                $this->chapterId = Chapter::where('name', $this->chapter)->value('id');
-            }
-
-            if (!$this->chapterId && !empty($this->chapters)) {
-                $this->chapterId = $this->chapters[0]->id;
-            }
-        } else {
-            $this->chapterId = $user?->chapter_id;
-
-            // Fallback: If user has no chapter_id on their account, get it from their team
-            if (!$this->chapterId && $user) {
-                $team = $user->teams()->first();
-                if ($team) {
-                    $this->chapterId = $team->chapter_id;
-                }
-            }
-        }
-
-        $this->loadSettings();
-    }
-
-    public function updatedChapterId(): void
-    {
-        if (!$this->chapterId) {
-            return;
-        }
-
-        $selected = Chapter::find($this->chapterId);
-        $this->chapter = $selected?->name;
         $this->loadSettings();
     }
 
     protected function loadSettings(): void
     {
-        if (!$this->chapterId) {
-            return;
-        }
-
-        $settings = CellPageSetting::where('chapter_id', $this->chapterId)->first();
+        $settings = CellPageSetting::whereNull('chapter_id')->first();
 
         if ($settings) {
             $this->hero_title = $settings->hero_title ?? 'Join a Cell Group';
@@ -136,11 +91,6 @@ new #[Layout('components.layouts.admin')] class extends Component {
 
     public function save(): void
     {
-        if (!$this->chapterId) {
-            $this->toast()->error('No Branch', 'Select a branch before saving settings.')->send();
-            return;
-        }
-
         $validated = $this->validate([
             'hero_title' => 'required|string|max:255',
             'hero_subtitle' => 'required|string|max:255',
@@ -179,7 +129,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
             ->toArray();
 
         CellPageSetting::updateOrCreate(
-            ['chapter_id' => $this->chapterId],
+            ['chapter_id' => null],
             [
                 'hero_title' => $validated['hero_title'],
                 'hero_subtitle' => $validated['hero_subtitle'],
@@ -206,7 +156,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
 <div class="space-y-6">
     <x-fancy-header
         title="Cell Page Settings"
-        subtitle="Configure the public cell groups page appearance"
+        subtitle="Configure the public cell groups page appearance (global settings apply to all chapters)"
         :breadcrumbs="[
             ['label' => 'Home', 'url' => route('admin.dashboard', request()->query())],
             ['label' => 'Cells', 'url' => route('admin.dashboard.cells.index', request()->query())],

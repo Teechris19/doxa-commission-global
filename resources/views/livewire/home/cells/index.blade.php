@@ -24,38 +24,17 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
 
     protected function loadPageSettings(): void
     {
-        $user = Auth::user();
-        $chapterId = $user?->chapter_id;
-
-        if (!$chapterId && $user) {
-            $team = $user->teams()->first();
-            if ($team) {
-                $chapterId = $team->chapter_id;
-            }
-        }
-
-        $this->pageSettings = CellPageSetting::where('chapter_id', $chapterId)->first();
+        $this->pageSettings = CellPageSetting::whereNull('chapter_id')->first();
     }
 
     protected function loadDisplayCells(): void
     {
-        $user = Auth::user();
-        $chapterId = $user?->chapter_id;
-
-        if (!$chapterId && $user) {
-            $team = $user->teams()->first();
-            if ($team) {
-                $chapterId = $team->chapter_id;
-            }
-        }
-
         $limit = $this->pageSettings?->cells_to_display ?? 3;
 
         $allCells = CellGroup::with(['primaryLeader.user'])
             ->withCount('activeMembers')
             ->where('is_active', true)
             ->where('name', '!=', 'Cell Settings')
-            ->when($chapterId, fn($q) => $q->where('chapter_id', $chapterId))
             ->orderBy('name')
             ->get();
 

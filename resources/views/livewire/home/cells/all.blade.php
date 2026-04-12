@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\{CellGroup, CellMember};
+use App\Models\{CellGroup, CellMember, Chapter};
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 use TallStackUi\Traits\Interactions;
@@ -13,23 +13,34 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
     public $showJoinModal = false;
     public $allCells = [];
 
+    // Chapter filter
+    public $selectedChapterId = null;
+    public $chapters = [];
+
     public function mount(): void
     {
-        $user = Auth::user();
-        $chapterId = $user?->chapter_id;
+        $this->loadChapters();
+        $this->loadAllCells();
+    }
 
-        if (!$chapterId && $user) {
-            $team = $user->teams()->first();
-            if ($team) {
-                $chapterId = $team->chapter_id;
-            }
-        }
+    public function filterByChapter(): void
+    {
+        $this->selectedChapterId = $this->selectedChapterId === '' ? null : (int) $this->selectedChapterId;
+        $this->loadAllCells();
+    }
 
+    protected function loadChapters(): void
+    {
+        $this->chapters = Chapter::orderBy('name')->get(['id', 'name']);
+    }
+
+    protected function loadAllCells(): void
+    {
         $this->allCells = CellGroup::with(['primaryLeader.user'])
             ->withCount('activeMembers')
             ->where('is_active', true)
             ->where('name', '!=', 'Cell Settings')
-            ->when($chapterId, fn($q) => $q->where('chapter_id', $chapterId))
+            ->when($this->selectedChapterId, fn($q) => $q->where('chapter_id', $this->selectedChapterId))
             ->orderBy('name')
             ->get()
             ->all();
@@ -82,142 +93,120 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
 
     public function with()
     {
-        return [
-            'cellsForMap' => collect($this->allCells)
-                ->filter(fn($c) => $c->latitude && $c->longitude)
-                ->map(fn($c) => [
-                    'id' => $c->id,
-                    'name' => $c->name,
-                    'location' => $c->location ?? '',
-                    'leader' => optional($c->primaryLeader)->name ?? 'No leader assigned',
-                    'leaderPhone' => optional($c->primaryLeader)->phone ?? '',
-                    'leaderEmail' => optional($c->primaryLeader)->email ?? '',
-                    'lat' => $c->latitude,
-                    'lng' => $c->longitude,
-                ])->values(),
-        ];
+        return [];
     }
 }; ?>
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
 <div>
     <section class="py-16 bg-gray-50">
-        <div class="container mx-auto px-4" x-data="{ activeTab: 'list' }">
+        <div class="container mx-auto px-4">
             <h2 class="text-3xl font-bold text-center mb-8 text-slate-900">All Cell Groups</h2>
 
-            {{-- Tab Switcher --}}
-            <div class="flex justify-center mb-10">
-                <div class="inline-flex rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
-                    <button @click="activeTab = 'list'"
-                            :class="activeTab === 'list' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'"
-                            class="px-6 py-2.5 rounded-lg text-sm font-semibold transition">
-                        <svg class="inline-block w-4 h-4 mr-1.5 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                        </svg>
-                        List View
-                    </button>
-                    <button @click="activeTab = 'map'; $nextTick(() => initCellsMap())"
-                            :class="activeTab === 'map' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'"
-                            class="px-6 py-2.5 rounded-lg text-sm font-semibold transition">
-                        <svg class="inline-block w-4 h-4 mr-1.5 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
-                        </svg>
-                        Map View
+            {{-- Chapter Filter --}}
+            <div class="max-w-md mx-auto mb-10">
+                <div class="flex gap-2">
+                    <select wire:model="selectedChapterId" class="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-lg text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+                        <option value="">All Chapters</option>
+                        @foreach($chapters as $chapter)
+                            <option value="{{ $chapter->id }}">{{ $chapter->name }}</option>
+                        @endforeach
+                    </select>
+                    <button wire:click="filterByChapter" class="rounded-xl bg-blue-600 px-6 py-3 text-lg font-semibold text-white hover:bg-blue-700 transition">
+                        Filter
                     </button>
                 </div>
+                <div wire:loading class="mt-2 text-center text-sm text-blue-600 dark:text-blue-400">Filtering cells...</div>
             </div>
 
-            {{-- List View --}}
-            <div x-show="activeTab === 'list'" x-transition>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    @forelse($allCells as $cell)
-                        <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition">
-                            @if($cell->image)
-                                <img src="{{ Storage::url($cell->image) }}" alt="{{ $cell->name }}" class="w-full h-48 object-cover">
-                            @else
-                                <div class="w-full h-48 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                                    <i class="bi bi-people-fill text-white text-6xl"></i>
+            {{-- Cell Cards --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                @forelse($allCells as $cell)
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition">
+                        @if($cell->image)
+                            <img src="{{ Storage::url($cell->image) }}" alt="{{ $cell->name }}" class="w-full h-48 object-cover">
+                        @else
+                            <div class="w-full h-48 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                                <i class="bi bi-people-fill text-white text-6xl"></i>
+                            </div>
+                        @endif
+
+                        <div class="p-5">
+                            <h3 class="text-xl font-bold text-gray-900 mb-2">{{ $cell->name }}</h3>
+
+                            @if($cell->description)
+                                <p class="text-gray-600 text-sm mb-3">{{ Str::limit($cell->description, 100) }}</p>
+                            @endif
+
+                            @if($cell->primaryLeader)
+                                <div class="bg-blue-50 rounded-lg p-3 mb-3">
+                                    <div class="flex items-center text-gray-700 mb-2">
+                                        <i class="bi bi-person-badge text-blue-600 mr-2 text-lg"></i>
+                                        <div>
+                                            <p class="text-xs text-gray-500">Cell Leader</p>
+                                            <p class="font-semibold text-sm">{{ $cell->primaryLeader->name }}</p>
+                                        </div>
+                                    </div>
+                                    @php
+                                        $phone = $cell->primaryLeader->phone ?: optional($cell->primaryLeader->user)->phone;
+                                    @endphp
+                                    @if($phone)
+                                        <a href="tel:{{ $phone }}" class="flex items-center text-xs text-gray-600 hover:text-blue-600">
+                                            <i class="bi bi-telephone mr-1"></i> {{ $phone }}
+                                        </a>
+                                    @endif
                                 </div>
                             @endif
 
-                            <div class="p-5">
-                                <h3 class="text-xl font-bold text-gray-900 mb-2">{{ $cell->name }}</h3>
-
-                                @if($cell->description)
-                                    <p class="text-gray-600 text-sm mb-3">{{ Str::limit($cell->description, 100) }}</p>
-                                @endif
-
-                                @if($cell->primaryLeader)
-                                    <div class="bg-blue-50 rounded-lg p-3 mb-3">
-                                        <div class="flex items-center text-gray-700 mb-2">
-                                            <i class="bi bi-person-badge text-blue-600 mr-2 text-lg"></i>
-                                            <div>
-                                                <p class="text-xs text-gray-500">Cell Leader</p>
-                                                <p class="font-semibold text-sm">{{ $cell->primaryLeader->name }}</p>
-                                            </div>
-                                        </div>
-                                        @php
-                                            $phone = $cell->primaryLeader->phone ?: optional($cell->primaryLeader->user)->phone;
-                                        @endphp
-                                        @if($phone)
-                                            <a href="tel:{{ $phone }}" class="flex items-center text-xs text-gray-600 hover:text-blue-600">
-                                                <i class="bi bi-telephone mr-1"></i> {{ $phone }}
-                                            </a>
-                                        @endif
+                            @if($cell->meeting_day && $cell->meeting_time)
+                                <div class="flex items-center text-gray-700 mb-3">
+                                    <i class="bi bi-calendar-event text-green-600 mr-2 text-lg"></i>
+                                    <div>
+                                        <p class="text-xs text-gray-500">Meetings</p>
+                                        <p class="font-semibold text-sm">{{ $cell->meeting_day }}s at {{ \Carbon\Carbon::parse($cell->meeting_time)->format('g:i A') }}</p>
                                     </div>
-                                @endif
-
-                                @if($cell->meeting_day && $cell->meeting_time)
-                                    <div class="flex items-center text-gray-700 mb-3">
-                                        <i class="bi bi-calendar-event text-green-600 mr-2 text-lg"></i>
-                                        <div>
-                                            <p class="text-xs text-gray-500">Meetings</p>
-                                            <p class="font-semibold text-sm">{{ $cell->meeting_day }}s at {{ \Carbon\Carbon::parse($cell->meeting_time)->format('g:i A') }}</p>
-                                        </div>
-                                    </div>
-                                @endif
-
-                                @if($cell->location)
-                                    <div class="flex items-center text-gray-700 mb-4">
-                                        <i class="bi bi-geo-alt text-red-600 mr-2 text-lg"></i>
-                                        <div>
-                                            <p class="text-xs text-gray-500">Location</p>
-                                            <p class="font-semibold text-sm">{{ $cell->location }}</p>
-                                        </div>
-                                    </div>
-                                @endif
-
-                                <div class="flex gap-2">
-                                    <button @click="$event.stopPropagation(); $wire.openJoinModal({{ $cell->id }})"
-                                            class="flex-1 py-2.5 px-4 rounded-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 transition text-sm">
-                                        Join Cell
-                                    </button>
-                                    @if($cell->latitude && $cell->longitude)
-                                        <a href="https://www.google.com/maps/dir/?api=1&destination={{ $cell->latitude }},{{ $cell->longitude }}" target="_blank"
-                                           class="flex-1 py-2.5 px-4 rounded-lg font-semibold bg-white border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-blue-300 hover:text-blue-700 transition text-center text-sm">
-                                            Get Directions
-                                        </a>
-                                    @else
-                                        <span class="flex-1 py-2.5 px-4 rounded-lg font-semibold bg-slate-100 text-slate-400 text-center text-sm cursor-not-allowed" title="Location not set">
-                                            Get Directions
-                                        </span>
-                                    @endif
                                 </div>
+                            @endif
+
+                            @if($cell->location)
+                                <div class="flex items-center text-gray-700 mb-4">
+                                    <i class="bi bi-geo-alt text-red-600 mr-2 text-lg"></i>
+                                    <div>
+                                        <p class="text-xs text-gray-500">Location</p>
+                                        <p class="font-semibold text-sm">{{ $cell->location }}</p>
+                                    </div>
+                                </div>
+                            @endif
+
+                            <div class="flex gap-2">
+                                <button @click="$event.stopPropagation(); $wire.openJoinModal({{ $cell->id }})"
+                                        class="flex-1 py-2.5 px-4 rounded-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 transition text-sm">
+                                    Join Cell
+                                </button>
+                                @if($cell->latitude && $cell->longitude)
+                                    <a href="https://www.google.com/maps/dir/?api=1&destination={{ $cell->latitude }},{{ $cell->longitude }}" target="_blank"
+                                       class="flex-1 py-2.5 px-4 rounded-lg font-semibold bg-white border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-blue-300 hover:text-blue-700 transition text-center text-sm">
+                                        Get Directions
+                                    </a>
+                                @else
+                                    <span class="flex-1 py-2.5 px-4 rounded-lg font-semibold bg-slate-100 text-slate-400 text-center text-sm cursor-not-allowed" title="Location not set">
+                                        Get Directions
+                                    </span>
+                                @endif
                             </div>
                         </div>
-                    @empty
-                        <div class="col-span-3 text-center py-16">
-                            <i class="bi bi-people text-8xl text-gray-400 mb-4"></i>
-                            <p class="text-xl text-gray-600">No active cell groups available at the moment</p>
-                        </div>
-                    @endforelse
-                </div>
-            </div>
-
-            {{-- Map View --}}
-            <div x-show="activeTab === 'map'" x-transition class="relative">
-                <div id="cells-map" class="w-full h-[600px] rounded-2xl shadow-lg overflow-hidden" data-cells='@js($cellsForMap)'></div>
+                    </div>
+                @empty
+                    <div class="col-span-3 text-center py-16">
+                        <i class="bi bi-people text-8xl text-gray-400 mb-4"></i>
+                        <p class="text-xl text-gray-600">
+                            @if($selectedChapterId)
+                                No active cell groups found in this chapter.
+                            @else
+                                No active cell groups available at the moment.
+                            @endif
+                        </p>
+                    </div>
+                @endforelse
             </div>
 
             <div class="mt-12 text-center">
@@ -277,65 +266,3 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
         </div>
     @endif
 </div>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>
-function initCellsMap() {
-    const mapEl = document.getElementById('cells-map');
-    if (!mapEl || typeof L === 'undefined') return;
-    if (mapEl.dataset.mapReady === '1') return;
-
-    mapEl.dataset.mapReady = '1';
-
-    const cells = JSON.parse(mapEl.dataset.cells || '[]');
-    if (!cells.length) {
-        mapEl.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500">No cells with coordinates available</div>';
-        return;
-    }
-
-    const defaultCenter = [cells[0].lat, cells[0].lng];
-    const map = L.map('cells-map').setView(defaultCenter, 12);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; OpenStreetMap contributors',
-    }).addTo(map);
-
-    const bounds = [];
-
-    cells.forEach(cell => {
-        const marker = L.marker([cell.lat, cell.lng]).addTo(map);
-
-        const popupContent = `
-            <div class="text-center">
-                <h3 class="font-bold text-lg mb-1">${cell.name}</h3>
-                <p class="text-sm text-gray-600 mb-1"><i class="bi bi-person-badge"></i> ${cell.leader}</p>
-                ${cell.location ? `<p class="text-sm text-gray-500 mb-3"><i class="bi bi-geo-alt"></i> ${cell.location}</p>` : ''}
-                <div class="flex gap-2 mt-2">
-                    <a href="#" onclick="Livewire.dispatch('openJoinModal', {cellId: ${cell.id}}); return false;" class="flex-1 bg-blue-600 text-white text-xs px-3 py-2 rounded-lg hover:bg-blue-700">Join Cell</a>
-                    <a href="https://www.google.com/maps/dir/?api=1&destination=${cell.lat},${cell.lng}" target="_blank" class="flex-1 bg-white border text-xs px-3 py-2 rounded-lg hover:bg-slate-50">Get Directions</a>
-                </div>
-            </div>
-        `;
-
-        marker.bindPopup(popupContent);
-        bounds.push([cell.lat, cell.lng]);
-    });
-
-    if (bounds.length > 1) {
-        map.fitBounds(bounds, { padding: [40, 40] });
-    }
-
-    window.cellsMap = map;
-}
-
-document.addEventListener('DOMContentLoaded', () => { loadLeafletForCells(); });
-document.addEventListener('livewire:navigated', () => { loadLeafletForCells(); });
-
-function loadLeafletForCells() {
-    if (typeof L !== 'undefined') return;
-    const script = document.createElement('script');
-    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-    document.head.appendChild(script);
-}
-</script>

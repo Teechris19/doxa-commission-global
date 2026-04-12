@@ -43,12 +43,40 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
 }; ?>
 
 <div class="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+    {{-- Hero Banner Section --}}
+    @php
+        $featuredSeries = \App\Models\SermonSeries::query()->latest()->first();
+    @endphp
+    @if($featuredSeries?->image)
+        <div class="relative mb-8 h-72 overflow-hidden rounded-3xl bg-cover bg-center bg-no-repeat sm:h-96"
+             style="background-image: url('{{ asset('storage/' . $featuredSeries->image) }}');">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
+            <div class="absolute bottom-0 left-0 right-0 p-6 sm:p-10">
+                <p class="text-xs font-semibold uppercase tracking-[0.3em] text-blue-300">Featured Series</p>
+                <h2 class="mt-2 text-2xl font-bold text-white sm:text-4xl">{{ $featuredSeries->title }}</h2>
+                <p class="mt-2 max-w-2xl text-sm text-gray-200 sm:text-base">{{ $featuredSeries->description }}</p>
+                <a href="{{ route('sermons.series-detail', ['id' => $featuredSeries->id]) }}" wire:navigate class="mt-4 inline-block rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700">
+                    View Series
+                </a>
+            </div>
+        </div>
+    @else
+        <div class="relative mb-8 h-72 overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 to-purple-700 sm:h-96">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+            <div class="absolute bottom-0 left-0 right-0 p-6 sm:p-10">
+                <p class="text-xs font-semibold uppercase tracking-[0.3em] text-blue-200">Messages</p>
+                <h2 class="mt-2 text-2xl font-bold text-white sm:text-4xl">Sermon Series</h2>
+                <p class="mt-2 max-w-2xl text-sm text-gray-200 sm:text-base">Explore curated collections of teaching.</p>
+            </div>
+        </div>
+    @endif
+
+    {{-- All Series Grid --}}
     <section class="rounded-3xl border border-blue-100 bg-white p-6 shadow-[0_24px_60px_-40px_rgba(37,99,235,0.45)] sm:p-8">
         <div class="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
-                <p class="text-xs font-semibold uppercase tracking-[0.3em] text-blue-600">Messages</p>
-                <h1 class="mt-2 text-3xl font-bold text-slate-900">Sermon Series</h1>
-                <p class="mt-2 text-sm text-slate-600">Explore curated collections of teaching.</p>
+                <p class="text-xs font-semibold uppercase tracking-[0.3em] text-blue-600">All Series</p>
+                <h1 class="mt-2 text-2xl font-bold text-slate-900">Browse All Series</h1>
             </div>
             <div class="w-full md:w-72">
                 <input
@@ -62,11 +90,14 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
 
         <div class="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             @forelse($this->series as $serie)
-                <article class="overflow-hidden rounded-2xl border border-blue-100 bg-white shadow-sm">
+                <article class="group overflow-hidden rounded-2xl border border-blue-100 bg-white shadow-sm transition hover:shadow-lg">
                     @if($serie->image)
-                        <img src="{{ asset('storage/' . $serie->image) }}" alt="{{ $serie->title }}" class="h-52 w-full object-cover">
+                        <div class="relative h-52 w-full bg-cover bg-center bg-no-repeat transition group-hover:scale-[1.02]"
+                             style="background-image: url('{{ asset('storage/' . $serie->image) }}');">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+                        </div>
                     @else
-                        <div class="flex h-52 items-center justify-center bg-blue-50 text-4xl text-blue-300">
+                        <div class="flex h-52 items-center justify-center bg-gradient-to-br from-blue-400 to-purple-500 text-4xl text-white/60">
                             <i class="fas fa-photo-film"></i>
                         </div>
                     @endif
