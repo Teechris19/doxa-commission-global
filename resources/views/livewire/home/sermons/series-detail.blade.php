@@ -120,7 +120,7 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
                         }
                     @endphp
 
-                    <div class="overflow-hidden rounded-2xl border border-blue-100 bg-white">
+                    <div wire:key="sermon-player-{{ $selectedSermon->id }}" class="overflow-hidden rounded-2xl border border-blue-100 bg-white">
                         <div class="aspect-video bg-slate-950">
                             @if($videoUrl)
                                 @if($youtubeId)
@@ -165,7 +165,7 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
                             @endif
 
                             @if($audioUrl)
-                                <div class="rounded-2xl border border-blue-100 bg-blue-50/70 p-4">
+                                <div wire:key="audio-player-{{ $selectedSermon->id }}" class="rounded-2xl border border-blue-100 bg-blue-50/70 p-4">
                                     <p class="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-blue-700">Audio</p>
                                     <audio controls preload="metadata" class="w-full">
                                         <source src="{{ $audioUrl }}" type="{{ $audioMedia?->mime_type ?? 'audio/mpeg' }}">
