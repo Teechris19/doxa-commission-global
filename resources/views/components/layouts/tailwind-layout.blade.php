@@ -565,5 +565,56 @@
 
     @livewireScripts
     @fluxScripts
+
+    {{-- Global Modal Auto-Close Script --}}
+    <script>
+    (() => {
+        function closeAllModals() {
+            // Close Alpine.js modals
+            if (window.$modalClose) {
+                document.querySelectorAll('[id$="-modal"], [id*="modal"]').forEach(modal => {
+                    if (modal.id) {
+                        try {
+                            window.$modalClose(modal.id);
+                        } catch (e) {}
+                    }
+                });
+            }
+
+            // Close modals by removing open classes
+            document.querySelectorAll('.modal.show, [x-show="true"], [x-show="open"]').forEach(modal => {
+                modal.classList.remove('show');
+                modal.style.display = 'none';
+                const backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) backdrop.remove();
+                document.body.classList.remove('overflow-hidden');
+            });
+
+            window.dispatchEvent(new CustomEvent('modal-closed'));
+            window.dispatchEvent(new CustomEvent('close-all-modals'));
+        }
+
+        // Listen for Livewire commit success
+        if (typeof Livewire !== 'undefined') {
+            Livewire.hook('commit', ({ component, succeed, fail }) => {
+                succeed(({ snapshot, stopPropagation }) => {
+                    setTimeout(() => {
+                        closeAllModals();
+                    }, 100);
+                });
+            });
+        }
+
+        // Listen for form submissions with wire:submit
+        document.addEventListener('submit', (e) => {
+            const form = e.target;
+            if (form.hasAttribute('wire:submit') || form.hasAttribute('wire:submit.prevent')) {
+                setTimeout(() => {
+                    closeAllModals();
+                }, 200);
+            }
+        });
+    })();
+    </script>
 </body>
 </html>
