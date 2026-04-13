@@ -29,6 +29,9 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
     public function selectSermon($sermonId)
     {
         $this->selectedSermon = Sermons::with('media')->findOrFail($sermonId);
+        
+        // Dispatch browser event to reload audio player
+        $this->dispatch('sermon-changed', sermonId: $this->selectedSermon->id);
     }
 
     public function resolveMediaUrl(?string $path): ?string
@@ -165,16 +168,240 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
                             @endif
 
                             @if($audioUrl)
-                                <div wire:key="audio-player-{{ $selectedSermon->id }}" class="rounded-2xl border border-blue-100 bg-blue-50/70 p-4">
-                                    <p class="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-blue-700">Audio</p>
-                                    <audio controls preload="metadata" class="w-full">
+                                <div class="rounded-2xl border border-blue-100 bg-blue-50/70 p-4" id="sermon-audio-player" data-audio-url="{{ $audioUrl }}" data-audio-type="{{ $audioMedia?->mime_type ?? 'audio/mpeg' }}" data-sermon-id="{{ $selectedSermon->id }}">
+                                    <p class="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-blue-700">Audio</p>
+
+                                    {{-- Custom Audio Controls --}}
+                                    <div class="flex items-center gap-4">
+                                        <button type="button" id="audio-play-btn" class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white transition hover:bg-blue-700">
+                                            <i class="fas fa-play"></i>
+                                        </button>
+                                        <div class="flex min-w-0 flex-1 flex-col gap-1">
+                                            <div class="flex items-center gap-2">
+                                                <span id="audio-current-time" class="w-10 text-xs font-mono text-slate-500">0:00</span>
+                                                <input type="range" id="audio-seek-bar" min="0" max="100" value="0" step="0.1" 
+                                                       class="h-1.5 flex-1 cursor-pointer accent-blue-600" 
+                                                       style="background: linear-gradient(to right, #2563eb 0%, #2563eb 0%, #e2e8f0 0%, #e2e8f0 100%);">
+                                                <span id="audio-duration" class="w-10 text-xs font-mono text-slate-500">0:00</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <audio id="sermon-audio" preload="auto" class="hidden">
                                         <source src="{{ $audioUrl }}" type="{{ $audioMedia?->mime_type ?? 'audio/mpeg' }}">
-                                        Your browser does not support the audio tag.
                                     </audio>
-                                    <a href="{{ $audioUrl }}" download class="mt-3 inline-flex items-center rounded-xl border border-blue-200 bg-white px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-50">
-                                        Download Audio
-                                    </a>
+
+                                    <style>
+                                    #audio-seek-bar::-webkit-slider-runnable-track {
+                                        background: #dbeafe;
+                                        border-radius: 9999px;
+                                        height: 6px;
+                                    }
+                                    #audio-seek-bar::-moz-range-track {
+                                        background: #dbeafe;
+                                        border-radius: 9999px;
+                                        height: 6px;
+                                    }
+                                    #audio-seek-bar::-webkit-slider-thumb {
+                                        -webkit-appearance: none;
+                                        appearance: none;
+                                        height: 16px;
+                                        width: 16px;
+                                        background-color: #2563eb;
+                                        border-radius: 50%;
+                                        margin-top: -5px;
+                                        box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+                                        cursor: pointer;
+                                        transition: transform 0.1s ease;
+                                    }
+                                    #audio-seek-bar::-webkit-slider-thumb:hover {
+                                        transform: scale(1.2);
+                                    }
+                                    #audio-seek-bar::-moz-range-thumb {
+                                        height: 16px;
+                                        width: 16px;
+                                        background-color: #2563eb;
+                                        border-radius: 50%;
+                                        border: none;
+                                        cursor: pointer;
+                                        transition: transform 0.1s ease;
+                                    }
+                                    #audio-seek-bar::-moz-range-thumb:hover {
+                                        transform: scale(1.2);
+                                    }
+                                    </style>
+
+                                    <div class="mt-3">
+                                        <a href="{{ $audioUrl }}" download class="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 bg-white px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-50">
+                                            <i class="fas fa-download text-xs"></i> Download Audio
+                                        </a>
+                                    </div>
                                 </div>
+
+                                <script>
+                                (function() {
+                                    let audioEl, playBtn, playIcon, seekBar, currentTimeEl, durationEl;
+
+                                    function formatTime(s) {
+                                        if (isNaN(s) || !isFinite(s)) return '0:00';
+                                        const m = Math.floor(s / 60);
+                                        const sec = Math.floor(s % 60);
+                                        return m + ':' + (sec < 10 ? '0' : '') + sec;
+                                    }
+
+                                    function initAudioPlayer() {
+                                        // Get element references
+                                        audioEl = document.getElementById('sermon-audio');
+                                        playBtn = document.getElementById('audio-play-btn');
+                                        seekBar = document.getElementById('audio-seek-bar');
+                                        currentTimeEl = document.getElementById('audio-current-time');
+                                        durationEl = document.getElementById('audio-duration');
+
+                                        if (!audioEl || !playBtn || !seekBar) {
+                                            console.warn('Audio elements not found');
+                                            return;
+                                        }
+
+                                        playIcon = playBtn.querySelector('i');
+
+                                        // Reset UI
+                                        currentTimeEl.textContent = '0:00';
+                                        durationEl.textContent = '0:00';
+                                        seekBar.value = 0;
+                                        seekBar.style.background = 'linear-gradient(to right, #2563eb 0%, #2563eb 0%, #e2e8f0 0%, #e2e8f0 100%)';
+                                        if (playIcon) {
+                                            playIcon.classList.remove('fa-pause');
+                                            playIcon.classList.add('fa-play');
+                                        }
+
+                                        // Event: Metadata loaded
+                                        audioEl.addEventListener('loadedmetadata', function() {
+                                            console.log('Audio loaded metadata, duration:', audioEl.duration);
+                                            durationEl.textContent = formatTime(audioEl.duration);
+                                            seekBar.value = 0;
+                                            currentTimeEl.textContent = '0:00';
+                                        });
+
+                                        // Event: Duration changed
+                                        audioEl.addEventListener('durationchange', function() {
+                                            durationEl.textContent = formatTime(audioEl.duration);
+                                        });
+
+                                        // Event: Time update (playback progress)
+                                        audioEl.addEventListener('timeupdate', function() {
+                                            if (!audioEl.duration) return;
+                                            const progress = (audioEl.currentTime / audioEl.duration) * 100;
+                                            seekBar.value = progress;
+                                            seekBar.style.background = `linear-gradient(to right, #2563eb 0%, #2563eb ${progress}%, #e2e8f0 ${progress}%, #e2e8f0 100%)`;
+                                            currentTimeEl.textContent = formatTime(audioEl.currentTime);
+                                        });
+
+                                        // Event: Play
+                                        audioEl.addEventListener('play', function() {
+                                            if (playIcon) {
+                                                playIcon.classList.remove('fa-play');
+                                                playIcon.classList.add('fa-pause');
+                                            }
+                                        });
+
+                                        // Event: Pause
+                                        audioEl.addEventListener('pause', function() {
+                                            if (playIcon) {
+                                                playIcon.classList.remove('fa-pause');
+                                                playIcon.classList.add('fa-play');
+                                            }
+                                        });
+
+                                        // Event: Ended
+                                        audioEl.addEventListener('ended', function() {
+                                            if (playIcon) {
+                                                playIcon.classList.remove('fa-pause');
+                                                playIcon.classList.add('fa-play');
+                                            }
+                                            seekBar.value = 0;
+                                            seekBar.style.background = 'linear-gradient(to right, #2563eb 0%, #2563eb 0%, #e2e8f0 0%, #e2e8f0 100%)';
+                                            currentTimeEl.textContent = '0:00';
+                                        });
+
+                                        // Event: Error
+                                        audioEl.addEventListener('error', function(e) {
+                                            console.error('Audio error:', e);
+                                            console.error('Audio src:', audioEl.src);
+                                            durationEl.textContent = 'Error';
+                                        });
+
+                                        // Play button click
+                                        playBtn.addEventListener('click', function() {
+                                            if (audioEl.paused) {
+                                                audioEl.play().catch(function(err) {
+                                                    if (err.name !== 'AbortError') {
+                                                        console.error('Playback failed:', err);
+                                                    }
+                                                });
+                                            } else {
+                                                audioEl.pause();
+                                            }
+                                        });
+
+                                        // Seek bar input (while dragging)
+                                        let isSeeking = false;
+                                        seekBar.addEventListener('input', function() {
+                                            isSeeking = true;
+                                            const progress = seekBar.value;
+                                            seekBar.style.background = `linear-gradient(to right, #2563eb 0%, #2563eb ${progress}%, #e2e8f0 ${progress}%, #e2e8f0 100%)`;
+                                        });
+
+                                        // Seek bar change (when released)
+                                        seekBar.addEventListener('change', function() {
+                                            if (audioEl.duration) {
+                                                const time = (parseFloat(seekBar.value) / 100) * audioEl.duration;
+                                                audioEl.currentTime = time;
+                                                currentTimeEl.textContent = formatTime(time);
+                                            }
+                                            isSeeking = false;
+                                        });
+
+                                        // Force audio to load
+                                        audioEl.load();
+                                        console.log('Audio player initialized, src:', audioEl.src);
+                                    }
+
+                                    // Initial load
+                                    if (document.readyState === 'loading') {
+                                        document.addEventListener('DOMContentLoaded', function() {
+                                            setTimeout(initAudioPlayer, 100);
+                                        });
+                                    } else {
+                                        setTimeout(initAudioPlayer, 100);
+                                    }
+
+                                    // When sermon changes via Livewire event
+                                    document.addEventListener('livewire:navigated', function() {
+                                        setTimeout(initAudioPlayer, 150);
+                                    });
+
+                                    // Custom event from Livewire when sermon changes
+                                    window.addEventListener('sermon-changed', function(e) {
+                                        console.log('Sermon changed event received, reloading audio...');
+                                        // Small delay to let Livewire update the DOM
+                                        setTimeout(function() {
+                                            // Destroy old audio element
+                                            if (audioEl) {
+                                                audioEl.pause();
+                                                audioEl.src = '';
+                                                audioEl.load();
+                                                var parent = audioEl.parentNode;
+                                                if (parent) {
+                                                    parent.removeChild(audioEl);
+                                                }
+                                            }
+                                            
+                                            // Reinitialize with new audio
+                                            setTimeout(initAudioPlayer, 50);
+                                        }, 100);
+                                    });
+                                })();
+                                </script>
                             @endif
                         </div>
                     </div>

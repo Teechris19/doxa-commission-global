@@ -99,6 +99,12 @@ input[type="range"]::-webkit-slider-thumb {
     border-radius: 50%;
     margin-top: -5px;
     box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+    transition: transform 0.1s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
 }
 
 input[type="range"]::-moz-range-thumb {
@@ -107,6 +113,12 @@ input[type="range"]::-moz-range-thumb {
     background-color: #2563eb;
     border-radius: 50%;
     border: none;
+    cursor: pointer;
+    transition: transform 0.1s ease;
+}
+
+input[type="range"]::-moz-range-thumb:hover {
+    transform: scale(1.2);
 }
 
 #seek-bar,
@@ -136,21 +148,35 @@ input[type="range"]::-moz-range-thumb {
 #seek-bar-mobile::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    height: 14px;
-    width: 14px;
+    height: 16px;
+    width: 16px;
     background-color: #2563eb;
     border-radius: 50%;
-    margin-top: -4px;
+    margin-top: -5px;
     box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+    transition: transform 0.1s ease;
+}
+
+#seek-bar::-webkit-slider-thumb:hover,
+#seek-bar-mobile::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
 }
 
 #seek-bar::-moz-range-thumb,
 #seek-bar-mobile::-moz-range-thumb {
-    height: 14px;
-    width: 14px;
+    height: 16px;
+    width: 16px;
     background-color: #2563eb;
     border-radius: 50%;
     border: none;
+    cursor: pointer;
+    transition: transform 0.1s ease;
+}
+
+#seek-bar::-moz-range-thumb:hover,
+#seek-bar-mobile::-moz-range-thumb:hover {
+    transform: scale(1.2);
 }
 
 .audio-player-bar {
@@ -771,14 +797,27 @@ input[type="range"]::-moz-range-thumb {
                 });
 
                 seekBarElement.addEventListener('input', () => {
-                    const time = (seekBarElement.value / 100) * audioPlayer.duration;
-                    audioPlayer.currentTime = time;
-                    // Sync the other seek bar
-                    if (seekBarElement === seekBar) {
-                        seekBarMobile.value = seekBarElement.value;
-                    } else {
-                        seekBar.value = seekBarElement.value;
+                    if (audioPlayer.duration && !isNaN(audioPlayer.duration)) {
+                        const time = (parseFloat(seekBarElement.value) / 100) * audioPlayer.duration;
+                        audioPlayer.currentTime = time;
+                        // Sync the other seek bar
+                        if (seekBarElement === seekBar) {
+                            seekBarMobile.value = seekBarElement.value;
+                            seekBarMobile.style.background = seekBarElement.style.background;
+                        } else {
+                            seekBar.value = seekBarElement.value;
+                            seekBar.style.background = seekBarElement.style.background;
+                        }
                     }
+                });
+
+                // Also handle 'change' event for browsers that don't fire 'input' properly
+                seekBarElement.addEventListener('change', () => {
+                    if (audioPlayer.duration && !isNaN(audioPlayer.duration)) {
+                        const time = (parseFloat(seekBarElement.value) / 100) * audioPlayer.duration;
+                        audioPlayer.currentTime = time;
+                    }
+                    isSeeking = false;
                 });
             }
 
