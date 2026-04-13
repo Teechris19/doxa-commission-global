@@ -7,12 +7,31 @@
     <meta name="theme-color" content="#1877f2">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Doxa Church">
+    @php
+        $globalSettings = \App\Models\GlobalSetting::query()
+            ->orderByDesc('updated_at')
+            ->first();
+    @endphp
 
-    <title>{{ isset($title) ? $title.' - ' : '' }}{{ config('app.name', 'Doxa Commission Global') }}</title>
+    <meta name="apple-mobile-web-app-title" content="{{ $globalSettings?->church_name ?? 'Doxa Church' }}">
+
+    <title>{{ isset($title) ? $title.' - ' : '' }}{{ $globalSettings?->meta_title ?: $globalSettings?->church_name ?: config('app.name', 'Doxa Commission Global') }}</title>
+
+    @if($globalSettings?->meta_description)
+        <meta name="description" content="{{ $globalSettings->meta_description }}">
+    @endif
+
+    @if($globalSettings?->meta_keywords)
+        <meta name="keywords" content="{{ $globalSettings->meta_keywords }}">
+    @endif
+
+    @if($globalSettings?->favicon)
+        <link rel="icon" type="image/png" href="{{ asset('storage/' . $globalSettings->favicon) }}">
+        <link rel="shortcut icon" type="image/png" href="{{ asset('storage/' . $globalSettings->favicon) }}">
+    @endif
 
     <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
-    <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
+    <link rel="apple-touch-icon" href="{{ $globalSettings?->logo ? asset('storage/' . $globalSettings->logo) : asset('apple-touch-icon.png') }}">
 
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=poppins:300,400,500,600,700&display=swap" rel="stylesheet" />
@@ -21,7 +40,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>
-<body class="site-shell font-['Poppins']" style="--mobile-nav-height: 4.1rem;">
+<body class="site-shell font-['Poppins']">
     <x-flash />
 
     @php
@@ -170,8 +189,10 @@
     <header class="sticky top-0 z-50 border-b border-blue-100/80 bg-blue-50/80 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-blue-50/70">
         <nav class="mx-auto flex min-h-[3.5rem] w-full max-w-7xl items-center justify-between px-3 py-2 sm:px-5 lg:px-8">
             <a href="{{ route('home') }}" wire:navigate class="flex items-center gap-3">
-                <img src="{{ asset('Img/doxa.PNG') }}" alt="Doxa Commission Global" class="h-8 w-8 rounded-full object-cover ring-1 ring-blue-100 sm:h-9 sm:w-9">
-                <span class="hidden text-[0.7rem] font-semibold tracking-wide text-blue-800 sm:block">Doxa Commission Global</span>
+                <img src="{{ $globalSettings?->logo ? asset('storage/' . $globalSettings->logo) : asset('Img/doxa.PNG') }}" 
+                     alt="{{ $globalSettings?->church_name ?? 'Doxa Commission Global' }}" 
+                     class="h-8 w-8 rounded-full object-cover ring-1 ring-blue-100 sm:h-9 sm:w-9">
+                <span class="hidden text-[0.7rem] font-semibold tracking-wide text-blue-800 sm:block">{{ $globalSettings?->church_name ?? 'Doxa Commission Global' }}</span>
             </a>
 
             <div class="hidden items-center gap-1.5 lg:flex">
@@ -228,11 +249,18 @@
                 @else
                     <a href="{{ route('home.login') }}" wire:navigate class="rounded-full bg-blue-600 px-2.5 py-1 text-[0.7rem] font-semibold text-white">Login</a>
                 @endauth
+                
+                {{-- Hamburger Menu Button --}}
+                <button id="hamburger-menu-btn" class="hamburger-btn" aria-label="Toggle menu">
+                    <span class="hamburger-line"></span>
+                    <span class="hamburger-line"></span>
+                    <span class="hamburger-line"></span>
+                </button>
             </div>
         </nav>
     </header>
 
-    <main class="mobile-nav-offset">
+    <main class="min-h-screen">
         {{ $slot }}
     </main>
 
@@ -334,7 +362,8 @@
         </div>
     </footer>
 
-    <nav class="mobile-floating-nav lg:hidden" aria-label="Primary">
+    {{-- Old Mobile Floating Nav (Hidden - Replaced by Hamburger Menu) --}}
+    <nav class="mobile-floating-nav hidden lg:hidden" aria-label="Primary">
         @foreach($primaryNav as $item)
             <a
                 href="{{ route($item['route']) }}"
@@ -349,6 +378,78 @@
             </a>
         @endforeach
     </nav>
+
+    {{-- Mobile Drawer Menu --}}
+    <div id="mobile-drawer" class="mobile-drawer" aria-hidden="true">
+        <div id="mobile-drawer-overlay" class="mobile-drawer-overlay"></div>
+        <div class="mobile-drawer-panel">
+            <div class="border-b border-blue-100 px-4 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <img src="{{ $globalSettings?->logo ? asset('storage/' . $globalSettings->logo) : asset('Img/doxa.PNG') }}" 
+                             alt="{{ $globalSettings?->church_name ?? 'Doxa Commission Global' }}" 
+                             class="h-8 w-8 rounded-full object-cover ring-1 ring-blue-100">
+                        <span class="text-sm font-semibold text-blue-800">{{ $globalSettings?->church_name ?? 'Doxa Commission Global' }}</span>
+                    </div>
+                    <button id="close-drawer-btn" class="rounded-full p-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="py-2">
+                @foreach($primaryNav as $item)
+                    <a
+                        href="{{ route($item['route']) }}"
+                        wire:navigate
+                        @class([
+                            'mobile-drawer-item',
+                            'is-active' => $item['active'],
+                        ])
+                    >
+                        <i class="fas {{ $item['icon'] }}" aria-hidden="true"></i>
+                        <span>{{ $item['label'] }}</span>
+                    </a>
+                @endforeach
+            </div>
+
+            <div class="border-t border-blue-100 px-4 py-3">
+                <p class="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">More</p>
+            </div>
+
+            <div class="py-2">
+                @foreach($secondaryNav as $item)
+                    <a
+                        href="{{ route($item['route']) }}"
+                        wire:navigate
+                        @class([
+                            'mobile-drawer-item',
+                            'is-active' => $item['active'],
+                        ])
+                    >
+                        <span>{{ $item['label'] }}</span>
+                    </a>
+                @endforeach
+            </div>
+
+            @auth
+                <div class="border-t border-blue-100 p-4">
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="w-full rounded-full bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700">
+                            Logout
+                        </button>
+                    </form>
+                </div>
+            @else
+                <div class="border-t border-blue-100 p-4">
+                    <a href="{{ route('home.login') }}" wire:navigate class="block w-full rounded-full bg-blue-600 px-4 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-blue-700">
+                        Connect With Us
+                    </a>
+                </div>
+            @endauth
+        </div>
+    </div>
 
     <script>
         (() => {
@@ -391,6 +492,74 @@
                     ongoingCountdown.dataset.intervalId = String(intervalId);
                 }
             }
+
+            // Mobile Drawer Functionality
+            const hamburgerBtn = document.getElementById('hamburger-menu-btn');
+            const mobileDrawer = document.getElementById('mobile-drawer');
+            const mobileDrawerOverlay = document.getElementById('mobile-drawer-overlay');
+            const closeDrawerBtn = document.getElementById('close-drawer-btn');
+
+            function openDrawer() {
+                if (!mobileDrawer) return;
+                mobileDrawer.classList.add('open');
+                mobileDrawer.setAttribute('aria-hidden', 'false');
+                if (hamburgerBtn) {
+                    hamburgerBtn.classList.add('active');
+                }
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeDrawer() {
+                if (!mobileDrawer) return;
+                mobileDrawer.classList.remove('open');
+                mobileDrawer.setAttribute('aria-hidden', 'true');
+                if (hamburgerBtn) {
+                    hamburgerBtn.classList.remove('active');
+                }
+                document.body.style.overflow = '';
+            }
+
+            if (hamburgerBtn) {
+                hamburgerBtn.addEventListener('click', function() {
+                    const isOpen = mobileDrawer.classList.contains('open');
+                    if (isOpen) {
+                        closeDrawer();
+                    } else {
+                        openDrawer();
+                    }
+                });
+            }
+
+            if (mobileDrawerOverlay) {
+                mobileDrawerOverlay.addEventListener('click', closeDrawer);
+            }
+
+            if (closeDrawerBtn) {
+                closeDrawerBtn.addEventListener('click', closeDrawer);
+            }
+
+            // Close drawer on Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeDrawer();
+                }
+            });
+
+            // Close drawer when clicking nav links
+            document.addEventListener('livewire:navigated', function() {
+                closeDrawer();
+            });
+
+            // Close drawer on window resize to desktop
+            let resizeTimer;
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(function() {
+                    if (window.innerWidth >= 1024) {
+                        closeDrawer();
+                    }
+                }, 100);
+            });
         })();
     </script>
 

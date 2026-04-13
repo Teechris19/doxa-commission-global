@@ -10,7 +10,7 @@ use Livewire\WithFileUploads;
 new #[Layout('components.layouts.tailwind-layout')] class extends Component {
     use WithFileUploads;
 
-    public ?LandingPageSetting $landing = null;
+    public $landing = null;
     public ?Chapter $activeChapter = null;
     public array $heroSection = [];
     public array $services = [];
@@ -79,20 +79,91 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
         return null;
     }
 
-    protected function resolveLandingSetting(?int $chapterId): ?LandingPageSetting
+    protected function resolveLandingSetting(?int $chapterId)
     {
         if (!Schema::hasColumn('landing_page_settings', 'chapter_id')) {
             return LandingPageSetting::first();
         }
 
-        if ($chapterId) {
-            $chapterSetting = LandingPageSetting::where('chapter_id', $chapterId)->first();
-            if ($chapterSetting) {
-                return $chapterSetting;
-            }
+        // Get global settings (chapter_id = null)
+        $globalSetting = LandingPageSetting::whereNull('chapter_id')->first();
+
+        // If no chapter context, return global
+        if (!$chapterId) {
+            return $globalSetting ?? LandingPageSetting::first();
         }
 
-        return LandingPageSetting::whereNull('chapter_id')->first() ?? LandingPageSetting::first();
+        // Get chapter-specific settings
+        $chapterSetting = LandingPageSetting::where('chapter_id', $chapterId)->first();
+
+        // If no chapter setting exists, return global
+        if (!$chapterSetting) {
+            return $globalSetting;
+        }
+
+        // If both exist, merge with field-level fallback
+        // Chapter values take precedence, but empty/null falls back to global
+        $merged = $this->mergeLandingSettings($globalSetting, $chapterSetting);
+
+        return $merged;
+    }
+
+    /**
+     * Merge global and chapter settings with field-level fallback.
+     * Chapter values override global, but empty/null values fall back to global.
+     */
+    protected function mergeLandingSettings(?LandingPageSetting $global, LandingPageSetting $chapter)
+    {
+        // If no global, just return chapter
+        if (!$global) {
+            return $chapter;
+        }
+
+        // Start with global values
+        $mergedData = [
+            'chapter_id' => $chapter->chapter_id,
+            'id' => $chapter->id,
+        ];
+
+        // For each field, use chapter value if set, otherwise fallback to global
+        $mergedData['services'] = $this->mergeField($chapter->services, $global->services);
+        $mergedData['number_of_testimonies'] = $this->mergeField($chapter->number_of_testimonies, $global->number_of_testimonies) ?? 5;
+        $mergedData['number_of_conclaves'] = $this->mergeField($chapter->number_of_conclaves, $global->number_of_conclaves) ?? 3;
+        $mergedData['hero_section'] = $this->mergeHeroSection($chapter->hero_section, $global->hero_section);
+
+        // Create a simple stdClass object with merged values
+        $merged = new \stdClass();
+        foreach ($mergedData as $key => $value) {
+            $merged->$key = $value;
+        }
+
+        return $merged;
+    }
+
+    /**
+     * Merge a single field: use chapter value if not empty, fallback to global
+     */
+    protected function mergeField($chapterValue, $globalValue)
+    {
+        // If chapter has a value (not null, not empty array, not empty string), use it
+        if ($chapterValue !== null && $chapterValue !== [] && $chapterValue !== '') {
+            return $chapterValue;
+        }
+
+        // Otherwise fallback to global
+        return $globalValue;
+    }
+
+    /**
+     * Merge hero section with field-level fallback
+     */
+    protected function mergeHeroSection($chapterHero, $globalHero)
+    {
+        $chapterHero = is_array($chapterHero) ? $chapterHero : [];
+        $globalHero = is_array($globalHero) ? $globalHero : [];
+
+        // Merge with global as base, chapter values override
+        return array_merge($globalHero, $chapterHero);
     }
 
     protected function buildHeroSection(array $hero): array

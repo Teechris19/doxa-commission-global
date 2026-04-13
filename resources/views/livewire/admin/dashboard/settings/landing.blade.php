@@ -13,7 +13,8 @@ use TallStackUi\Traits\Interactions;
 new #[Layout('components.layouts.admin')] class extends Component {
     use WithFileUploads, Interactions;
 
-    public LandingPageSetting $landing;
+    public $landing;
+    public ?LandingPageSetting $landingModel = null; // Actual model for saving
     public array $services = [];
     public int $number_of_testimonies = 5;
     public int $number_of_conclaves = 3;
@@ -71,7 +72,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
         return Chapter::orderBy('name')->first();
     }
 
-    protected function resolveLandingSetting(): LandingPageSetting
+    protected function resolveLandingSetting()
     {
         if (!$this->hasChapterColumn()) {
             return LandingPageSetting::firstOrCreate([], [
@@ -83,6 +84,10 @@ new #[Layout('components.layouts.admin')] class extends Component {
 
         $chapterId = $this->activeChapter?->id;
 
+        // Get global settings
+        $globalSetting = LandingPageSetting::whereNull('chapter_id')->first();
+
+        // Get chapter record
         $query = LandingPageSetting::query();
         if ($chapterId) {
             $query->where('chapter_id', $chapterId);
@@ -91,16 +96,91 @@ new #[Layout('components.layouts.admin')] class extends Component {
         }
 
         $record = $query->first();
-        if ($record) {
-            return $record;
+
+        // If no record exists, create one or use global
+        if (!$record) {
+            if ($chapterId) {
+                // For chapter, create empty record that will merge with global
+                $record = LandingPageSetting::create([
+                    'chapter_id' => $chapterId,
+                    'services' => [],
+                    'number_of_testimonies' => null, // Will fallback to global
+                    'hero_section' => [],
+                ]);
+            } else {
+                // For global, create with defaults
+                $record = LandingPageSetting::create([
+                    'chapter_id' => null,
+                    'services' => [],
+                    'number_of_testimonies' => 5,
+                    'hero_section' => $this->defaultHeroSection(),
+                ]);
+            }
         }
 
-        return LandingPageSetting::create([
-            'chapter_id' => $chapterId,
-            'services' => [],
-            'number_of_testimonies' => 5,
-            'hero_section' => $this->defaultHeroSection(),
-        ]);
+        // If editing a chapter and global exists, merge for display
+        // This way admin sees global values as base when chapter hasn't overridden
+        if ($chapterId && $globalSetting) {
+            $this->landingModel = $record; // Store actual model for saving
+            return $this->mergeLandingSettings($globalSetting, $record);
+        }
+
+        $this->landingModel = $record; // Store actual model
+        return $record;
+    }
+
+    /**
+     * Merge global and chapter settings with field-level fallback.
+     */
+    protected function mergeLandingSettings(?LandingPageSetting $global, LandingPageSetting $chapter)
+    {
+        if (!$global) {
+            return $chapter;
+        }
+
+        $mergedData = [
+            'chapter_id' => $chapter->chapter_id,
+            'id' => $chapter->id,
+        ];
+
+        // Merge each field with fallback
+        $mergedData['services'] = $this->mergeSettingField($chapter->services, $global->services) ?? [];
+        $mergedData['number_of_testimonies'] = $this->mergeSettingField($chapter->number_of_testimonies, $global->number_of_testimonies);
+        $mergedData['number_of_conclaves'] = $this->mergeSettingField($chapter->number_of_conclaves, $global->number_of_conclaves);
+        $mergedData['hero_section'] = $this->mergeHeroSettingField($chapter->hero_section, $global->hero_section);
+
+        // Create a simple stdClass object with merged values
+        $merged = new \stdClass();
+        foreach ($mergedData as $key => $value) {
+            $merged->$key = $value;
+        }
+
+        return $merged;
+    }
+
+    /**
+     * Merge a single setting field with fallback logic
+     */
+    protected function mergeSettingField($chapterValue, $globalValue)
+    {
+        // If chapter has a meaningful value, use it
+        if ($chapterValue !== null && $chapterValue !== [] && $chapterValue !== '') {
+            return $chapterValue;
+        }
+        // Otherwise fallback to global
+        return $globalValue;
+    }
+
+    /**
+     * Merge hero section field-by-field
+     */
+    protected function mergeHeroSettingField($chapterHero, $globalHero)
+    {
+        $chapterHero = is_array($chapterHero) ? $chapterHero : [];
+        $globalHero = is_array($globalHero) ? $globalHero : [];
+
+        // Merge: global as base, chapter overrides
+        return array_merge($globalHero, $chapterHero);
     }
 
     protected function defaultHeroSection(): array
@@ -288,7 +368,10 @@ new #[Layout('components.layouts.admin')] class extends Component {
             $payload['chapter_id'] = $this->activeChapter?->id;
         }
 
-        $this->landing->update($payload);
+        // Use the actual model for saving
+        if ($this->landingModel) {
+            $this->landingModel->update($payload);
+        }
     }
 
     protected function hasChapterColumn(): bool
