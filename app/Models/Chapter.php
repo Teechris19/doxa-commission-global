@@ -17,8 +17,6 @@ class Chapter extends Model
 
     protected $casts = [
         'data' => 'array',
-        'latitude' => 'decimal:8',
-        'longitude' => 'decimal:8',
     ];
 
     public function members(){

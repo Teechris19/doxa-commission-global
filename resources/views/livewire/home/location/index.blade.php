@@ -160,8 +160,10 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
                     <h2 class="text-lg font-semibold text-slate-900">{{ $selectedChapter->name }} Details</h2>
                     <div class="mt-4 space-y-4 text-sm text-slate-600">
                         @php
-                            $chapterData = (object) $selectedChapter->data;
+                            $chapterData = (object) ($selectedChapter->data ?? []);
                             $address = isset($chapterData->address) ? $chapterData->address : (isset($chapterData->location) ? $chapterData->location : null);
+                            $phone = isset($chapterData->phone) ? $chapterData->phone : null;
+                            $email = isset($chapterData->email) ? $chapterData->email : null;
                         @endphp
                         @if($address)
                             <div>
@@ -170,17 +172,17 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
                             </div>
                         @endif
 
-                        @if($selectedChapter->phone)
+                        @if($phone)
                             <div>
                                 <p class="font-semibold text-slate-800">Phone</p>
-                                <a href="tel:{{ $selectedChapter->phone }}" class="text-blue-700 hover:underline">{{ $selectedChapter->phone }}</a>
+                                <a href="tel:{{ $phone }}" class="text-blue-700 hover:underline">{{ $phone }}</a>
                             </div>
                         @endif
 
-                        @if($selectedChapter->email)
+                        @if($email)
                             <div>
                                 <p class="font-semibold text-slate-800">Email</p>
-                                <a href="mailto:{{ $selectedChapter->email }}" class="text-blue-700 hover:underline">{{ $selectedChapter->email }}</a>
+                                <a href="mailto:{{ $email }}" class="text-blue-700 hover:underline">{{ $email }}</a>
                             </div>
                         @endif
 

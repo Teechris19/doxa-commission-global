@@ -26,36 +26,34 @@
             </div>
 
             <div class="max-h-[400px] space-y-2 overflow-y-auto">
-                @if($chapters->isEmpty())
+                @forelse($chapters as $chapter)
+                    <button
+                        wire:click="selectChapter({{ $chapter->id }})"
+                        @class([
+                            'w-full rounded-lg border p-4 text-left transition',
+                            'border-blue-600 bg-blue-50 dark:bg-blue-900/30' => $selectedChapterId === $chapter->id,
+                            'border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50 dark:border-zinc-600 dark:bg-zinc-700 dark:hover:bg-zinc-600' => $selectedChapterId !== $chapter->id,
+                        ])
+                    >
+                        <p class="font-medium text-slate-900 dark:text-gray-100">{{ $chapter->name }}</p>
+                        @if($chapter->latitude && $chapter->longitude)
+                            <p class="mt-1 text-xs text-green-600 dark:text-green-400">
+                                <i class="fa-solid fa-check-circle"></i> Location set
+                            </p>
+                            <p class="text-xs text-slate-500 dark:text-gray-400">
+                                {{ $chapter->latitude }}, {{ $chapter->longitude }}
+                            </p>
+                        @else
+                            <p class="mt-1 text-xs text-amber-600 dark:text-amber-400">
+                                <i class="fa-solid fa-exclamation-circle"></i> No location
+                            </p>
+                        @endif
+                    </button>
+                @empty
                     <p class="py-4 text-center text-sm text-slate-500 dark:text-gray-400">
                         No chapters found.
                     </p>
-                @else
-                    @foreach($chapters as $chapter)
-                        <button
-                            wire:click="selectChapter({{ $chapter->id }})"
-                            @class([
-                                'w-full rounded-lg border p-4 text-left transition',
-                                'border-blue-600 bg-blue-50 dark:bg-blue-900/30' => $selectedChapterId === $chapter->id,
-                                'border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50 dark:border-zinc-600 dark:bg-zinc-700 dark:hover:bg-zinc-600' => $selectedChapterId !== $chapter->id,
-                            ])
-                        >
-                            <p class="font-medium text-slate-900 dark:text-gray-100">{{ $chapter->name }}</p>
-                            @if($chapter->latitude && $chapter->longitude)
-                                <p class="mt-1 text-xs text-green-600 dark:text-green-400">
-                                    <i class="fa-solid fa-check-circle"></i> Location set
-                                </p>
-                                <p class="text-xs text-slate-500 dark:text-gray-400">
-                                    {{ $chapter->latitude }}, {{ $chapter->longitude }}
-                                </p>
-                            @else
-                                <p class="mt-1 text-xs text-amber-600 dark:text-amber-400">
-                                    <i class="fa-solid fa-exclamation-circle"></i> No location
-                                </p>
-                            @endif
-                        </button>
-                    @endforeach
-                @endif
+                @endforelse
             </div>
         </div>
 
@@ -91,9 +89,6 @@
                                 placeholder="e.g., 6.5244"
                                 class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm dark:border-zinc-600 dark:bg-zinc-700 dark:text-gray-200"
                             />
-                            @error('latitude')
-                                <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                            @enderror
                         </div>
 
                         <div>
@@ -107,9 +102,6 @@
                                 placeholder="e.g., 3.3792"
                                 class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm dark:border-zinc-600 dark:bg-zinc-700 dark:text-gray-200"
                             />
-                            @error('longitude')
-                                <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                            @enderror
                         </div>
                     </div>
 
