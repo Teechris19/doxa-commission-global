@@ -8,6 +8,7 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
 
     public $startLocation = '';
     public $chapters = [];
+    public $selectedChapterId = '';
     public $selectedChapter = null;
     public $routeInfo = null;
     public $isCalculating = false;
@@ -17,16 +18,23 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
         $this->chapters = Chapter::whereNotNull('latitude')
             ->whereNotNull('longitude')
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->toArray();
 
-        $this->selectedChapter = $this->chapters->first();
+        if (count($this->chapters) > 0) {
+            $this->selectedChapterId = $this->chapters[0]['id'];
+            $this->selectedChapter = (object) $this->chapters[0];
+        }
     }
 
-    public function selectChapter($chapterId)
+    public function updatedSelectedChapterId($chapterId)
     {
-        $this->selectedChapter = Chapter::findOrFail($chapterId);
-        $this->routeInfo = null;
-        $this->startLocation = '';
+        $chapter = Chapter::find($chapterId);
+        if ($chapter) {
+            $this->selectedChapter = $chapter;
+            $this->routeInfo = null;
+            $this->startLocation = '';
+        }
     }
 
     public function calculateRoute()
@@ -36,10 +44,10 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
         }
 
         $this->isCalculating = true;
-        
+
         // Geocode the start location using Nominatim
         $startCoords = $this->geocodeLocation($this->startLocation);
-        
+
         if ($startCoords) {
             $this->routeInfo = [
                 'start' => $startCoords,
@@ -50,7 +58,7 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
                 'destinationName' => $this->selectedChapter->name,
             ];
         }
-        
+
         $this->isCalculating = false;
     }
 
@@ -59,10 +67,10 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
         try {
             $encodedQuery = urlencode($query);
             $url = "https://nominatim.openstreetmap.org/search?format=json&q={$encodedQuery}&limit=1";
-            
+
             $response = file_get_contents($url);
             $data = json_decode($response, true);
-            
+
             if ($data && count($data) > 0) {
                 return [
                     'lat' => floatval($data[0]['lat']),
@@ -73,7 +81,7 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
         } catch (\Exception $e) {
             // Handle error
         }
-        
+
         return null;
     }
 
@@ -90,20 +98,20 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
             <p class="mt-2 text-sm text-slate-600">Choose a chapter and get driving directions.</p>
         </header>
 
-        @if(count($chapters) > 1)
-            <div class="mb-8 flex flex-wrap justify-center gap-2">
-                @foreach($chapters as $chapter)
-                    <button
-                        wire:click="selectChapter({{ $chapter->id }})"
-                        @class([
-                            'rounded-full border px-4 py-2 text-sm font-semibold transition',
-                            'border-blue-600 bg-blue-600 text-white' => $selectedChapter && $selectedChapter->id === $chapter->id,
-                            'border-blue-200 bg-white text-blue-700 hover:border-blue-300 hover:bg-blue-50' => !$selectedChapter || $selectedChapter->id !== $chapter->id,
-                        ])
+        @if(count($chapters) > 0)
+            <div class="mb-8 flex justify-center">
+                <div class="w-full max-w-xs">
+                    <label for="chapter-select" class="mb-2 block text-sm font-semibold text-slate-700">Select Chapter</label>
+                    <select
+                        id="chapter-select"
+                        wire:model.live="selectedChapterId"
+                        class="w-full rounded-xl border border-blue-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                     >
-                        {{ $chapter->name }}
-                    </button>
-                @endforeach
+                        @foreach($chapters as $chapter)
+                            <option value="{{ $chapter['id'] }}">{{ $chapter['name'] }}</option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
         @endif
 

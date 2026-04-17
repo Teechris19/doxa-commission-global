@@ -13,4 +13,8 @@ Route::middleware(['super-admin'])->group(function () {
     Volt::route('/super-admin/create-conclaves', 'admin.dashboard.conclave.create')->name('super-admin.conclaves.create');
     Volt::route('/super-admin/edit-conclaves/{conclave}/edit', 'admin.dashboard.conclave.edit')->name('super-admin.conclaves.edit');
     Volt::route('/super-admin/conclave/add-admin', 'admin.dashboard.conclave.admin')->name('super-admin.conclaves.add-admin');
+    //----------------------------------------------------------------------------------
+    //               LOCATION SECTION
+    //----------------------------------------------------------------------------------
+    Volt::route('/super-admin/locations', 'admin.superadmin.locations.index')->name('super-admin.locations');
 });

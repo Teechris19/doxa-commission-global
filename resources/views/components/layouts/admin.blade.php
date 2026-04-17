@@ -175,6 +175,14 @@ TODO: Add Active route indicators
                     Assign Chapter Admin
                 </flux:navlist.item>
             </flux:navlist.group>
+
+            <flux:navlist.group expandable heading="Locations"
+                :expanded="request()->routeIs('super-admin.locations*') ? 'true' : 'false'">
+                <flux:navlist.item icon="map-pin" :href="route('super-admin.locations', request()->query())" wire:navigate
+                    :active="request()->routeIs('super-admin.locations') ? 'true' : 'false'">
+                    Chapter Locations
+                </flux:navlist.item>
+            </flux:navlist.group>
             
             {{-- Conclaves Management (Separate from Chapters) --}}
             <flux:navlist.group expandable heading="Conclaves"

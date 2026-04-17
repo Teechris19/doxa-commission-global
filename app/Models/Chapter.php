@@ -10,11 +10,15 @@ class Chapter extends Model
     use HasFactory;
     protected $fillable = [
         'name',
-        'data'
+        'data',
+        'latitude',
+        'longitude',
     ];
 
     protected $casts = [
         'data' => 'array',
+        'latitude' => 'decimal:8',
+        'longitude' => 'decimal:8',
     ];
 
     public function members(){
