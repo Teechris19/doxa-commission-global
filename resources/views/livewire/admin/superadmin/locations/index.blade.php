@@ -2,7 +2,7 @@
     <div class="mb-6">
         <h2 class="text-2xl font-semibold text-slate-900 dark:text-gray-100">Chapter Locations</h2>
         <p class="mt-1 text-sm text-slate-600 dark:text-gray-400">
-            Set geographic coordinates for each chapter to display on the public Location page.
+            Set geographic coordinates and details for each chapter to display on the public Location page.
         </p>
     </div>
 
@@ -12,7 +12,7 @@
         </div>
     @endif
 
-    <div class="grid gap-6 lg:grid-cols-[1fr_1.5fr]">
+    <div class="grid gap-6 lg:grid-cols-[1fr_2fr]">
         <div class="rounded-xl border border-slate-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-800">
             <h3 class="mb-4 text-lg font-semibold text-slate-900 dark:text-gray-100">Select Chapter</h3>
 
@@ -60,7 +60,7 @@
         <div class="rounded-xl border border-slate-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-800">
             <h3 class="mb-4 text-lg font-semibold text-slate-900 dark:text-gray-100">
                 @if($selectedChapterId)
-                    Set Location
+                    Set Location & Details
                 @else
                     Location Details
                 @endif
@@ -105,6 +105,117 @@
                         </div>
                     </div>
 
+                    <button
+                        type="button"
+                        wire:click="reverseGeocode"
+                        class="text-sm text-blue-600 hover:underline dark:text-blue-400"
+                    >
+                        <i class="fa-solid fa-magnifying-glass"></i> Auto-fill address from coordinates
+                    </button>
+
+                    <div>
+                        <label for="address" class="mb-2 block text-sm font-medium text-slate-700 dark:text-gray-300">
+                            Address
+                        </label>
+                        <textarea
+                            id="address"
+                            wire:model.defer="address"
+                            rows="3"
+                            placeholder="Enter address or auto-fill from coordinates"
+                            class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm dark:border-zinc-600 dark:bg-zinc-700 dark:text-gray-200"
+                        ></textarea>
+                    </div>
+
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div>
+                            <label for="phone" class="mb-2 block text-sm font-medium text-slate-700 dark:text-gray-300">
+                                Phone
+                            </label>
+                            <input
+                                type="text"
+                                id="phone"
+                                wire:model.defer="phone"
+                                placeholder="e.g., +234 800 123 4567"
+                                class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm dark:border-zinc-600 dark:bg-zinc-700 dark:text-gray-200"
+                            />
+                        </div>
+
+                        <div>
+                            <label for="email" class="mb-2 block text-sm font-medium text-slate-700 dark:text-gray-300">
+                                Email
+                            </label>
+                            <input
+                                type="email"
+                                id="email"
+                                wire:model.defer="email"
+                                placeholder="e.g., info@chapter.com"
+                                class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm dark:border-zinc-600 dark:bg-zinc-700 dark:text-gray-200"
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-slate-700 dark:text-gray-300">
+                            Service Times
+                        </label>
+                        
+                        @if(!empty($serviceTimes))
+                            <div class="mb-3 space-y-2">
+                                @foreach($serviceTimes as $day => $time)
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-24 rounded bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-800 dark:bg-blue-900 dark:text-blue-200 capitalize">
+                                            {{ $day }}
+                                        </span>
+                                        <input
+                                            type="text"
+                                            wire:model.defer="serviceTimes.{{ $day }}"
+                                            class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-700 dark:text-gray-200"
+                                        />
+                                        <button
+                                            type="button"
+                                            wire:click="removeServiceTime('{{ $day }}')"
+                                            class="text-red-500 hover:text-red-700"
+                                        >
+                                            <i class="fa-solid fa-times"></i>
+                                        </button>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+
+                        <div class="flex items-end gap-2">
+                            <div class="w-32">
+                                <select
+                                    wire:model.defer="newServiceDay"
+                                    class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-700 dark:text-gray-200"
+                                >
+                                    <option value="sunday">Sunday</option>
+                                    <option value="monday">Monday</option>
+                                    <option value="tuesday">Tuesday</option>
+                                    <option value="wednesday">Wednesday</option>
+                                    <option value="thursday">Thursday</option>
+                                    <option value="friday">Friday</option>
+                                    <option value="saturday">Saturday</option>
+                                </select>
+                            </div>
+                            <div class="flex-1">
+                                <input
+                                    type="text"
+                                    wire:model.defer="newServiceTime"
+                                    placeholder="e.g., 7:00 AM"
+                                    class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-700 dark:text-gray-200"
+                                />
+                            </div>
+                            <button
+                                type="button"
+                                wire:click="addServiceTime"
+                                class="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
+                            >
+                                Add
+                            </button>
+                        </div>
+                    </div>
+
                     <p class="text-xs text-slate-500 dark:text-gray-400">
                         Tip: Enter negative values for southern latitudes and western longitudes.
                     </p>
@@ -114,7 +225,7 @@
                         class="inline-flex items-center rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
                     >
                         <i class="fa-solid fa-location-dot me-2"></i>
-                        Save Location
+                        Save Location & Details
                     </button>
                 </form>
             @else
@@ -122,7 +233,7 @@
                     <div>
                         <i class="fa-solid fa-map-pin text-4xl text-slate-300 dark:text-zinc-600"></i>
                         <p class="mt-4 text-sm text-slate-500 dark:text-gray-400">
-                            Select a chapter from the list to set its location coordinates.
+                            Select a chapter from the list to set its location coordinates and details.
                         </p>
                     </div>
                 </div>

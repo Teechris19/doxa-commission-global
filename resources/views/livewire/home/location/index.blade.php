@@ -35,7 +35,7 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
 
     public function applyChapter()
     {
-        $selectedId = $this->selectedChapterId;
+        $this->selectedChapterId = request('chapterId', $this->selectedChapterId);
         
         $chapterData = DB::table('chapters')
             ->where('id', $this->selectedChapterId)
@@ -47,10 +47,6 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
             $this->selectedChapter = $chapterData;
             $this->routeInfo = null;
             $this->startLocation = '';
-            
-            // Force refresh
-            $this->dispatch('chapterChanged', chapterId: $chapterData->id);
-            $this->emit('chapterChanged', $chapterData->id);
         }
     }
 
@@ -131,7 +127,7 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
                         </select>
                         <button
                             type="button"
-                            onclick="alert('Click works!'); updateMap();"
+                            onclick="console.log('chaptersData:', chaptersData); const selectedId = parseInt(document.getElementById('chapter-select').value); const chapter = chaptersData.find(c => c.id === selectedId); console.log('chapter:', chapter); if(chapter) { const detailsEl = document.getElementById('chapter-details'); console.log('detailsEl:', detailsEl); document.getElementById('chapter-details').innerHTML = generateDetailsHTML(chapter); updateMap(); }"
                             class="shrink-0 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700"
                         >
                             Apply
@@ -182,7 +178,7 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
                     </div>
                 </div>
 
-                <aside class="rounded-2xl border border-blue-100 bg-white p-5">
+                <aside id="chapter-details" class="rounded-2xl border border-blue-100 bg-white p-5">
                     <h2 class="text-lg font-semibold text-slate-900">{{ $selectedChapter->name }} Details</h2>
                     <div class="mt-4 space-y-4 text-sm text-slate-600">
                         @php
@@ -261,6 +257,35 @@ function updateMap() {
         // Reinitialize map
         initLocationMap();
     }
+}
+
+function generateDetailsHTML(chapter) {
+    let data = {};
+    try {
+        data = typeof chapter.data === 'string' ? JSON.parse(chapter.data) : chapter.data;
+    } catch(e) {}
+    
+    let html = '<h2 class="text-lg font-semibold text-slate-900">' + chapter.name + ' Details</h2>';
+    html += '<div class="mt-4 space-y-4 text-sm text-slate-600">';
+    
+    if (data.address || data.location) {
+        html += '<div><p class="font-semibold text-slate-800">Address</p><p>' + (data.address || data.location) + '</p></div>';
+    }
+    if (data.phone) {
+        html += '<div><p class="font-semibold text-slate-800">Phone</p><a href="tel:' + data.phone + '" class="text-blue-700 hover:underline">' + data.phone + '</a></div>';
+    }
+    if (data.email) {
+        html += '<div><p class="font-semibold text-slate-800">Email</p><a href="mailto:' + data.email + '" class="text-blue-700 hover:underline">' + data.email + '</a></div>';
+    }
+    
+    html += '<div><p class="font-semibold text-slate-800">Service Times</p><p>Sunday: 7:00 AM, 8:30 AM, 10:00 AM, 4:00 PM</p><p>Thursday: 5:30 PM (Glory Experience)</p></div>';
+    html += '</div>';
+    html += '<div class="mt-6 grid gap-2 sm:grid-cols-2">';
+    html += '<a href="/events" wire:navigate class="inline-flex items-center justify-center rounded-xl border border-blue-200 px-4 py-2.5 text-sm font-medium text-blue-700 hover:bg-blue-50">View Events</a>';
+    html += '<a href="/appointment" wire:navigate class="inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">Book Appointment</a>';
+    html += '</div>';
+    
+    return html;
 }
 
 document.addEventListener('DOMContentLoaded', function() {
