@@ -3,6 +3,7 @@
 use App\Models\Chapter;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
+use Illuminate\Support\Facades\DB;
 
 new #[Layout('components.layouts.tailwind-layout')] class extends Component {
 
@@ -29,11 +30,27 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
 
     public function updatedSelectedChapterId($chapterId)
     {
-        $chapter = Chapter::find($chapterId);
-        if ($chapter) {
-            $this->selectedChapter = $chapter;
+        // This is triggered automatically, but we don't update the map here
+    }
+
+    public function applyChapter()
+    {
+        $selectedId = $this->selectedChapterId;
+        
+        $chapterData = DB::table('chapters')
+            ->where('id', $this->selectedChapterId)
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->first();
+
+        if ($chapterData) {
+            $this->selectedChapter = $chapterData;
             $this->routeInfo = null;
             $this->startLocation = '';
+            
+            // Force refresh
+            $this->dispatch('chapterChanged', chapterId: $chapterData->id);
+            $this->emit('chapterChanged', $chapterData->id);
         }
     }
 
@@ -102,15 +119,24 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
             <div class="mb-8 flex justify-center">
                 <div class="w-full max-w-xs">
                     <label for="chapter-select" class="mb-2 block text-sm font-semibold text-slate-700">Select Chapter</label>
-                    <select
-                        id="chapter-select"
-                        wire:model.live="selectedChapterId"
-                        class="w-full rounded-xl border border-blue-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                    >
-                        @foreach($chapters as $chapter)
-                            <option value="{{ $chapter['id'] }}">{{ $chapter['name'] }}</option>
-                        @endforeach
-                    </select>
+                    <div class="flex gap-2">
+                        <select
+                            id="chapter-select"
+                            wire:model="selectedChapterId"
+                            class="w-full rounded-xl border border-blue-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                        >
+                            @foreach($chapters as $chapter)
+                                <option value="{{ $chapter['id'] }}">{{ $chapter['name'] }}</option>
+                            @endforeach
+                        </select>
+                        <button
+                            type="button"
+                            onclick="alert('Click works!'); updateMap();"
+                            class="shrink-0 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700"
+                        >
+                            Apply
+                        </button>
+                    </div>
                 </div>
             </div>
         @endif
@@ -210,10 +236,35 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 <script>
+// Chapters data from PHP
+const chaptersData = @json($chapters);
+
+function updateMap() {
+    const select = document.getElementById('chapter-select');
+    const selectedId = parseInt(select.value);
+    console.log('Selected chapter ID:', selectedId);
+    
+    // Find the selected chapter
+    const selectedChapter = chaptersData.find(c => c.id === selectedId);
+    console.log('Selected chapter:', selectedChapter);
+    
+    if (selectedChapter && selectedChapter.latitude && selectedChapter.longitude) {
+        const mapEl = document.getElementById('map');
+        
+        // Update data attributes
+        mapEl.dataset.lat = selectedChapter.latitude;
+        mapEl.dataset.lng = selectedChapter.longitude;
+        mapEl.dataset.name = selectedChapter.name;
+        
+        console.log('New coordinates:', selectedChapter.latitude, selectedChapter.longitude);
+        
+        // Reinitialize map
+        initLocationMap();
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     initLocationMap();
-    
-    window.addEventListener('livewire:updated', initLocationMap);
 });
 
 function initLocationMap() {
@@ -223,6 +274,8 @@ function initLocationMap() {
     const lat = parseFloat(mapEl.dataset.lat);
     const lng = parseFloat(mapEl.dataset.lng);
     const name = mapEl.dataset.name || 'Destination';
+    
+    console.log('Initializing map with:', lat, lng, name);
     
     // Remove existing map if any
     if (window.locationMap) {
