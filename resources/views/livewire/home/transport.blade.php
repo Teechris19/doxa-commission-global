@@ -17,6 +17,8 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
     public $activeChapter = null;
 
     public array $pickupPoints = [];
+    public array $chapters = [];
+    public $selectedChapterId = '';
 
     public ?string $name = null;
     public ?string $phone = null;
@@ -34,9 +36,27 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
 
     public function mount(): void
     {
+        $this->chapters = Chapter::whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->toArray();
+
+        if (count($this->chapters) > 0) {
+            $this->selectedChapterId = (string) $this->chapters[0]['id'];
+        }
+
         $this->chapterId = $this->resolveChapterId();
         $this->activeChapter = $this->chapterId ? Chapter::find($this->chapterId) : null;
 
+        $this->loadPickupPoints();
+        $this->syncSelectedPickup();
+    }
+
+    public function updatedSelectedChapterId(): void
+    {
+        $this->chapterId = $this->selectedChapterId ? (int) $this->selectedChapterId : null;
+        $this->activeChapter = $this->chapterId ? Chapter::find($this->chapterId) : null;
         $this->loadPickupPoints();
         $this->syncSelectedPickup();
     }
@@ -230,6 +250,23 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
         </div>
 
         <div class="space-y-8 px-6 py-8 sm:px-10">
+            @if(count($chapters) > 0)
+                <div class="mb-4 flex items-center gap-4">
+                    <div class="flex-1">
+                        <label for="chapter-select" class="mb-2 block text-sm font-semibold text-slate-700">Select Chapter</label>
+                        <select
+                            id="chapter-select"
+                            wire:model.live="selectedChapterId"
+                            class="w-full rounded-xl border border-blue-200 bg-white px-4 py-3 text-sm text-slate-900"
+                        >
+                            @foreach($chapters as $chapter)
+                                <option value="{{ $chapter['id'] }}">{{ $chapter['name'] }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+            @endif
+
             @if ($message)
                 <div class="rounded-2xl border px-4 py-3 text-sm {{ $messageType === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-red-200 bg-red-50 text-red-700' }}">
                     {{ $message }}

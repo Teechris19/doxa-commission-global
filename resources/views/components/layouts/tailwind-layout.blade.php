@@ -49,13 +49,6 @@
             ->first();
         $footerDescription = $globalSettings?->footer_description
             ?: ($globalSettings?->tagline ?? "Bringing nations into God's glory worldwide.");
-        $footerAddress = $globalSettings?->footer_address ?? '129 Goldie, Adjacent Amika Utuk, Calabar, Cross River State, Nigeria.';
-        $footerPhone = $globalSettings?->footer_phone ?? '+234 1234567890';
-        $footerEmail = $globalSettings?->footer_email ?? 'info@doxachurch.org';
-        $footerServices = collect($globalSettings?->footer_services ?? [])
-            ->filter(fn($service) => !empty($service['name']) && !empty($service['times']))
-            ->values()
-            ->all();
         $footerSocial = json_decode($globalSettings?->social_links ?? '{}', true) ?? [];
 
         $primaryNav = [
@@ -267,28 +260,13 @@
     <x-announcement-popup />
 
     <footer class="mt-14 border-t border-blue-100 bg-blue-700 text-blue-50">
-        <div class="mx-auto grid w-full max-w-7xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-4 lg:px-8">
+        <div class="mx-auto grid w-full max-w-7xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-3 lg:px-8">
             <div class="space-y-3">
-                <h3 class="text-base font-semibold text-white">{{ $globalSettings?->church_name ?? 'Doxa Commission Global' }}</h3>
+                <div class="flex items-center gap-3">
+                    <img src="{{ $globalSettings?->logo ? asset('storage/' . $globalSettings->logo) : asset('Img/doxa.PNG') }}" alt="Logo" class="h-16 w-16 rounded-lg object-contain">
+                    <h3 class="text-xl font-semibold text-white">{{ $globalSettings?->church_name ?? 'Doxa Commission Global' }}</h3>
+                </div>
                 <p class="text-sm text-blue-100">{{ $footerDescription }}</p>
-                <p class="text-sm text-blue-100">{{ $footerAddress }}</p>
-                <a href="tel:{{ preg_replace('/\\s+/', '', $footerPhone) }}" class="block text-sm text-blue-100 transition hover:text-white">{{ $footerPhone }}</a>
-                <a href="mailto:{{ $footerEmail }}" class="block text-sm text-blue-100 transition hover:text-white">{{ $footerEmail }}</a>
-            </div>
-
-            <div class="space-y-3">
-                <h3 class="text-base font-semibold text-white">Service Times</h3>
-                @if (count($footerServices))
-                    @foreach ($footerServices as $service)
-                        <p class="text-sm text-blue-100">{{ $service['name'] }}</p>
-                        <p class="text-sm text-blue-100">{{ $service['times'] }}</p>
-                    @endforeach
-                @else
-                    <p class="text-sm text-blue-100">Sunday Glory Life Service</p>
-                    <p class="text-sm text-blue-100">7:00am, 8:30am, 10:00am, 4:00pm</p>
-                    <p class="text-sm text-blue-100">Thursday Glory Experience</p>
-                    <p class="text-sm text-blue-100">5:30pm</p>
-                @endif
             </div>
 
             <div class="space-y-3">
@@ -565,56 +543,5 @@
 
     @livewireScripts
     @fluxScripts
-
-    {{-- Global Modal Auto-Close Script --}}
-    <script>
-    (() => {
-        function closeAllModals() {
-            // Close Alpine.js modals
-            if (window.$modalClose) {
-                document.querySelectorAll('[id$="-modal"], [id*="modal"]').forEach(modal => {
-                    if (modal.id) {
-                        try {
-                            window.$modalClose(modal.id);
-                        } catch (e) {}
-                    }
-                });
-            }
-
-            // Close modals by removing open classes
-            document.querySelectorAll('.modal.show, [x-show="true"], [x-show="open"]').forEach(modal => {
-                modal.classList.remove('show');
-                modal.style.display = 'none';
-                const backdrop = document.querySelector('.modal-backdrop');
-                if (backdrop) backdrop.remove();
-                document.body.classList.remove('overflow-hidden');
-            });
-
-            window.dispatchEvent(new CustomEvent('modal-closed'));
-            window.dispatchEvent(new CustomEvent('close-all-modals'));
-        }
-
-        // Listen for Livewire commit success
-        if (typeof Livewire !== 'undefined') {
-            Livewire.hook('commit', ({ component, succeed, fail }) => {
-                succeed(({ snapshot, stopPropagation }) => {
-                    setTimeout(() => {
-                        closeAllModals();
-                    }, 100);
-                });
-            });
-        }
-
-        // Listen for form submissions with wire:submit
-        document.addEventListener('submit', (e) => {
-            const form = e.target;
-            if (form.hasAttribute('wire:submit') || form.hasAttribute('wire:submit.prevent')) {
-                setTimeout(() => {
-                    closeAllModals();
-                }, 200);
-            }
-        });
-    })();
-    </script>
 </body>
 </html>

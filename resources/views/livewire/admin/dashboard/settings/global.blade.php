@@ -32,10 +32,6 @@ new   #[Layout('components.layouts.admin')]  class extends Component {
     public string $meta_keywords = '';
     public $extras;
     public string $footer_description = '';
-    public string $footer_address = '';
-    public string $footer_phone = '';
-    public string $footer_email = '';
-    public array $footer_services = [];
 
     public function mount()
     {
@@ -59,10 +55,6 @@ new   #[Layout('components.layouts.admin')]  class extends Component {
         $this->meta_keywords    = $this->settings->meta_keywords ?? '';
         $this->extras           = $this->settings->extras ?? [];
         $this->footer_description = $this->settings->footer_description ?? '';
-        $this->footer_address     = $this->settings->footer_address ?? '';
-        $this->footer_phone       = $this->settings->footer_phone ?? '';
-        $this->footer_email       = $this->settings->footer_email ?? '';
-        $this->footer_services    = $this->settings->footer_services ?? [];
     }
 
     public function save()
@@ -87,10 +79,6 @@ new   #[Layout('components.layouts.admin')]  class extends Component {
             'giving_url' => $this->giving_url,
             'social_links' => json_encode($this->social_links),
             'footer_description' => $this->footer_description,
-            'footer_address' => $this->footer_address,
-            'footer_phone' => $this->footer_phone,
-            'footer_email' => $this->footer_email,
-            'footer_services' => $this->footer_services,
             'meta_title' => $this->meta_title,
             'meta_description' => $this->meta_description,
             'meta_keywords' => $this->meta_keywords,
@@ -138,20 +126,9 @@ new   #[Layout('components.layouts.admin')]  class extends Component {
         }
         $this->$field = null;
 
-    }
+}
 
-    public function addFooterService(): void
-    {
-        $this->footer_services[] = ['name' => '', 'times' => ''];
-    }
-
-    public function removeFooterService(int $index): void
-    {
-        unset($this->footer_services[$index]);
-        $this->footer_services = array_values($this->footer_services);
-    }
-};
-
+    };
 ?>
 <div>
     <x-fancy-header title="Global Settings" subtitle="Manage church-wide settings for all chapters" :breadcrumbs="[
@@ -212,28 +189,6 @@ new   #[Layout('components.layouts.admin')]  class extends Component {
             <x-tab.items tab="Footer" class="hover:bg-zinc-700">
                 <div class="space-y-4">
                     <x-textarea label="Footer Description" wire:model="footer_description" placeholder="Short mission statement for the footer." />
-                    <x-input label="Footer Address" wire:model="footer_address" />
-                    <x-input label="Footer Phone" wire:model="footer_phone" />
-                    <x-input label="Footer Email" wire:model="footer_email" />
-
-                    <div class="space-y-3">
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm font-semibold text-gray-200">Service Times</span>
-                            <x-button class="bg-blue-600 hover:bg-blue-700" wire:click="addFooterService">Add Service</x-button>
-                        </div>
-
-                        @forelse ($footer_services as $index => $service)
-                            <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
-                                <x-input label="Service Name" wire:model="footer_services.{{ $index }}.name" />
-                                <x-input label="Times" wire:model="footer_services.{{ $index }}.times" />
-                                <div class="flex items-end">
-                                    <x-button class="bg-red-600 hover:bg-red-700" wire:click="removeFooterService({{ $index }})">Remove</x-button>
-                                </div>
-                            </div>
-                        @empty
-                            <div class="text-sm text-gray-400">No service times added yet.</div>
-                        @endforelse
-                    </div>
                 </div>
             </x-tab.items>
 

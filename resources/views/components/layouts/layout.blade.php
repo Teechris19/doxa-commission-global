@@ -97,19 +97,7 @@
         $globalSettings = \App\Models\GlobalSetting::first();
         $footerChurchName = $globalSettings?->church_name ?? config('app.name', 'Doxa Commission Global');
         $footerDescription = $globalSettings?->footer_description ?? "Bringing nations into God's glory worldwide.";
-        $footerAddress = $globalSettings?->footer_address ?? '129 Goldie, Adjacent Amika Utuk, Calabar, Cross River State, Nigeria.';
-        $footerPhone = $globalSettings?->footer_phone ?? '+234 1234567890';
-        $footerEmail = $globalSettings?->footer_email ?? 'info@doxachurch.org';
-        $footerServices = collect($globalSettings?->footer_services ?? [])
-            ->filter(fn($service) => !empty($service['name']) && !empty($service['times']))
-            ->values()
-            ->all();
         $footerSocial = json_decode($globalSettings?->social_links ?? '{}', true) ?? [];
-
-        $fallbackServices = [
-            ['name' => 'Sunday Glory Life Service', 'times' => '7:00am, 8:30am, 10:00am, 4:00pm'],
-            ['name' => 'Thursday Glory Experience', 'times' => '5:30pm'],
-        ];
     @endphp
 
     <footer class="main-footer">
@@ -117,30 +105,13 @@
         <div class="row mx-2">
 
             <div class="footer-content-con row mx-2">
-                <div class="footer-content col-lg-3 col-md-6">
+                <div class="footer-content col-lg-4 col-md-6">
                     <!-- <img src="Img/doxa.PNG"> -->
                     <h2>{{ $footerChurchName }}</h2>
                     <h4>{{ $footerDescription }}</h3>
-                        <div class="footer-info">
-                            <p>
-                                <i class="fa-solid fa-location-dot"></i>{{ $footerAddress }}
-                            </p>
-                            <p><i class="fa-solid fa-phone"></i><a href="tel:{{ preg_replace('/\\s+/', '', $footerPhone) }}">{{ $footerPhone }}</a></p>
-                            <p>
-                                <i class="fa-regular fa-envelope"></i>
-                                <a href="mailto:{{ $footerEmail }}">{{ $footerEmail }}</a>
-                            </p>
-                        </div>
                 </div>
 
-                <div class="footer-content col-lg-3 col-md-6">
-                    @foreach (count($footerServices) ? $footerServices : $fallbackServices as $service)
-                        <h2>{{ $service['name'] }}</h2>
-                        <p>{{ $service['times'] }}</p>
-                    @endforeach
-                </div>
-
-                <div class="footer-content col-lg-3 col-md-6">
+                <div class="footer-content col-lg-4 col-md-6">
                     <h2>Quick Links</h2>
                     <ul>
                         <li><a href="{{ route('home') }}" wire:navigate>Home</a></li>
@@ -153,7 +124,7 @@
                     </ul>
                 </div>
 
-                <div class="footer-content newsletter col-lg-3 col-md-6">
+                <div class="footer-content newsletter col-lg-4 col-md-6">
                     <h3 class=>Stay Connected</h3>
                     <p></p>Subscribe to our newsletter for updates and spiritual insights.</p>
                     <form id="newsletter-form">

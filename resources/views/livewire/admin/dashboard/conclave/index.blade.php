@@ -44,6 +44,8 @@ new  #[Layout('components.layouts.admin')]  class extends Component {
         $this->selected = $this->ids();
     }
 
+    public $showDeleteModal = false;
+
     // Apply the bulk action
     public function applyBulkAction()
     {
@@ -52,7 +54,8 @@ new  #[Layout('components.layouts.admin')]  class extends Component {
         }
 
         if ($this->bulkAction == 'delete') {
-            $this->dispatch('$modalOpen("confirm-delete")');
+            $this->showDeleteModal = true;
+            return;
         }
 
 
@@ -158,15 +161,14 @@ new  #[Layout('components.layouts.admin')]  class extends Component {
 
             @interact('column_action', $row)
             <x-button.circle color="red" icon="trash"
-                x-on:click="$modalOpen('confirm-delete'); $wire.set('selected_id', {{ $row?->id }})"
-                wire:model='selected_id' />
+                x-on:click="$wire.set('selected_id', {{ $row?->id }}); $wire.set('showDeleteModal', true);" />
             <x-link href="{{ route('super-admin.conclaves.edit', ['conclave' => $row->name]) }}"
                 class="ml-2 bg-green-700 text-white p-2 rounded-full" icon="pencil" wire:navigate></x-link>
             @endinteract
         </x-table>
     </x-card>
 
-    <x-modal center id="confirm-delete">
+    <x-modal center id="confirm-delete" wire:model="showDeleteModal">
         <div class="flex flex-col items-center space-y-4">
             <!-- Warning Icon -->
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" class="text-red-600 size-36" viewBox="0 0 24 24"

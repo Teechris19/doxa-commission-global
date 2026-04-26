@@ -37,11 +37,6 @@ new #[Layout('components.layouts.admin')] class extends Component {
         'city' => '',
         'state' => '',
         'country' => '',
-        'marital_status' => '',
-        'wedding_anniversary' => '',
-        'occupation' => '',
-        'employer' => '',
-        'education_level' => '',
         'baptism_status' => '',
         'membership_date' => '',
         'avatar' => null,
@@ -151,16 +146,6 @@ new #[Layout('components.layouts.admin')] class extends Component {
             {{-- ================== CHURCH INFO ================== --}}
             <x-tab.items tab="Church Info">
                 <div class="grid md:grid-cols-2 gap-4 p-4">
-                    <x-select label="Marital Status" wire:model.defer="profile.marital_status">
-                        <option value="">Select</option>
-                        <option value="single">Single</option>
-                        <option value="married">Married</option>
-                        <option value="widowed">Widowed</option>
-                    </x-select>
-                    <x-input type="date" label="Wedding Anniversary" wire:model.defer="profile.wedding_anniversary" />
-                    <x-input label="Occupation" wire:model.defer="profile.occupation" />
-                    <x-input label="Employer" wire:model.defer="profile.employer" />
-                    <x-input label="Education Level" wire:model.defer="profile.education_level" />
                     <x-select label="Baptism Status" wire:model.defer="profile.baptism_status">
                         <option value="">Select</option>
                         <option value="baptized">Baptized</option>

@@ -52,6 +52,14 @@ new #[Layout('components.layouts.admin')] class extends Component {
     public $partnership_deadline;
     public $partnership_description;
 
+    // Modal state
+    public $showEditModal = false;
+
+    public function closeEditModal()
+    {
+        $this->showEditModal = false;
+    }
+
     public function mount()
     {
         $this->chapterId = Chapter::where('name', '=', $this->chapter)->firstOrFail()->id;
@@ -82,7 +90,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
      */
     public function rows()
     {
-        return Events::latest()->when($this->search, fn($q) => $q->where('title', 'like', "%{$this->search}%")->orWhere('description', 'like', "%{$this->search}%"))->when($this->chapterId, fn($q) => $q->where('chapter_id', $this->chapterId))->when($this->status, fn($q) => $q->where('status', $this->status))->paginate($this->quantity)->withQueryString();
+        return Events::orderBy('id', 'desc')->when($this->search, fn($q) => $q->where('title', 'like', "%{$this->search}%")->orWhere('description', 'like', "%{$this->search}%"))->when($this->chapterId, fn($q) => $q->where('chapter_id', $this->chapterId))->when($this->status, fn($q) => $q->where('status', $this->status))->paginate($this->quantity)->withQueryString();
     }
 
     public function updatedStatus()
@@ -165,6 +173,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
             'partnership_deadline' => $event->partnership_deadline?->format('Y-m-d\TH:i'),
             'partnership_description' => $event->partnership_description,
         ]);
+        $this->showEditModal = true;
     }
 
     public function edit()
@@ -216,7 +225,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
         $this->toast()->success('Event updated', 'The event details were updated successfully')->send();
         $this->dispatch('$refresh');
         $this->dispatch('Edited');
-        $this->dispatch('$closeModal', 'event-edit-modal');
+        $this->showEditModal = false;
     }
 
     public function addAccount(){
@@ -238,7 +247,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
         $this->toast()->success('Event updated', 'Account(s) added to event successfully')->send();
         $this->dispatch('$refresh');
         $this->dispatch('Edited');
-        $this->dispatch('$closeModal', 'event-edit-modal');
+        $this->showEditModal = false;
     }
 };
 ?>
@@ -251,7 +260,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
         </x-slot:actions>
     </x-fancy-header>
 
-    <x-modal id="event-edit-modal" title="Event Management" size="2xl">
+    <x-modal id="event-edit-modal" title="Event Management" size="2xl" wire:model="showEditModal">
         <div x-data="{ openSection: 'edit' }" class="space-y-4">
 
             <!-- Accordion: Edit Event -->
@@ -496,7 +505,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
 
     <x-card class="relative dark:bg-dark-800">
         <x-table :$headers :$rows :filter="['quantity' => 'quantity', 'search' => 'search']" :quantity="[5, 15, 50, 100, 250]" paginate persistent selectable
-            wire:model.live="selected">
+            wire:model="selected">
 
             <x-slot:header>
                 <x-select.native :options="[
@@ -534,7 +543,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
                     </a>
 
                     <x-button color="blue" icon="pencil" sm
-                        x-on:click="$wire.call('selectedEvent', {{ $row?->id }}).then(() => $modalOpen('event-edit-modal'))">
+                        x-on:click="$wire.call('selectedEvent', {{ $row?->id }})">
                         Edit
                     </x-button>
 

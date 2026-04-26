@@ -214,51 +214,50 @@ new #[Layout('components.layouts.admin')] class extends Component {
             @endinteract
 
             @interact('column_action', $row)
-                {{-- Check Progress --}}
                 <button class="px-3 rounded py-1 bg-blue-800 text-white"
-                    x-on:click="$wire.call('selectedUser', {{ $row->user_id }}).then(() => $modalOpen('modal-id'))">
+                    wire:click="selectedUser({{ $row->user_id }})">
                     Check Progress
                 </button>
             @endinteract
         </x-table>
     </x-card>
-    <x-modal title="Academy Classes Progress" z-index="z-10" id="modal-id">
-        @if($student)
-            <div class="mb-4 p-3 bg-blue-50 rounded-lg">
-                <p class="text-sm font-medium text-blue-900">Student: {{ $student->user->name }}</p>
-                <p class="text-sm text-blue-700">Batch: {{ $student->batch?->name ?? 'Not assigned' }}</p>
-                <p class="text-sm text-blue-700">Phone: {{ $student->phone ?? 'N/A' }}</p>
-            </div>
-        @endif
 
-        @if ($allClasses != null)
+    @if($student)
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" x-show="$wire.student" x-transition>
+            <div class="bg-white dark:bg-zinc-800 rounded-xl shadow-2xl w-full max-w-2xl mx-4 p-6" @click.outside="$wire.student = null">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white">Academy Classes Progress</h3>
+                    <button wire:click="$set('student', null)" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="mb-4 p-3 bg-blue-50 dark:bg-zinc-700 rounded-lg">
+                    <p class="text-sm font-medium text-blue-900 dark:text-white">Student: {{ $student->user->name }}</p>
+                    <p class="text-sm text-blue-700 dark:text-gray-300">Batch: {{ $student->batch?->name ?? 'Not assigned' }}</p>
+                    <p class="text-sm text-blue-700 dark:text-gray-300">Phone: {{ $student->phone ?? 'N/A' }}</p>
+                </div>
 
-            <div class="space-y-4">
-                @foreach ($allClasses as $class)
-                    <div class="flex items-center justify-between bg-gray-50 dark:bg-zinc-900 p-3 rounded-lg shadow-sm">
-                        <span
-                            class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
-                        {{ in_array($class->id, $studentProgress) ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800' }}">
-                            {{ $class->name }}
-                        </span>
-
-                        <span class="text-sm text-gray-600 dark:text-gray-400">
-                            {{ in_array($class->id, $studentProgress) ? now()->format('Y-m-d H:i') : 'Pending' }}
-                        </span>
-
-                        <button
-                            class="px-3 py-1 rounded text-xs font-semibold
-                            {{ in_array($class->id, $studentProgress) ? 'bg-gray-600 text-white' : 'bg-green-600 text-white' }}"
-                            @click="$wire.call('addToStudentCompleteClasses', {{ $class->id }})">
-                            {{ in_array($class->id, $studentProgress) ? 'Completed' : 'Mark Done' }}
-                        </button>
+                @if ($allClasses && $allClasses->count() > 0)
+                    <div class="space-y-4 max-h-96 overflow-y-auto">
+                        @foreach ($allClasses as $class)
+                            <div class="flex items-center justify-between bg-gray-50 dark:bg-zinc-900 p-3 rounded-lg shadow-sm">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ in_array($class->id, $studentProgress) ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800' }}">
+                                    {{ $class->name }}
+                                </span>
+                                <button
+                                    class="px-3 py-1 rounded text-xs font-semibold {{ in_array($class->id, $studentProgress) ? 'bg-gray-600 text-white' : 'bg-green-600 text-white' }}"
+                                    wire:click="addToStudentCompleteClasses({{ $class->id }})">
+                                    {{ in_array($class->id, $studentProgress) ? 'Completed' : 'Mark Done' }}
+                                </button>
+                            </div>
+                        @endforeach
                     </div>
-                @endforeach
+                @else
+                    <p class="text-center text-gray-500">No classes available</p>
+                @endif
             </div>
-        @else
-            <x-spinner-loader size="xl" color="white"></x-spinner-loader>
-        @endif
-
-    </x-modal>
+        </div>
+    @endif
 
 </div>

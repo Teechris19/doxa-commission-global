@@ -2,7 +2,6 @@
 use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 use App\Models\{BeliversAcademy, StudentClasses, AcademyClases, AcademyBatch};
-use App\Notifications\ClassCompletedByStudent;
 use Illuminate\Support\Facades\Storage;
 
 new #[Layout('components.layouts.tailwind-layout')] class extends Component {
@@ -53,50 +52,6 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
         // Find completion date (when last class was completed)
         if (!empty($this->classDone)) {
             $this->completionDate = now()->format('Y-m-d');
-        }
-    }
-
-    public function markClassAsComplete($classId)
-    {
-        if (!in_array($classId, $this->classDone)) {
-            $this->classDone[] = $classId;
-            $this->student->class_completed = json_encode($this->classDone);
-            $this->student->save();
-            
-            // Update completion date
-            $this->completionDate = now()->format('Y-m-d');
-            
-            // Recalculate progress
-            $totalClasses = $this->classes->count();
-            if ($totalClasses > 0) {
-                $this->progressPercentage = round((count($this->classDone) / $totalClasses) * 100);
-            }
-            
-            // Notify student
-            $class = AcademyClases::find($classId);
-            if ($class) {
-                auth()->user()->notify(new ClassCompletedByStudent(auth()->user(), $class, 'completed'));
-            }
-            
-            $this->dispatch('$refresh');
-        }
-    }
-
-    public function markClassAsIncomplete($classId)
-    {
-        if (($key = array_search($classId, $this->classDone)) !== false) {
-            unset($this->classDone[$key]);
-            $this->classDone = array_values($this->classDone); // Re-index array
-            $this->student->class_completed = json_encode($this->classDone);
-            $this->student->save();
-            
-            // Recalculate progress
-            $totalClasses = $this->classes->count();
-            if ($totalClasses > 0) {
-                $this->progressPercentage = round((count($this->classDone) / $totalClasses) * 100);
-            }
-            
-            $this->dispatch('$refresh');
         }
     }
 }; ?>
@@ -212,9 +167,7 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
                             <th class="px-4 py-3 text-left font-semibold">#</th>
                             <th class="px-4 py-3 text-left font-semibold">Course</th>
                             <th class="px-4 py-3 text-left font-semibold">Description</th>
-                            <th class="px-4 py-3 text-left font-semibold">Date</th>
                             <th class="px-4 py-3 text-left font-semibold">Status</th>
-                            <th class="px-4 py-3 text-center font-semibold">Action</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-blue-50 bg-white">
@@ -224,12 +177,6 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
                                 <td class="px-4 py-3 font-medium text-slate-900">{{ $class->name }}</td>
                                 <td class="px-4 py-3 text-slate-600 max-w-xs truncate" title="{{ $class->description }}">
                                     {{ Str::limit($class->description ?? 'No description', 50) }}
-                                </td>
-                                <td class="px-4 py-3 text-slate-600">
-                                    <span class="inline-flex items-center gap-1">
-                                        <i class="fas fa-calendar text-gray-400"></i>
-                                        {{ \Carbon\Carbon::parse($class->date)->format('M d, Y') }}
-                                    </span>
                                 </td>
                                 <td class="px-4 py-3">
                                     @if (in_array($class->id, $classDone))
@@ -242,21 +189,6 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
                                             <i class="fas fa-clock"></i>
                                             Pending
                                         </span>
-                                    @endif
-                                </td>
-                                <td class="px-4 py-3 text-center">
-                                    @if (in_array($class->id, $classDone))
-                                        <button wire:click="markClassAsIncomplete({{ $class->id }})" 
-                                                class="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-500 hover:bg-gray-600 text-white text-xs font-medium rounded-lg transition-colors">
-                                            <i class="fas fa-undo"></i>
-                                            Mark Incomplete
-                                        </button>
-                                    @else
-                                        <button wire:click="markClassAsComplete({{ $class->id }})" 
-                                                class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-lg transition-colors">
-                                            <i class="fas fa-check"></i>
-                                            Mark Complete
-                                        </button>
                                     @endif
                                 </td>
                             </tr>

@@ -90,28 +90,26 @@
     </x-card>
 
     {{-- Modal --}}
-    <flux:modal wire:model="showModal" class="max-w-2xl">
+    <x-modal id="conclave-modal" wire:model="showModal" :title="($conclaveId ? 'Edit' : 'Create') . ' Conclave'" size="2xl">
         <div class="space-y-4">
-            <h2 class="text-xl font-semibold">{{ $conclaveId ? 'Edit' : 'Create' }} Conclave</h2>
-            
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <flux:input wire:model="name" label="Conclave Name *" type="text" placeholder="e.g., Abuja Conclave" />
-                <flux:input wire:model="location" label="Location *" type="text" placeholder="e.g., Abuja" />
+                <x-input wire:model="name" label="Conclave Name *" placeholder="e.g., Abuja Conclave" />
+                <x-input wire:model="location" label="Location *" placeholder="e.g., Abuja" />
             </div>
 
-            <flux:textarea wire:model="description" label="Description" rows="3" placeholder="Description about this conclave..." />
-            <flux:input wire:model="address" label="Address" type="text" placeholder="Full address" />
+            <x-textarea wire:model="description" label="Description" rows="3" placeholder="Description about this conclave..." />
+            <x-input wire:model="address" label="Address" placeholder="Full address" />
 
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <flux:input wire:model="phone" label="Phone" type="text" placeholder="Contact number" />
-                <flux:input wire:model="email" label="Email" type="email" placeholder="Contact email" />
+                <x-input wire:model="phone" label="Phone" placeholder="Contact number" />
+                <x-input wire:model="email" label="Email" type="email" placeholder="Contact email" />
             </div>
 
-            <flux:input wire:model="whatsapp_link" label="WhatsApp Group Link" type="url" placeholder="https://chat.whatsapp.com/INVITE_CODE" />
+            <x-input wire:model="whatsapp_link" label="WhatsApp Group Link" type="url" placeholder="https://chat.whatsapp.com/INVITE_CODE" />
 
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <flux:input wire:model="latitude" label="Latitude" type="text" placeholder="e.g., 9.0765" />
-                <flux:input wire:model="longitude" label="Longitude" type="text" placeholder="e.g., 7.3986" />
+                <x-input wire:model="latitude" label="Latitude" placeholder="e.g., 9.0765" />
+                <x-input wire:model="longitude" label="Longitude" placeholder="e.g., 7.3986" />
             </div>
 
             <div>
@@ -131,13 +129,13 @@
             </div>
 
             <div class="flex items-center gap-2">
-                <flux:checkbox wire:model="isActive" label="Active" />
+                <x-checkbox wire:model="isActive" label="Active" />
             </div>
 
             <div class="flex justify-end gap-3 pt-4">
-                <flux:button wire:click="$set('showModal', false)" variant="ghost">Cancel</flux:button>
-                <flux:button wire:click="save" class="bg-blue-600 hover:bg-blue-700">Save Conclave</flux:button>
+                <x-button wire:click="$set('showModal', false)" color="gray" variant="outline">Cancel</x-button>
+                <x-button wire:click="save" color="blue">Save Conclave</x-button>
             </div>
         </div>
-    </flux:modal>
+    </x-modal>
 </div>
