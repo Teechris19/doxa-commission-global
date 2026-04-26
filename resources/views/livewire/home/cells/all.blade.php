@@ -3,15 +3,15 @@
 use App\Models\{CellGroup, CellMember, Chapter};
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
+use Livewire\WithPagination;
 use TallStackUi\Traits\Interactions;
 use Illuminate\Support\Facades\Auth;
 
 new #[Layout('components.layouts.tailwind-layout')] class extends Component {
-    use Interactions;
+    use Interactions, WithPagination;
 
     public $selectedCell = null;
     public $showJoinModal = false;
-    public $allCells = [];
 
     // Chapter filter
     public $selectedChapterId = null;
@@ -20,30 +20,17 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
     public function mount(): void
     {
         $this->loadChapters();
-        $this->loadAllCells();
     }
 
     public function filterByChapter(): void
     {
         $this->selectedChapterId = $this->selectedChapterId === '' ? null : (int) $this->selectedChapterId;
-        $this->loadAllCells();
+        $this->resetPage();
     }
 
     protected function loadChapters(): void
     {
         $this->chapters = Chapter::orderBy('name')->get(['id', 'name']);
-    }
-
-    protected function loadAllCells(): void
-    {
-        $this->allCells = CellGroup::with(['primaryLeader.user'])
-            ->withCount('activeMembers')
-            ->where('is_active', true)
-            ->where('name', '!=', 'Cell Settings')
-            ->when($this->selectedChapterId, fn($q) => $q->where('chapter_id', $this->selectedChapterId))
-            ->orderBy('name')
-            ->get()
-            ->all();
     }
 
     public function openJoinModal($cellId)
@@ -93,7 +80,15 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
 
     public function with()
     {
-        return [];
+        return [
+            'allCells' => CellGroup::with(['primaryLeader.user'])
+                ->withCount('activeMembers')
+                ->where('is_active', true)
+                ->where('name', '!=', 'Cell Settings')
+                ->when($this->selectedChapterId, fn($q) => $q->where('chapter_id', $this->selectedChapterId))
+                ->orderBy('name')
+                ->paginate(6)
+        ];
     }
 }; ?>
 
@@ -207,6 +202,10 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
                         </p>
                     </div>
                 @endforelse
+            </div>
+
+            <div class="mt-8">
+                {{ $allCells->links() }}
             </div>
 
             <div class="mt-12 text-center">

@@ -1,9 +1,9 @@
 <div class="space-y-6">
     <x-fancy-header title="Conclaves" subtitle="Manage Doxite conclaves (geographic areas)" :breadcrumbs="[
-        ['label' => 'Home', 'url' => route('admin.dashboard')],
+        ['label' => 'Home', 'url' => route('admin.dashboard', request()->query())],
         ['label' => 'Conclaves']
     ]">
-        <x-button wire:click="create" icon="plus" class="bg-blue-600 hover:bg-blue-700">Add Conclave</x-button>
+        <x-button x-on:click="$wire.create().then(() => $modalOpen('conclave-modal'))" icon="plus" class="bg-blue-600 hover:bg-blue-700">Add Conclave</x-button>
     </x-fancy-header>
 
     <x-card>
@@ -68,7 +68,7 @@
                             </td>
                             <td class="px-4 py-3 text-right">
                                 <div class="flex justify-end gap-2">
-                                    <x-button wire:click="edit({{ $conclave->id }})" icon="pencil" variant="ghost" size="sm">Edit</x-button>
+                                    <x-button x-on:click="$wire.edit({{ $conclave->id }}).then(() => $modalOpen('conclave-modal'))" icon="pencil" variant="ghost" size="sm">Edit</x-button>
                                     <x-button wire:click="delete({{ $conclave->id }})" icon="trash" variant="ghost" size="sm" class="text-red-600 hover:text-red-700">Delete</x-button>
                                 </div>
                             </td>
@@ -90,7 +90,7 @@
     </x-card>
 
     {{-- Modal --}}
-    <x-modal id="conclave-modal" wire:model="showModal" :title="($conclaveId ? 'Edit' : 'Create') . ' Conclave'" size="2xl">
+    <x-modal id="conclave-modal" wire:model.live="showModal" :title="($conclaveId ? 'Edit' : 'Create') . ' Conclave'" size="2xl" blur>
         <div class="space-y-4">
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <x-input wire:model="name" label="Conclave Name *" placeholder="e.g., Abuja Conclave" />

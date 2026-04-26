@@ -135,7 +135,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
     </x-fancy-header>
 
 
-    <x-modal title="View Prayer Request" size="2xl" id="request-modal">
+    <x-modal title="View Prayer Request" size="2xl" id="request-modal" blur>
         @if ($prayerRequest == null)
             <div class="flex justify-center">
                 <x-spinner-loader color="white" size="xl"></x-spinner-loader>

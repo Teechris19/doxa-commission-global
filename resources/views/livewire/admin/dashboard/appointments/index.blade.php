@@ -139,11 +139,10 @@ new #[Layout('components.layouts.admin')] class extends Component {
             $recipient->notify(new AppointmentStatusUpdated($appointment, 'rescheduled'));
         }
 
-        $this->reset('selectedAppointment', 'appointmentDate', 'appointmentTime');
-        $this->dispatch('$refresh');
         $this->dispatch('rescheduled');
-
+        $this->dispatch('$closeModal', 'reschedule');
         $this->toast()->success('Done!', 'appointment Rescheduled successfully!')->send();
+        $this->reset('selectedAppointment', 'appointmentDate', 'appointmentTime');
     }
 }; ?>
 

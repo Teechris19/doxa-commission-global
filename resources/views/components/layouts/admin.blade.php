@@ -8,6 +8,13 @@ TODO: Add Active route indicators
     {{-- <script src="/tinymce/js/tinymce/tinymce.min.js"></script> --}}
     <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
 
+    <style>
+        /* Global Fix for Toasts and Dialogs appearing behind Modals */
+        [id^="tallstackui_toast"], [id^="tallstackui_dialog"] {
+            z-index: 9999 !important;
+        }
+    </style>
+
     @include('partials.head')
     @stack('styles')
     
@@ -302,12 +309,12 @@ TODO: Add Active route indicators
         @role('super-admin')
             <livewire:admin.components.chapter-switcher />
         @endrole
-        <x-toast />
-        <x-dialog />
         {{ $slot }}
     </flux:main>
     </div>
 
+    <x-toast />
+    <x-dialog />
 
     @fluxScripts
     @stack('scripts')

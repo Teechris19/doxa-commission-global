@@ -207,14 +207,15 @@ new #[Layout('components.layouts.admin')] class extends Component {
             }
 
             $account->update($payload);
-            $this->toast()->success('Updated', 'Account updated successfully.')->send();
+            $msg = 'Account updated successfully.';
         } else {
             Accounts::create($payload);
-            $this->toast()->success('Created', 'Account created successfully.')->send();
+            $msg = 'Account created successfully.';
         }
 
-        $this->resetAccountForm();
         $this->dispatch('$closeModal', 'partnership-account-modal');
+        $this->toast()->success('Success', $msg)->send();
+        $this->resetAccountForm();
     }
 
     public function deleteAccount(int $id): void
@@ -470,7 +471,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
         </div>
     </x-card>
 
-    <x-modal id="partnership-account-modal" :title="$editingId ? 'Edit Account' : 'Create Account'" size="4xl">
+    <x-modal id="partnership-account-modal" :title="$editingId ? 'Edit Account' : 'Create Account'" size="4xl" blur>
         <form wire:submit.prevent="saveAccount" class="space-y-4">
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>

@@ -242,9 +242,9 @@ new #[Layout('components.layouts.admin')] class extends Component {
         ]);
         $category->save();
 
+        $this->dispatch('$closeModal', 'partnership-category-modal');
         $this->toast()->success('Saved', 'Partnership category saved successfully.')->send();
         $this->resetCategoryForm();
-        $this->dispatch('$closeModal', 'partnership-category-modal');
     }
 
     public function deleteCategory($id): void
@@ -451,9 +451,9 @@ new #[Layout('components.layouts.admin')] class extends Component {
         $intent->fill($payload);
         $intent->save();
 
+        $this->dispatch('$closeModal', 'partnership-intent-modal');
         $this->toast()->success('Saved', 'Partnership intent saved successfully.')->send();
         $this->resetIntentForm();
-        $this->dispatch('$closeModal', 'partnership-intent-modal');
     }
 
     public function setIntentStatus(int $id, string $status): void

@@ -222,10 +222,11 @@ new #[Layout('components.layouts.admin')] class extends Component {
 
         $this->event->update($data);
 
+        $this->showEditModal = false;
+        $this->dispatch('$closeModal', 'event-edit-modal');
         $this->toast()->success('Event updated', 'The event details were updated successfully')->send();
         $this->dispatch('$refresh');
         $this->dispatch('Edited');
-        $this->showEditModal = false;
     }
 
     public function addAccount(){
@@ -244,10 +245,11 @@ new #[Layout('components.layouts.admin')] class extends Component {
                 ]);
             }
         }
+        $this->showEditModal = false;
+        $this->dispatch('$closeModal', 'event-edit-modal');
         $this->toast()->success('Event updated', 'Account(s) added to event successfully')->send();
         $this->dispatch('$refresh');
         $this->dispatch('Edited');
-        $this->showEditModal = false;
     }
 };
 ?>
@@ -260,7 +262,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
         </x-slot:actions>
     </x-fancy-header>
 
-    <x-modal id="event-edit-modal" title="Event Management" size="2xl" wire:model="showEditModal">
+    <x-modal id="event-edit-modal" title="Event Management" size="2xl" wire:model="showEditModal" blur>
         <div x-data="{ openSection: 'edit' }" class="space-y-4">
 
             <!-- Accordion: Edit Event -->

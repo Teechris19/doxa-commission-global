@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin\Dashboard\Conclaves;
 
 use App\Models\Conclave;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
@@ -11,6 +12,9 @@ use TallStackUi\Traits\Interactions;
 class Index extends Component
 {
     use Interactions, WithPagination, WithFileUploads;
+
+    #[Url]
+    public $chapter = '';
 
     public $search = '';
     public $perPage = 10;
@@ -117,13 +121,15 @@ class Index extends Component
 
             if ($this->conclaveId) {
                 Conclave::where('id', $this->conclaveId)->update($data);
-                $this->toast()->success('Updated', 'Conclave updated successfully.')->send();
+                $msg = 'Conclave updated successfully.';
             } else {
                 Conclave::create($data);
-                $this->toast()->success('Created', 'Conclave created successfully.')->send();
+                $msg = 'Conclave created successfully.';
             }
 
             $this->showModal = false;
+            $this->dispatch('$closeModal', 'conclave-modal');
+            $this->toast()->success('Success', $msg)->send();
             $this->resetForm();
         } catch (\Exception $e) {
             $this->toast()->error('Error', 'Failed to save: ' . $e->getMessage())->send();

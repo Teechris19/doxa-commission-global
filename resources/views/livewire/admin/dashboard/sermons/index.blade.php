@@ -153,9 +153,11 @@ new #[Layout('components.layouts.admin')]  class extends Component {
             $this->storeSermonMedia($sermon, $this->videoFile, 'video');
         }
 
-        $this->toast()->success('Done!', $this->editMode ? 'Sermon updated successfully!' : 'Sermon created successfully!')->send();
+        $msg = $this->editMode ? 'Sermon updated successfully!' : 'Sermon created successfully!';
+        
+        $this->dispatch('$closeModal', 'sermon-modal');
+        $this->toast()->success('Done!', $msg)->send();
         $this->resetSermonForm();
-        $this->dispatch('close-modal', 'sermon-modal');
         $this->dispatch('$refresh');
     }
 
@@ -238,9 +240,11 @@ new #[Layout('components.layouts.admin')]  class extends Component {
         ]);
         $series->save();
 
-        $this->toast()->success('Done!', $this->editMode ? 'Series updated successfully!' : 'Series created successfully!')->send();
+        $msg = $this->editMode ? 'Series updated successfully!' : 'Series created successfully!';
+        
+        $this->dispatch('$closeModal', 'series-modal');
+        $this->toast()->success('Done!', $msg)->send();
         $this->resetSeriesForm();
-        $this->dispatch('close-modal', 'series-modal');
         $this->dispatch('$refresh');
     }
 
@@ -334,7 +338,7 @@ new #[Layout('components.layouts.admin')]  class extends Component {
     />
 
     <!-- Sermon Edit Modal -->
-    <x-modal id="sermon-modal" :title="$editMode ? 'Edit Sermon' : 'Create Sermon'" size="2xl">
+    <x-modal id="sermon-modal" :title="$editMode ? 'Edit Sermon' : 'Create Sermon'" size="2xl" blur>
         <form wire:submit.prevent="saveSermon" class="space-y-6 bg-zinc-50 dark:bg-zinc-800 p-6">
             <div>
                 <label class="block text-sm font-medium mb-1 dark:text-gray-200">Title *</label>
@@ -443,8 +447,8 @@ new #[Layout('components.layouts.admin')]  class extends Component {
         </form>
     </x-modal>
 
-    <!-- Series Modal -->
-    <x-modal id="series-modal" :title="$editMode ? 'Edit Series' : 'Create Series'" size="xl">
+    <!-- Series Edit Modal -->
+    <x-modal id="series-modal" :title="$editMode ? 'Edit Series' : 'Create Series'" size="xl" blur>
         <form wire:submit.prevent="saveSeries" class="space-y-6 bg-zinc-50 dark:bg-zinc-800 p-6">
             <div>
                 <label class="block text-sm font-medium mb-1 dark:text-gray-200">Title *</label>

@@ -126,11 +126,13 @@ new #[Layout('components.layouts.admin')] class extends Component {
 
         $appointment->save();
         $appointment->restore();
+        
+        $this->dispatch('rescheduled');
+        $this->dispatch('$closeModal', 'reschedule');
+        $this->toast()->success('Done!', 'appointment Rescheduled successfully!')->send();
+        
         $this->reset('selectedAppointment', 'appointmentDate', 'appointmentTime');
         $this->dispatch('$refresh');
-        $this->dispatch('rescheduled');
-
-        $this->toast()->success('Done!', 'appointment Rescheduled successfully!')->send();
     }
 }; ?>
 

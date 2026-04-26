@@ -58,8 +58,10 @@ new  #[Layout('components.layouts.admin')]  class extends Component {
         $user->assignRole('member');
         $this->assignAdmin();
 
+        $this->dispatch('admin-changed');
+        $this->dispatch('$closeModal', 'change-admin-modal');
+        $this->toast()->success('Done!', 'Chapter admin changed successfully!')->send();
         $this->dispatch('$refresh');
-        $this->dispatch("admin-changed");
     }
 
 
@@ -69,8 +71,10 @@ new  #[Layout('components.layouts.admin')]  class extends Component {
     public function save(): void
     {
         $this->assignAdmin();
+        $this->dispatch('admin-assigned');
+        $this->dispatch('$closeModal', 'select-admin-modal');
+        $this->toast()->success('Done!', 'Chapter admin assigned successfully!')->send();
         $this->dispatch('$refresh');
-        $this->dispatch("admin-assigned");
     }
 
     protected function assignAdmin()

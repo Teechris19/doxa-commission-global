@@ -168,7 +168,7 @@ new  #[Layout('components.layouts.admin')]  class extends Component {
         </x-table>
     </x-card>
 
-    <x-modal center id="confirm-delete" wire:model="showDeleteModal">
+    <x-modal center id="confirm-delete" wire:model="showDeleteModal" blur>
         <div class="flex flex-col items-center space-y-4">
             <!-- Warning Icon -->
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" class="text-red-600 size-36" viewBox="0 0 24 24"

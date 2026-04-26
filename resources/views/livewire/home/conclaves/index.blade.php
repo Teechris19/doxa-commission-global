@@ -3,21 +3,25 @@
 use App\Models\Conclave;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
+use Livewire\WithPagination;
 
 new #[Layout('components.layouts.tailwind-layout')] class extends Component {
-    public $conclaves;
-    public $selectedConclave = null;
+    use WithPagination;
 
-    public function mount()
-    {
-        $this->conclaves = Conclave::where('is_active', true)
-            ->orderBy('location')
-            ->get();
-    }
+    public $selectedConclave = null;
 
     public function selectConclave($id)
     {
         $this->selectedConclave = Conclave::find($id);
+    }
+
+    public function with()
+    {
+        return [
+            'conclaves' => Conclave::where('is_active', true)
+                ->orderBy('location')
+                ->paginate(6)
+        ];
     }
 }; ?>
 
@@ -71,6 +75,10 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
                         </div>
                     </article>
                 @endforeach
+            </div>
+
+            <div class="mt-12">
+                {{ $conclaves->links() }}
             </div>
         @else
             <div class="text-center py-12">

@@ -169,14 +169,15 @@ new #[Layout('components.layouts.admin')] class extends Component {
                 ->where('chapter_id', $this->chapterId)
                 ->findOrFail($this->locationId);
             $location->update($payload);
-            $this->toast()->success('Updated', 'Pickup location updated successfully.')->send();
+            $msg = 'Pickup location updated successfully.';
         } else {
             PickupLocation::create($payload);
-            $this->toast()->success('Created', 'Pickup location created successfully.')->send();
+            $msg = 'Pickup location created successfully.';
         }
 
-        $this->resetPickupLocationForm();
         $this->dispatch('$closeModal', 'pickup-location-modal');
+        $this->toast()->success('Success', $msg)->send();
+        $this->resetPickupLocationForm();
     }
 
     public function togglePickupLocationStatus(int $id): void
@@ -269,8 +270,8 @@ new #[Layout('components.layouts.admin')] class extends Component {
             $recipient->notify(new TransportRequestUpdated($request, $validated['transportStatus']));
         }
 
-        $this->toast()->success('Updated', 'Transport request updated successfully.')->send();
         $this->dispatch('$closeModal', 'transport-request-modal');
+        $this->toast()->success('Updated', 'Transport request updated successfully.')->send();
     }
 
     public function changeStatus(int $id, string $status): void
