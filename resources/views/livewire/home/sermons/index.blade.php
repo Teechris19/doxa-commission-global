@@ -77,6 +77,7 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
 };
 ?>
 
+<div class="min-h-screen bg-white text-slate-900">
 <style>
 input[type="range"]::-webkit-slider-runnable-track {
     background: #bfdbfe;
@@ -270,9 +271,56 @@ input[type="range"]::-moz-range-thumb:hover {
 .sermon-card:hover .image-wrapper img {
     transform: scale(1.06);
 }
+
+/* Floating WhatsApp Button */
+.whatsapp-float {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background-color: #25d366;
+    color: #fff;
+    border-radius: 50px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    animation: whatsapp-floating 3s ease-in-out infinite;
+}
+
+.whatsapp-float:hover {
+    background-color: #128c7e;
+    transform: scale(1.05);
+    color: white;
+    box-shadow: 0 6px 16px rgba(18, 140, 126, 0.4);
+}
+
+.whatsapp-float i {
+    font-size: 20px;
+    margin-right: 8px;
+}
+
+@keyframes whatsapp-floating {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+}
+
+@media (max-width: 767px) {
+    .whatsapp-float {
+        bottom: 100px; /* Stay above the audio player on mobile */
+        right: 20px;
+        padding: 10px 16px;
+        font-size: 13px;
+    }
+}
 </style>
 
-<div class="min-h-screen bg-white text-slate-900">
     <section class="relative overflow-hidden border-b border-blue-100">
         <div class="pointer-events-none absolute inset-0">
             <div class="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-blue-100/90 via-white to-white opacity-90"></div>
@@ -508,7 +556,32 @@ input[type="range"]::-moz-range-thumb:hover {
 
     <audio id="player-audio" src="" preload="metadata"></audio>
 
+    <!-- WhatsApp Floating Button -->
+    @php
+        $globalSettings = \App\Models\GlobalSetting::orderByDesc('updated_at')->first();
+        $socialLinks = json_decode($globalSettings?->social_links ?? '{}', true) ?? [];
+        $whatsappNumber = $socialLinks['whatsapp'] ?? '';
+        
+        // If it's just a number, format it as a wa.me link
+        if ($whatsappNumber && !str_starts_with($whatsappNumber, 'http')) {
+            $whatsappNumber = 'https://wa.me/' . ltrim($whatsappNumber, '+ ');
+        }
+        
+        // Final link with pre-filled message
+        $whatsappLink = $whatsappNumber ?: 'https://wa.me/234XXXXXXXXXX';
+        if (str_contains($whatsappLink, '?')) {
+            $whatsappLink .= '&text=' . urlencode('I would like to request a message titled ');
+        } else {
+            $whatsappLink .= '?text=' . urlencode('I would like to request a message titled ');
+        }
+    @endphp
+    <a href="{{ $whatsappLink }}" class="whatsapp-float" target="_blank">
+        <i class="fab fa-whatsapp"></i>
+        <span>Request Message</span>
+    </a>
+
 <script>
+
         // Use immediate execution and also listen for Livewire load
         (function() {
             let initialized = false;

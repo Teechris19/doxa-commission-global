@@ -23,6 +23,7 @@ Route::prefix('admin/dashboard')
         Volt::route('prayer-request-teams', 'admin.dashboard.settings.request_teams')->name('admin.dashboard.prayer_requests.request_teams');
         Volt::route('believers-academy', 'admin.dashboard.settings.believersclass')->name('admin.settings.believersclass');
         Volt::route('settings/pastor', 'admin.dashboard.settings.pastor')->name('admin.dashboard.settings.pastor');
+        Volt::route('settings/request-message', 'admin.dashboard.settings.request-message')->name('admin.dashboard.settings.request-message');
         // Settings - Event Teams
         Volt::route('/settings/event-teams', 'admin.dashboard.settings.event-teams')->name('admin.dashboard.settings.event-teams');
         

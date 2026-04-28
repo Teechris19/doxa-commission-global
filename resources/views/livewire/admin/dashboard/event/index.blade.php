@@ -18,7 +18,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
     public array $selected = [];
     public ?string $bulkAction = null;
     public $event = null;
-    public ?string $status = null;
+    public ?string $filterStatus = null;
     public ?int $chapterId;
 
     #[Url]
@@ -29,6 +29,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
     public $title;
     public $slug;
     public $description;
+    public $status;
 
     // Scheduling
     public $start_at;
@@ -90,10 +91,10 @@ new #[Layout('components.layouts.admin')] class extends Component {
      */
     public function rows()
     {
-        return Events::orderBy('id', 'desc')->when($this->search, fn($q) => $q->where('title', 'like', "%{$this->search}%")->orWhere('description', 'like', "%{$this->search}%"))->when($this->chapterId, fn($q) => $q->where('chapter_id', $this->chapterId))->when($this->status, fn($q) => $q->where('status', $this->status))->paginate($this->quantity)->withQueryString();
+        return Events::orderBy('id', 'desc')->when($this->search, fn($q) => $q->where('title', 'like', "%{$this->search}%")->orWhere('description', 'like', "%{$this->search}%"))->when($this->chapterId, fn($q) => $q->where('chapter_id', $this->chapterId))->when($this->filterStatus, fn($q) => $q->where('status', $this->filterStatus))->paginate($this->quantity)->withQueryString();
     }
 
-    public function updatedStatus()
+    public function updatedFilterStatus()
     {
         $this->rows();
     }
@@ -516,7 +517,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
                     ['label' => 'Published', 'value' => 'published'],
                     ['label' => 'Cancelled', 'value' => 'cancelled'],
                     ['label' => 'Archived', 'value' => 'archived'],
-                ]" wire:model.live='status' class="mb-4" />
+                ]" wire:model.live='filterStatus' class="mb-4" />
             </x-slot:header>
 
             @interact('column_event_status', $row)

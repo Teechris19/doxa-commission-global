@@ -429,7 +429,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
     }
 }; ?>
 
-<div class="space-y-6">
+<div class="space-y-6" x-data="{ activeTab: 'Hero' }">
     <x-fancy-header title="About Page Settings" subtitle="Manage all sections of the public about page" :breadcrumbs="[
         ['label' => 'Home', 'url' => route('admin.dashboard')],
         ['label' => 'Settings'],
@@ -454,204 +454,210 @@ new #[Layout('components.layouts.admin')] class extends Component {
         </div>
     </x-fancy-header>
 
-    <!-- Hero Section -->
-    <x-card>
-        <div class="mb-4 flex items-center justify-between">
-            <div>
-                <h3 class="text-lg font-semibold">1. Hero Section</h3>
-                <p class="text-sm text-slate-500">Top banner section of the about page</p>
-            </div>
-            <x-button wire:click="saveAboutUs" class="bg-blue-600 hover:bg-blue-700">Save Hero</x-button>
+    <x-card class="dark:bg-zinc-800 text-white overflow-hidden">
+        {{-- Custom Responsive Tabs --}}
+        <div class="border-b border-zinc-700">
+            <nav class="flex overflow-x-auto no-scrollbar" aria-label="Tabs">
+                @foreach(['Hero', 'Who We Are', 'Our Foundation', 'Our Pastor', 'Service Time', 'Conclave Preview', 'Join Community (CTA)'] as $tabName)
+                    <button 
+                        @click="activeTab = '{{ $tabName }}'"
+                        :class="{ 'border-blue-500 text-blue-500': activeTab === '{{ $tabName }}', 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-600': activeTab !== '{{ $tabName }}' }"
+                        class="whitespace-nowrap border-b-2 py-4 px-4 text-sm font-medium transition-all duration-200 focus:outline-none"
+                    >
+                        {{ $tabName }}
+                    </button>
+                @endforeach
+            </nav>
         </div>
-        <div class="space-y-4">
-            <flux:input wire:model="heroTitle" label="Hero Title" type="text" placeholder="Welcome to Doxa Church" />
-            <flux:textarea wire:model="heroSubtitle" label="Hero Subtitle" rows="2" placeholder="A place where faith, hope, and love come together." />
-            <div>
-                <label class="mb-1 block text-sm font-medium">Hero Background Image</label>
-                @if($existingHeroImage)
-                    <div class="mb-2">
-                        <img src="{{ Storage::url($existingHeroImage) }}" alt="Hero" class="h-32 rounded object-cover" />
+
+        <div class="mt-6">
+            <!-- Hero Tab -->
+            <div x-show="activeTab === 'Hero'" x-cloak>
+                <div class="mb-4 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold">Hero Section</h3>
+                        <p class="text-sm text-slate-400">Top banner section of the about page</p>
                     </div>
-                @endif
-                <input type="file" wire:model="heroBackgroundImage" accept="image/*" class="w-full rounded-lg border px-3 py-2" />
-            </div>
-        </div>
-    </x-card>
-
-    <!-- Who We Are Section -->
-    <x-card>
-        <div class="mb-4 flex items-center justify-between">
-            <div>
-                <h3 class="text-lg font-semibold">2. Who We Are</h3>
-                <p class="text-sm text-slate-500">Main description section</p>
-            </div>
-            <x-button wire:click="saveAboutUs" class="bg-blue-600 hover:bg-blue-700">Save Section</x-button>
-        </div>
-        <div class="space-y-4">
-            <div>
-                <label class="mb-1 block text-sm font-medium">Section Image</label>
-                @if($existingWhoWeAreImage)
-                    <div class="mb-2">
-                        <img src="{{ Storage::url($existingWhoWeAreImage) }}" alt="Who We Are" class="h-32 rounded object-cover" />
-                    </div>
-                @endif
-                <input type="file" wire:model="whoWeAreImage" accept="image/*" class="w-full rounded-lg border px-3 py-2" />
-            </div>
-            <flux:textarea wire:model="whoWeAreDescription" label="Description" rows="5" placeholder="Enter the main description..." />
-        </div>
-    </x-card>
-
-    <!-- Our Foundation Section -->
-    <x-card>
-        <div class="mb-4 flex items-center justify-between">
-            <div>
-                <h3 class="text-lg font-semibold">3. Our Foundation</h3>
-                <p class="text-sm text-slate-500">Mission, Vision, and Core Values</p>
-            </div>
-            <x-button wire:click="saveAboutUs" class="bg-blue-600 hover:bg-blue-700">Save Section</x-button>
-        </div>
-        <div class="space-y-4">
-            <flux:textarea wire:model="mission" label="Mission" rows="3" placeholder="Our mission..." />
-            <flux:textarea wire:model="vision" label="Vision" rows="3" placeholder="Our vision..." />
-            <flux:textarea wire:model="coreValues" label="Core Values" rows="3" placeholder="Our core values..." />
-        </div>
-    </x-card>
-
-    <!-- History Timeline -->
-    <x-card>
-        <div class="mb-4 flex items-center justify-between">
-            <div>
-                <h3 class="text-lg font-semibold">4. Our Journey (History Timeline)</h3>
-                <p class="text-sm text-slate-500">Add significant events in church history</p>
-            </div>
-            <div class="flex gap-2">
-                <x-button wire:click="addHistoryEvent" class="bg-green-600 hover:bg-green-700">+ Add Event</x-button>
-                <x-button wire:click="saveHistoryTimeline" class="bg-blue-600 hover:bg-blue-700">Save Timeline</x-button>
-            </div>
-        </div>
-        <div class="space-y-3">
-            @foreach($historyTimeline as $index => $event)
-                <div class="flex items-center gap-3 rounded-lg border border-gray-200 p-3">
-                    <flux:input wire:model="historyTimeline.{{ $index }}.year" label="Year" type="text" placeholder="e.g., 2010" class="w-32" />
-                    <flux:input wire:model="historyTimeline.{{ $index }}.event" label="Event" type="text" placeholder="Event description" class="flex-1" />
-                    <x-button wire:click="removeHistoryEvent({{ $index }})" class="bg-red-600 hover:bg-red-700">Remove</x-button>
+                    <x-button wire:click="saveAboutUs" class="bg-blue-600 hover:bg-blue-700">Save Hero</x-button>
                 </div>
-            @endforeach
-        </div>
-    </x-card>
-
-    <!-- Our Pastor Section -->
-    <x-card>
-        <div class="mb-4 flex items-center justify-between">
-            <div>
-                <h3 class="text-lg font-semibold">5. Our Pastor</h3>
-                <p class="text-sm text-slate-500">Pastor information and social links</p>
-            </div>
-            <div class="flex gap-2">
-                <x-button wire:click="addPastor" class="bg-green-600 hover:bg-green-700">+ Add Pastor</x-button>
-                <x-button wire:click="savePastors" class="bg-blue-600 hover:bg-blue-700">Save Pastors</x-button>
-            </div>
-        </div>
-        <div class="space-y-4">
-            @foreach($pastors as $index => $pastor)
-                <div class="rounded-lg border border-gray-200 p-4">
-                    <div class="mb-3 flex items-center justify-between">
-                        <h4 class="font-medium">Pastor #{{ $index + 1 }}</h4>
-                        <x-button wire:click="removePastor({{ $index }})" class="bg-red-600 hover:bg-red-700">Remove</x-button>
+                <div class="space-y-4">
+                    <flux:input wire:model="heroTitle" label="Hero Title" type="text" placeholder="Welcome to Doxa Church" />
+                    <flux:textarea wire:model="heroSubtitle" label="Hero Subtitle" rows="2" placeholder="A place where faith, hope, and love come together." />
+                    <div>
+                        <label class="mb-1 block text-sm font-medium">Hero Background Image</label>
+                        @if($existingHeroImage)
+                            <div class="mb-2">
+                                <img src="{{ Storage::url($existingHeroImage) }}" alt="Hero" class="h-32 rounded object-cover" />
+                            </div>
+                        @endif
+                        <input type="file" wire:model="heroBackgroundImage" accept="image/*" class="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2" />
                     </div>
-                    <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-                        <flux:input wire:model="pastors.{{ $index }}.name" label="Name" type="text" />
-                        <flux:input wire:model="pastors.{{ $index }}.title" label="Title" type="text" />
-                        <flux:textarea wire:model="pastors.{{ $index }}.description" label="Description" rows="3" />
-                        <div class="md:col-span-2">
-                            <label class="mb-1 block text-sm font-medium">Image</label>
-                            @if(isset($pastor['image']))
-                                <div class="mb-2">
-                                    <img src="{{ Storage::url($pastor['image']) }}" alt="Pastor" class="h-24 w-24 rounded object-cover" />
+                </div>
+            </div>
+
+            <!-- Who We Are Tab -->
+            <div x-show="activeTab === 'Who We Are'" x-cloak>
+                <div class="mb-4 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold">Who We Are</h3>
+                        <p class="text-sm text-slate-400">Main description section</p>
+                    </div>
+                    <x-button wire:click="saveAboutUs" class="bg-blue-600 hover:bg-blue-700">Save Section</x-button>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <label class="mb-1 block text-sm font-medium">Section Image</label>
+                        @if($existingWhoWeAreImage)
+                            <div class="mb-2">
+                                <img src="{{ Storage::url($existingWhoWeAreImage) }}" alt="Who We Are" class="h-32 rounded object-cover" />
+                            </div>
+                        @endif
+                        <input type="file" wire:model="whoWeAreImage" accept="image/*" class="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2" />
+                    </div>
+                    <flux:textarea wire:model="whoWeAreDescription" label="Description" rows="5" placeholder="Enter the main description..." />
+                </div>
+            </div>
+
+            <!-- Our Foundation Tab -->
+            <div x-show="activeTab === 'Our Foundation'" x-cloak>
+                <div class="mb-4 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold">Our Foundation</h3>
+                        <p class="text-sm text-slate-400">Mission, Vision, and Core Values</p>
+                    </div>
+                    <x-button wire:click="saveAboutUs" class="bg-blue-600 hover:bg-blue-700">Save Section</x-button>
+                </div>
+                <div class="space-y-4">
+                    <flux:textarea wire:model="mission" label="Mission" rows="3" placeholder="Our mission..." />
+                    <flux:textarea wire:model="vision" label="Vision" rows="3" placeholder="Our vision..." />
+                    <flux:textarea wire:model="coreValues" label="Core Values" rows="3" placeholder="Our core values..." />
+                </div>
+            </div>
+
+            <!-- Our Pastor Tab -->
+            <div x-show="activeTab === 'Our Pastor'" x-cloak>
+                <div class="mb-4 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold">Our Pastor</h3>
+                        <p class="text-sm text-slate-400">Pastor information and social links</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <x-button wire:click="addPastor" class="bg-green-600 hover:bg-green-700">+ Add Pastor</x-button>
+                        <x-button wire:click="savePastors" class="bg-blue-600 hover:bg-blue-700">Save Pastors</x-button>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    @foreach($pastors as $index => $pastor)
+                        <div class="rounded-lg border border-zinc-700 bg-zinc-900 p-4">
+                            <div class="mb-3 flex items-center justify-between">
+                                <h4 class="font-medium">Pastor #{{ $index + 1 }}</h4>
+                                <x-button wire:click="removePastor({{ $index }})" class="bg-red-600 hover:bg-red-700 text-xs px-2 py-1">Remove</x-button>
+                            </div>
+                            <div class="grid grid-cols-1 gap-3 md:grid-cols-2 text-white">
+                                <flux:input wire:model="pastors.{{ $index }}.name" label="Name" type="text" />
+                                <flux:input wire:model="pastors.{{ $index }}.title" label="Title" type="text" />
+                                <flux:textarea wire:model="pastors.{{ $index }}.description" label="Description" rows="3" class="md:col-span-2" />
+                                <div class="md:col-span-2">
+                                    <label class="mb-1 block text-sm font-medium">Image</label>
+                                    @if(isset($pastor['image']))
+                                        <div class="mb-2">
+                                            <img src="{{ Storage::url($pastor['image']) }}" alt="Pastor" class="h-24 w-24 rounded object-cover" />
+                                        </div>
+                                    @endif
+                                    <input type="file" wire:model="pastors.{{ $index }}.temp_image" accept="image/*" class="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2" />
                                 </div>
-                            @endif
-                            <input type="file" wire:model="pastors.{{ $index }}.temp_image" accept="image/*" class="w-full rounded-lg border px-3 py-2" />
+                                <flux:input wire:model="pastors.{{ $index }}.facebook_url" label="Facebook URL" type="url" />
+                                <flux:input wire:model="pastors.{{ $index }}.instagram_url" label="Instagram URL" type="url" />
+                                <flux:input wire:model="pastors.{{ $index }}.twitter_url" label="Twitter/X URL" type="url" />
+                                <flux:input wire:model="pastors.{{ $index }}.youtube_url" label="YouTube URL" type="url" />
+                                <div class="flex items-center gap-2">
+                                    <flux:checkbox wire:model="pastors.{{ $index }}.is_active" label="Active" />
+                                </div>
+                            </div>
                         </div>
-                        <flux:input wire:model="pastors.{{ $index }}.facebook_url" label="Facebook URL" type="url" />
-                        <flux:input wire:model="pastors.{{ $index }}.instagram_url" label="Instagram URL" type="url" />
-                        <flux:input wire:model="pastors.{{ $index }}.twitter_url" label="Twitter/X URL" type="url" />
-                        <flux:input wire:model="pastors.{{ $index }}.youtube_url" label="YouTube URL" type="url" />
-                        <div class="flex items-center gap-2">
-                            <flux:checkbox wire:model="pastors.{{ $index }}.is_active" label="Active" />
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Service Time Tab -->
+            <div x-show="activeTab === 'Service Time'" x-cloak>
+                <div class="mb-4 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold">Service Times</h3>
+                        <p class="text-sm text-slate-400">Sunday and Thursday service schedules</p>
+                    </div>
+                    <x-button wire:click="saveServiceTimes" class="bg-blue-600 hover:bg-blue-700">Save Services</x-button>
+                </div>
+                <div class="space-y-6">
+                    <!-- Sunday Services -->
+                    <div>
+                        <div class="mb-3 flex items-center justify-between">
+                            <h4 class="font-medium text-blue-400">Sunday Services</h4>
+                            <x-button wire:click="addSundayService" class="bg-green-600 hover:bg-green-700">+ Add Service</x-button>
                         </div>
+                        @foreach($sundayServices as $index => $service)
+                            <div class="mb-2 flex items-center gap-3 rounded-lg border border-zinc-700 bg-zinc-900 p-3">
+                                <flux:input wire:model="sundayServices.{{ $index }}.service_name" label="Service Name" type="text" placeholder="e.g., 1st Service" class="flex-1" />
+                                <flux:input wire:model="sundayServices.{{ $index }}.time" label="Time" type="text" placeholder="e.g., 7:00 AM - 9:00 AM" class="w-48" />
+                                <x-button wire:click="removeSundayService({{ $index }})" class="bg-red-600 hover:bg-red-700 text-xs">Remove</x-button>
+                            </div>
+                        @endforeach
+                    </div>
+                    <!-- Thursday Services -->
+                    <div>
+                        <div class="mb-3 flex items-center justify-between">
+                            <h4 class="font-medium text-blue-400">Thursday Services</h4>
+                            <x-button wire:click="addThursdayService" class="bg-green-600 hover:bg-green-700">+ Add Service</x-button>
+                        </div>
+                        @foreach($thursdayServices as $index => $service)
+                            <div class="mb-2 flex items-center gap-3 rounded-lg border border-zinc-700 bg-zinc-900 p-3">
+                                <flux:input wire:model="thursdayServices.{{ $index }}.service_name" label="Service Name" type="text" placeholder="e.g., Bible Study" class="flex-1" />
+                                <flux:input wire:model="thursdayServices.{{ $index }}.time" label="Time" type="text" placeholder="e.g., 6:00 PM - 8:00 PM" class="w-48" />
+                                <x-button wire:click="removeThursdayService({{ $index }})" class="bg-red-600 hover:bg-red-700 text-xs">Remove</x-button>
+                            </div>
+                        @endforeach
                     </div>
                 </div>
-            @endforeach
+            </div>
+
+            <!-- Conclave Preview Tab -->
+            <div x-show="activeTab === 'Conclave Preview'" x-cloak>
+                <div class="mb-4 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold">Conclaves Preview</h3>
+                        <p class="text-sm text-slate-400">Number of conclaves to show on about page</p>
+                    </div>
+                    <x-button wire:click="saveAboutUs" class="bg-blue-600 hover:bg-blue-700">Save Setting</x-button>
+                </div>
+                <flux:input wire:model="conclavesPreviewCount" label="Number of Conclaves to Display" type="number" min="1" max="20" />
+            </div>
+
+            <!-- Join Community (CTA) Tab -->
+            <div x-show="activeTab === 'Join Community (CTA)'" x-cloak>
+                <div class="mb-4 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold">Join Community (CTA)</h3>
+                        <p class="text-sm text-slate-400">Call-to-action section at the bottom</p>
+                    </div>
+                    <x-button wire:click="saveCtaSection" class="bg-blue-600 hover:bg-blue-700">Save CTA</x-button>
+                </div>
+                <div class="space-y-4">
+                    <flux:input wire:model="ctaTitle" label="Title" type="text" placeholder="Join Our Community" />
+                    <flux:textarea wire:model="ctaDescription" label="Description" rows="2" placeholder="Experience the love of Christ..." />
+                    <flux:input wire:model="ctaButtonText" label="Button Text" type="text" placeholder="Visit Us" />
+                    <flux:input wire:model="ctaButtonLink" label="Button Link" type="url" placeholder="/contact" />
+                </div>
+            </div>
         </div>
     </x-card>
 
-    <!-- Service Times -->
-    <x-card>
-        <div class="mb-4 flex items-center justify-between">
-            <div>
-                <h3 class="text-lg font-semibold">6. Service Times</h3>
-                <p class="text-sm text-slate-500">Sunday and Thursday service schedules</p>
-            </div>
-            <x-button wire:click="saveServiceTimes" class="bg-blue-600 hover:bg-blue-700">Save Services</x-button>
-        </div>
-        <div class="space-y-6">
-            <!-- Sunday Services -->
-            <div>
-                <div class="mb-3 flex items-center justify-between">
-                    <h4 class="font-medium text-blue-700">Sunday Services</h4>
-                    <x-button wire:click="addSundayService" class="bg-green-600 hover:bg-green-700">+ Add Service</x-button>
-                </div>
-                @foreach($sundayServices as $index => $service)
-                    <div class="mb-2 flex items-center gap-3 rounded-lg border border-gray-200 p-3">
-                        <flux:input wire:model="sundayServices.{{ $index }}.service_name" label="Service Name" type="text" placeholder="e.g., 1st Service" class="flex-1" />
-                        <flux:input wire:model="sundayServices.{{ $index }}.time" label="Time" type="text" placeholder="e.g., 7:00 AM - 9:00 AM" class="w-48" />
-                        <x-button wire:click="removeSundayService({{ $index }})" class="bg-red-600 hover:bg-red-700">Remove</x-button>
-                    </div>
-                @endforeach
-            </div>
-            <!-- Thursday Services -->
-            <div>
-                <div class="mb-3 flex items-center justify-between">
-                    <h4 class="font-medium text-blue-700">Thursday Services</h4>
-                    <x-button wire:click="addThursdayService" class="bg-green-600 hover:bg-green-700">+ Add Service</x-button>
-                </div>
-                @foreach($thursdayServices as $index => $service)
-                    <div class="mb-2 flex items-center gap-3 rounded-lg border border-gray-200 p-3">
-                        <flux:input wire:model="thursdayServices.{{ $index }}.service_name" label="Service Name" type="text" placeholder="e.g., Bible Study" class="flex-1" />
-                        <flux:input wire:model="thursdayServices.{{ $index }}.time" label="Time" type="text" placeholder="e.g., 6:00 PM - 8:00 PM" class="w-48" />
-                        <x-button wire:click="removeThursdayService({{ $index }})" class="bg-red-600 hover:bg-red-700">Remove</x-button>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    </x-card>
-
-    <!-- Conclaves Preview Settings -->
-    <x-card>
-        <div class="mb-4 flex items-center justify-between">
-            <div>
-                <h3 class="text-lg font-semibold">7. Conclaves Preview</h3>
-                <p class="text-sm text-slate-500">Number of conclaves to show on about page</p>
-            </div>
-            <x-button wire:click="saveAboutUs" class="bg-blue-600 hover:bg-blue-700">Save Setting</x-button>
-        </div>
-        <flux:input wire:model="conclavesPreviewCount" label="Number of Conclaves to Display" type="number" min="1" max="20" />
-    </x-card>
-
-    <!-- Join Community CTA -->
-    <x-card>
-        <div class="mb-4 flex items-center justify-between">
-            <div>
-                <h3 class="text-lg font-semibold">8. Join Community (CTA)</h3>
-                <p class="text-sm text-slate-500">Call-to-action section at the bottom</p>
-            </div>
-            <x-button wire:click="saveCtaSection" class="bg-blue-600 hover:bg-blue-700">Save CTA</x-button>
-        </div>
-        <div class="space-y-4">
-            <flux:input wire:model="ctaTitle" label="Title" type="text" placeholder="Join Our Community" />
-            <flux:textarea wire:model="ctaDescription" label="Description" rows="2" placeholder="Experience the love of Christ..." />
-            <flux:input wire:model="ctaButtonText" label="Button Text" type="text" placeholder="Visit Us" />
-            <flux:input wire:model="ctaButtonLink" label="Button Link" type="url" placeholder="/contact" />
-        </div>
-    </x-card>
+    <style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
 </div>

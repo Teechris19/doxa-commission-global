@@ -159,21 +159,6 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
         </section>
     @endif
 
-    @if($aboutUs && $aboutUs->history_timeline && count($aboutUs->history_timeline) > 0)
-        {{-- Our Journey (History Timeline) Section --}}
-        <section class="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
-            <h2 class="text-center text-2xl font-semibold text-slate-900">Our Journey</h2>
-            <div class="mx-auto mt-8 max-w-3xl border-l-2 border-blue-200 pl-6">
-                @foreach($aboutUs->history_timeline as $event)
-                    <div class="relative mb-8">
-                        <span class="absolute -left-[1.95rem] top-1 h-3.5 w-3.5 rounded-full border-2 border-white bg-blue-600"></span>
-                        <p class="text-sm font-semibold text-blue-700">{{ $event['year'] }}</p>
-                        <p class="mt-1 text-sm leading-7 text-slate-600">{{ $event['event'] }}</p>
-                    </div>
-                @endforeach
-            </div>
-        </section>
-    @endif
 
     {{-- Our Pastor Section (New System) --}}
     @if($pastors && $pastors->count() > 0)

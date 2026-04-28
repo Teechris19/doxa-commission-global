@@ -201,12 +201,17 @@ TODO: Add Active route indicators
             </flux:navlist.group>
             @endrole
             @include('partials.team-based-menu')
-
-            
         </flux:navlist>
     
        
         <flux:spacer />
+
+        <flux:navlist variant="outline" class="text-sm">
+            <flux:navlist.item icon="chat-bubble-left-right" :href="route('admin.dashboard.settings.request-message', request()->query())" wire:navigate
+                :active="request()->routeIs('admin.dashboard.settings.request-message')">
+                Request Message
+            </flux:navlist.item>
+        </flux:navlist>
 
         <div class="flex items-center justify-center py-2">
             <livewire:admin.components.notifications />

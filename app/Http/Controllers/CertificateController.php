@@ -16,8 +16,8 @@ class CertificateController extends Controller
 
     public function generateCertificate(Request $request)
     {
-        $name = $request->query('name');
-        $requestedDate = $request->query('date');
+        $name = $request->input('name');
+        $requestedDate = $request->input('date');
 
         if (!$name || !$requestedDate) {
             abort(400, 'Name and date required');
@@ -45,52 +45,49 @@ class CertificateController extends Controller
         $tplIdx = $pdf->importPage(1);
 
         // Get the size of the imported page and use it
-        $pageWidth = $pdf->getPageWidth($tplIdx);
-        $pageHeight = $pdf->getPageHeight($tplIdx);
+        $size = $pdf->getTemplateSize($tplIdx);
+        $pageWidth = $size['width'];
+        $pageHeight = $size['height'];
         
         // Add a page with the same size as the template
-        $pdf->AddPage('L', [$pageWidth, $pageHeight]);
+        $pdf->AddPage($size['orientation'], [$pageWidth, $pageHeight]);
         $pdf->useTemplate($tplIdx);
 
-        // Set font for name - Arial Italic for elegant script-like appearance
-        $pdf->SetFont('Arial', 'I', 36);
-        $pdf->SetTextColor(0, 0, 0); // Black color
+        // Name positioning based on CSS: left: 7.8%, top: 47.9%, width: 65%, text-align: center
+        $nameX = $pageWidth * 0.078;
+        $nameY = $pageHeight * 0.479;
+        $nameBoxWidth = $pageWidth * 0.65;
 
-        // Calculate width of name text to center it properly
-        $nameWidth = $pdf->GetStringWidth($name);
-        $pageWidth = $pdf->GetPageWidth();
-        $margin = 20; // Margin from edges
-        
-        // Center the name with proper margins
-        $xPos = ($pageWidth - $nameWidth) / 2;
-        
-        // Ensure name doesn't go beyond margins
-        if ($xPos < $margin) {
-            // If name is too long, reduce font size
-            $pdf->SetFont('Arial', 'I', 24);
-            $nameWidth = $pdf->GetStringWidth($name);
-            $xPos = ($pageWidth - $nameWidth) / 2;
+        // Set font for name - Arial Italic
+        $currentFontSize = 36;
+        $pdf->SetFont('Arial', 'I', $currentFontSize);
+        $pdf->SetTextColor(0, 0, 0);
+
+        // Auto-scale font size if name is too long for the box
+        while ($pdf->GetStringWidth($name) > $nameBoxWidth && $currentFontSize > 12) {
+            $currentFontSize -= 2;
+            $pdf->SetFontSize($currentFontSize);
         }
-        
-        // Add name (adjusted Y position for better spacing)
-        $pdf->SetXY($xPos, 95);
-        $pdf->Cell(0, 12, $name, 0, 1, 'L');
 
-        // Format date as "28 Mar 2026" (DD Mon YYYY)
+        // Use a height that matches the font size (~13mm for 36pt)
+        $pdf->SetXY($nameX, $nameY);
+        $pdf->Cell($nameBoxWidth, 13, $name, 0, 0, 'C');
+
+        // Date positioning based on CSS: left: 10.3%, top: 82.7%, width: 24% (default text-align: left)
+        $dateX = $pageWidth * 0.103;
+        $dateY = $pageHeight * 0.827;
+        $dateBoxWidth = $pageWidth * 0.24;
+
+        // Format date as "28 Apr 2026"
         $formattedDate = \Carbon\Carbon::parse($requestedDate)->format('d M Y');
 
-        // Add date ABOVE the "Awarded on this day" underline - black color, bold
+        // Set font for date - Arial Bold
         $pdf->SetFont('Arial', 'B', 18);
-        $pdf->SetTextColor(0, 0, 0); // Black color
+        $pdf->SetTextColor(0, 0, 0);
 
-        $dateWidth = $pdf->GetStringWidth($formattedDate);
-        $pageWidth = $pdf->GetPageWidth();
-        $dateXPos = ($pageWidth - $dateWidth) / 2;
-
-        // Position date BELOW "Awarded on this day" text but ABOVE the underline
-        // Increase Y value to move date lower on the page
-        $pdf->SetXY($dateXPos, 112);
-        $pdf->Cell(0, 10, $formattedDate, 0, 1, 'L');
+        // Use a height that matches the font size (~7mm for 18pt)
+        $pdf->SetXY($dateX, $dateY);
+        $pdf->Cell($dateBoxWidth, 7, $formattedDate, 0, 0, 'L');
 
         // Output the PDF
         $pdf->Output('I', 'certificate.pdf');

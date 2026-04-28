@@ -62,7 +62,7 @@ Volt::route('believers_academy/dashboard', 'home.believers.dashboard')->name('be
 //-----------------------------------------------------------------------------------
 Route::middleware('auth')->group(function () {
     Route::get('certificate/form', [CertificateController::class, 'showForm'])->name('certificate.form');
-    Route::get('certificate/generate', [CertificateController::class, 'generateCertificate'])->name('certificate.generate');
+    Route::match(['get', 'post'], 'certificate/generate', [CertificateController::class, 'generateCertificate'])->name('certificate.generate');
 });
 //-----------------------------------------------------------------------------------
 //pARTNERSHIP ROUTES

@@ -97,12 +97,19 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
                         <li class="flex items-start gap-3"><span class="mt-1 h-2 w-2 rounded-full bg-blue-500"></span>Grow in community and service</li>
                     </ul>
                     <div class="mt-8">
-                        @if(!$isRegistered)
-                            <a href="{{ route('believers_academy.register', request()->query()) }}" class="bg-blue-600 text-white px-8 py-3 rounded-full font-bold hover:bg-blue-700 transition-colors duration-300 shadow-md text-sm inline-block" wire:navigate>Register Now</a>
+                        @auth
+                            @if(!$isRegistered)
+                                <a href="{{ route('believers_academy.register', request()->query()) }}" class="bg-blue-600 text-white px-8 py-3 rounded-full font-bold hover:bg-blue-700 transition-colors duration-300 shadow-md text-sm inline-block" wire:navigate>Register Now</a>
+                            @else
+                                <a href="{{ route('believers_academy.dashboard', request()->query()) }}" class="bg-green-500 text-white px-8 py-3 rounded-full font-bold hover:bg-green-600 transition-colors duration-300 shadow-md text-sm inline-block" wire:navigate>View Dashboard</a>
+                            @endif
                         @else
-                            <a href="{{ route('believers_academy.dashboard', request()->query()) }}" class="bg-green-500 text-white px-8 py-3 rounded-full font-bold hover:bg-green-600 transition-colors duration-300 shadow-md text-sm inline-block" wire:navigate>View Dashboard</a>
-                        @endif
+                            <p class="text-blue-600 font-semibold italic bg-blue-50 px-6 py-2 rounded-full border border-blue-100 inline-block shadow-sm text-sm">
+                                <i class="fas fa-lock mr-2 text-xs"></i> You need to log in or sign up to register.
+                            </p>
+                        @endauth
                     </div>
+
                 </div>
                 <div class="rounded-2xl border border-blue-100 bg-blue-50 p-6">
                     <p class="text-blue-700 italic text-base">"Then you will know the truth, and the truth will set you free." - John 8:32</p>
@@ -115,42 +122,57 @@ new #[Layout('components.layouts.tailwind-layout')] class extends Component {
     <section class="py-20 px-5 bg-gradient-to-br from-gray-50 to-blue-50 mobile-section">
         <div class="max-w-6xl mx-auto">
             <h2 class="text-3xl md:text-4xl font-bold text-center mb-6 text-gray-800 mobile-heading">Learning Path</h2>
-            <p class="text-xl text-center text-gray-600 mb-12 max-w-2xl mx-auto leading-relaxed">Structured courses designed for spiritual growth at every stage</p>
+            <p class="text-xl text-center text-gray-600 mb-8 max-w-2xl mx-auto leading-relaxed">Structured courses designed for spiritual growth at every stage</p>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mobile-grid-gap">
-                @foreach($classes as $index => $class)
-                    <div class="bg-white rounded-2xl shadow-soft p-8 border border-gray-100 transition-all duration-300 hover:shadow-lg hover:-translate-y-2 mobile-card">
-                        <div class="flex items-center mb-6">
-                            <div class="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mr-4">
-                                <i class="fas fa-graduation-cap text-blue-500 text-2xl"></i>
-                            </div>
-                            <div>
-                                <h3 class="text-2xl font-bold text-gray-800">{{ $class->name }}</h3>
-                                <span class="text-blue-600 font-medium">Level {{ $index + 1 }} • Duration TBD</span>
-                            </div>
+            @guest
+                <div class="text-center py-12 bg-white rounded-3xl shadow-soft border border-gray-100 max-w-4xl mx-auto px-6">
+                    <div class="mb-6">
+                        <div class="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto text-blue-500 mb-4">
+                            <i class="fas fa-lock text-3xl"></i>
                         </div>
-                        <p class="text-gray-600 mb-6 leading-relaxed">{{ $class->description ?? 'Class description coming soon.' }}</p>
-                        @if($class->study_material)
-                            <div class="space-y-3 mb-6">
-                                <div class="flex items-center text-gray-700">
-                                    <i class="fas fa-book text-blue-500 mr-3"></i>
-                                    <span>Study Materials Available</span>
+                        <p class="text-gray-600 mt-2">You need to log in or sign up to view the learning path and register for classes.</p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <a href="{{ route('home.login') }}" class="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-md inline-block">Login</a>
+                        <a href="{{ route('home.login') }}" class="bg-white text-blue-600 border border-blue-200 px-8 py-3 rounded-xl font-bold hover:bg-blue-50 transition-colors shadow-sm inline-block">Sign Up</a>
+                    </div>
+                </div>
+            @else
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mobile-grid-gap">
+                    @foreach($classes as $index => $class)
+                        <div class="bg-white rounded-2xl shadow-soft p-8 border border-gray-100 transition-all duration-300 hover:shadow-lg hover:-translate-y-2 mobile-card">
+                            <div class="flex items-center mb-6">
+                                <div class="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mr-4">
+                                    <i class="fas fa-graduation-cap text-blue-500 text-2xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-2xl font-bold text-gray-800">{{ $class->name }}</h3>
+                                    <span class="text-blue-600 font-medium">Level {{ $index + 1 }} • Duration TBD</span>
                                 </div>
                             </div>
-                        @endif
-                        @if(!$isRegistered)
-                            <a href="{{ route('believers_academy.register', request()->query()) }}" class="w-full bg-blue-500 text-white py-3 rounded-xl font-medium hover:bg-blue-600 transition-colors inline-block text-center" wire:navigate>Enroll Now</a>
-                        @else
-                            <span class="w-full bg-gray-400 text-white py-3 rounded-xl font-medium inline-block text-center">Already Enrolled</span>
-                        @endif
-                    </div>
-                @endforeach
-                @if($classes->isEmpty())
-                    <div class="col-span-full text-center py-12">
-                        <p class="text-gray-500 text-lg">Classes will be available soon.</p>
-                    </div>
-                @endif
-            </div>
+                            <p class="text-gray-600 mb-6 leading-relaxed">{{ $class->description ?? 'Class description coming soon.' }}</p>
+                            @if($class->study_material)
+                                <div class="space-y-3 mb-6">
+                                    <div class="flex items-center text-gray-700">
+                                        <i class="fas fa-book text-blue-500 mr-3"></i>
+                                        <span>Study Materials Available</span>
+                                    </div>
+                                </div>
+                            @endif
+                            @if(!$isRegistered)
+                                <a href="{{ route('believers_academy.register', request()->query()) }}" class="w-full bg-blue-500 text-white py-3 rounded-xl font-medium hover:bg-blue-600 transition-colors inline-block text-center" wire:navigate>Enroll Now</a>
+                            @else
+                                <span class="w-full bg-gray-400 text-white py-3 rounded-xl font-medium inline-block text-center">Already Enrolled</span>
+                            @endif
+                        </div>
+                    @endforeach
+                    @if($classes->isEmpty())
+                        <div class="col-span-full text-center py-12">
+                            <p class="text-gray-500 text-lg">Classes will be available soon.</p>
+                        </div>
+                    @endif
+                </div>
+            @endguest
         </div>
     </section>
 
