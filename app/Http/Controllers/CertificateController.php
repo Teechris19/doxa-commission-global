@@ -58,9 +58,16 @@ class CertificateController extends Controller
         $nameY = $pageHeight * 0.479;
         $nameBoxWidth = $pageWidth * 0.65;
 
-        // Set font for name - Arial Italic
+        // Set font for name - Using 'Courier' as a placeholder for cursive if Lucida is not installed
+        // To use Lucida Handwriting, you would need to add the font files (.php and .z) to the FPDF font directory
         $currentFontSize = 36;
-        $pdf->SetFont('Arial', 'I', $currentFontSize);
+        try {
+            // Attempt to use Lucida Handwriting if it's been added to the vendor font folder
+            $pdf->SetFont('LucidaHandwriting', '', $currentFontSize);
+        } catch (\Exception $e) {
+            // Fallback to Courier Italic which has a slightly more "handwritten" feel than Arial
+            $pdf->SetFont('Courier', 'I', $currentFontSize);
+        }
         $pdf->SetTextColor(0, 0, 0);
 
         // Auto-scale font size if name is too long for the box
@@ -73,16 +80,20 @@ class CertificateController extends Controller
         $pdf->SetXY($nameX, $nameY);
         $pdf->Cell($nameBoxWidth, 13, $name, 0, 0, 'C');
 
-        // Date positioning based on CSS: left: 10.3%, top: 82.7%, width: 24% (default text-align: left)
-        $dateX = $pageWidth * 0.103;
+        // Date positioning based on CSS: left: 12%, top: 82.7%, width: 24% (default text-align: left)
+        $dateX = $pageWidth * 0.12;
         $dateY = $pageHeight * 0.827;
         $dateBoxWidth = $pageWidth * 0.24;
 
         // Format date as "28 Apr 2026"
         $formattedDate = \Carbon\Carbon::parse($requestedDate)->format('d M Y');
 
-        // Set font for date - Arial Bold
-        $pdf->SetFont('Arial', 'B', 18);
+        // Set font for date - Using same font as name for consistency
+        try {
+            $pdf->SetFont('LucidaHandwriting', '', 18);
+        } catch (\Exception $e) {
+            $pdf->SetFont('Courier', 'I', 18);
+        }
         $pdf->SetTextColor(0, 0, 0);
 
         // Use a height that matches the font size (~7mm for 18pt)
