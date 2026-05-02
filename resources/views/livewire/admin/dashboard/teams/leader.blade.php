@@ -16,159 +16,117 @@ new #[Layout('components.layouts.admin')] class extends Component {
     public ?int $chapterId = null;
 
     public array $teams = [];
-    public ?int $selectedTeam = null;
+    public ?int $selectedTeamId = null;
+    public ?Team $selectedTeam = null;
 
-    // Leader assignment state
-    public ?int $selectedUserForLeader = null;
-    // Assistant assignment state
-    public ?int $selectedUserForAssistant = null;
-    public string $newAssistantTitle = '';
-
-    public ?User $currentLeader = null;
-    public array $currentAssistants = [];
     public array $chapterUsers = [];
+
+    // Assignment state
+    public ?int $selectedUserId = null;
+    public string $newAssistantTitle = '';
 
     public function mount(): void
     {
         $chapter = Chapter::where('name', $this->chapter)->firstOrFail();
         $this->chapterId = $chapter->id;
-
-        $this->teams = Team::where('chapter_id', $this->chapterId)
-            ->get()
-            ->map(fn($t) => ['value' => $t->id, 'label' => $t->name])
-            ->toArray();
+        $this->teams = Team::where('chapter_id', $this->chapterId)->orderBy('name')->get()->toArray();
+        $this->chapterUsers = User::where('chapter_id', $this->chapterId)->get(['id', 'name'])->toArray();
     }
 
-    public function updatedSelectedTeam($teamId): void
+    public function updatedSelectedTeamId($teamId): void
     {
-        $team = Team::with(['users' => fn($q) => $q->withPivot('role_title', 'role_in_team')])->find($teamId);
-
-        if (!$team) {
-            $this->reset(['currentLeader', 'currentAssistants', 'chapterUsers']);
-            return;
-        }
-
-        $this->currentLeader = $team->users()->wherePivot('role_in_team', 'team-lead')->first();
-        
-        $this->currentAssistants = $team->users()
-            ->wherePivot('role_in_team', 'assistant-team-lead')
-            ->get()
-            ->map(fn($u) => [
-                'id' => $u->id,
-                'name' => $u->name,
-                'title' => $u->pivot->role_title ?? 'Assistant'
-            ])
-            ->toArray();
-
-        $this->chapterUsers = User::where('chapter_id', $this->chapterId)
-            ->get()
-            ->map(fn($u) => ['value' => $u->id, 'label' => $u->name])
-            ->toArray();
-
-        $this->reset(['selectedUserForLeader', 'selectedUserForAssistant', 'newAssistantTitle']);
+        $this->selectedTeam = Team::with(['users' => fn($q) => $q->withPivot('role_title', 'role_in_team')])->find($teamId);
+        $this->reset(['selectedUserId', 'newAssistantTitle']);
     }
 
-    public function assignLeader(): void
+    public function promoteToLead(int $userId): void
     {
-        if (!$this->selectedTeam || !$this->selectedUserForLeader) return;
-
-        $team = Team::find($this->selectedTeam);
-        $user = User::find($this->selectedUserForLeader);
-
-        // Demote old leader
-        $oldLeader = $team->users()->wherePivot('role_in_team', 'team-lead')->first();
+        if (!$this->selectedTeam || !$userId) return;
+        $oldLeader = $this->selectedTeam->users()->wherePivot('role_in_team', 'team-lead')->first();
         if ($oldLeader) {
-            $team->users()->updateExistingPivot($oldLeader->id, ['role_in_team' => 'member']);
+            $this->selectedTeam->users()->updateExistingPivot($oldLeader->id, ['role_in_team' => 'member']);
         }
-
-        // Promote new leader
-        $team->users()->syncWithoutDetaching([
-            $user->id => ['chapter_id' => $this->chapterId, 'role_in_team' => 'team-lead']
-        ]);
-        
-        $this->toast()->success('Done', 'Team leader updated.')->send();
-        $this->updatedSelectedTeam($this->selectedTeam);
+        $this->selectedTeam->users()->syncWithoutDetaching([$userId => ['role_in_team' => 'team-lead', 'chapter_id' => $this->chapterId]]);
+        $this->updatedSelectedTeamId($this->selectedTeamId);
+        $this->toast()->success('Done', 'New leader promoted.')->send();
     }
 
     public function addAssistant(): void
     {
-        if (!$this->selectedTeam || !$this->selectedUserForAssistant || empty($this->newAssistantTitle)) {
-            $this->toast()->error('Error', 'Please select a user and provide a role title.')->send();
-            return;
-        }
-
-        $team = Team::find($this->selectedTeam);
-        $team->users()->syncWithoutDetaching([
-            $this->selectedUserForAssistant => [
-                'chapter_id' => $this->chapterId, 
-                'role_in_team' => 'assistant-team-lead',
-                'role_title' => $this->newAssistantTitle
-            ]
-        ]);
-        
-        $this->reset(['selectedUserForAssistant', 'newAssistantTitle']);
-        $this->updatedSelectedTeam($this->selectedTeam);
+        if (!$this->selectedTeam || !$this->selectedUserId || empty($this->newAssistantTitle)) return;
+        $this->selectedTeam->users()->syncWithoutDetaching([$this->selectedUserId => ['role_in_team' => 'assistant-team-lead', 'role_title' => $this->newAssistantTitle, 'chapter_id' => $this->chapterId]]);
+        $this->updatedSelectedTeamId($this->selectedTeamId);
         $this->toast()->success('Done', 'Assistant added.')->send();
     }
 
-    public function removeAssistant(int $userId): void
+    public function remove(int $userId): void
     {
-        $team = Team::find($this->selectedTeam);
-        $team->users()->updateExistingPivot($userId, ['role_in_team' => 'member', 'role_title' => null]);
-        $this->updatedSelectedTeam($this->selectedTeam);
-        $this->toast()->success('Done', 'Assistant removed.')->send();
+        $this->selectedTeam->users()->updateExistingPivot($userId, ['role_in_team' => 'member', 'role_title' => null]);
+        $this->updatedSelectedTeamId($this->selectedTeamId);
+        $this->toast()->success('Done', 'Member removed from role.')->send();
     }
 };
 ?>
-<div>
-    <x-fancy-header title="Team Leadership Management" subtitle="Assign leaders and support roles" :breadcrumbs="[
-        ['label' => 'Home', 'url' => route('admin.dashboard', request()->query())],
-        ['label'=>'Teams', 'url'=>route('admin.dashboard.teams', request()->query())],
-        ['label' => 'Edit Leadership']
-    ]" class="mb-4" />
+<div class="max-w-6xl mx-auto py-8">
+    <x-fancy-header title="Leadership Console" subtitle="Switch teams and update roles in real-time" />
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-        {{-- Team Selection --}}
-        <x-card header="Team Selection" class="dark:bg-zinc-900">
-            <select wire:model.live="selectedTeam" class="w-full p-2 rounded-lg bg-zinc-800 text-zinc-100 border border-zinc-700">
-                <option value="">Choose a team</option>
+    <div class="mt-8 grid grid-cols-1 md:grid-cols-12 gap-6 h-[600px]">
+        {{-- Team Sidebar --}}
+        <div class="md:col-span-3 bg-zinc-900 border border-zinc-800 rounded-2xl p-4 overflow-y-auto">
+            <h3 class="text-xs font-bold uppercase text-zinc-500 mb-4 px-2">Teams</h3>
+            <div class="space-y-1">
                 @foreach($teams as $team)
-                    <option value="{{ $team['value'] }}">{{ $team['label'] }}</option>
+                    <button wire:click="$set('selectedTeamId', {{ $team['id'] }})" class="w-full text-left px-4 py-3 rounded-xl transition {{ $selectedTeamId == $team['id'] ? 'bg-blue-600 text-white' : 'hover:bg-zinc-800 text-zinc-300' }}">
+                        {{ $team['name'] }}
+                    </button>
                 @endforeach
-            </select>
-        </x-card>
-
-        {{-- Main Leader --}}
-        <x-card header="Team Leader" class="dark:bg-zinc-900">
-            <p class="text-sm text-zinc-400 mb-2">Current Leader: <span class="font-bold text-white">{{ $currentLeader?->name ?? 'None' }}</span></p>
-            <select wire:model="selectedUserForLeader" class="w-full p-2 rounded bg-zinc-800 text-white border border-zinc-700 mb-2">
-                <option value="">New Leader</option>
-                @foreach($chapterUsers as $u) <option value="{{ $u['value'] }}">{{ $u['label'] }}</option> @endforeach
-            </select>
-            <x-button wire:click="assignLeader" color="blue" class="w-full">Change Leader</x-button>
-        </x-card>
-
-        {{-- Assistant Management --}}
-        <x-card header="Assistant Team Leads" class="dark:bg-zinc-900">
-            <details class="group mb-4">
-                <summary class="cursor-pointer font-bold text-zinc-300 p-2 bg-zinc-800 rounded">Manage Assistants ({{ count($currentAssistants) }})</summary>
-                <ul class="mt-2 space-y-1">
-                    @foreach($currentAssistants as $asst)
-                        <li class="flex justify-between p-2 bg-zinc-800 rounded text-sm text-white">
-                            {{ $asst['name'] }} ({{ $asst['title'] }})
-                            <button wire:click="removeAssistant({{ $asst['id'] }})" class="text-red-400">×</button>
-                        </li>
-                    @endforeach
-                </ul>
-            </details>
-            <div class="space-y-2">
-                <select wire:model="selectedUserForAssistant" class="w-full p-2 rounded bg-zinc-800 text-white border border-zinc-700">
-                    <option value="">Select User</option>
-                    @foreach($chapterUsers as $u) <option value="{{ $u['value'] }}">{{ $u['label'] }}</option> @endforeach
-                </select>
-                <input wire:model="newAssistantTitle" placeholder="Custom Role Title" class="w-full p-2 rounded bg-zinc-800 text-white border border-zinc-700">
-                <x-button wire:click="addAssistant" color="green" class="w-full">Add Assistant</x-button>
             </div>
-        </x-card>
+        </div>
+
+        {{-- Main Console --}}
+        <div class="md:col-span-9 bg-zinc-900 border border-zinc-800 rounded-2xl p-8">
+            @if(!$selectedTeam)
+                <div class="h-full flex items-center justify-center text-zinc-500">Select a team to begin managing leadership.</div>
+            @else
+                <div class="flex justify-between items-start mb-8">
+                    <div>
+                        <h2 class="text-3xl font-bold text-white">{{ $selectedTeam->name }}</h2>
+                        <p class="text-zinc-400">Manage structure for this unit</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-8">
+                    {{-- Role Management Form --}}
+                    <div class="space-y-6">
+                        <select wire:model="selectedUserId" class="w-full p-3 rounded-xl bg-zinc-800 border-zinc-700 text-white">
+                            <option value="">Select Member...</option>
+                            @foreach($chapterUsers as $u) <option value="{{ $u['value'] }}">{{ $u['label'] }}</option> @endforeach
+                        </select>
+                        <input wire:model="newAssistantTitle" placeholder="Role (e.g. Secretary, Lead)" class="w-full p-3 rounded-xl bg-zinc-800 border-zinc-700 text-white">
+                        <div class="flex gap-2">
+                            <x-button wire:click="promoteToLead({{ $selectedUserId ?? 0 }})" color="blue" class="flex-1">Set Leader</x-button>
+                            <x-button wire:click="addAssistant" color="green" class="flex-1">Set Assistant</x-button>
+                        </div>
+                    </div>
+
+                    {{-- Live Preview --}}
+                    <div class="bg-zinc-800/50 rounded-2xl p-6 border border-zinc-800">
+                        <h4 class="text-zinc-400 font-bold uppercase text-[10px] tracking-widest mb-4">Current Leadership</h4>
+                        <div class="space-y-4">
+                            <div class="flex justify-between border-b border-zinc-700 pb-2">
+                                <span class="text-zinc-500">Lead</span>
+                                <span class="text-white font-bold">{{ $selectedTeam->users->firstWhere('pivot.role_in_team', 'team-lead')?->name ?? 'Unassigned' }}</span>
+                            </div>
+                            @foreach($selectedTeam->users->where('pivot.role_in_team', 'assistant-team-lead') as $asst)
+                                <div class="flex justify-between">
+                                    <span class="text-zinc-500">{{ $asst->pivot->role_title }}</span>
+                                    <span class="text-white">{{ $asst->name }} <button wire:click="remove({{ $asst->id }})" class="ml-2 text-red-500"><i class="fas fa-times"></i></button></span>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            @endif
+        </div>
     </div>
 </div>
