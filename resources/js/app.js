@@ -10,26 +10,8 @@ window.flatpickr = flatpickr;
 
 let deferredPrompt = null;
 
-window.addEventListener('beforeinstallprompt', (event) => {
-    event.preventDefault();
-    deferredPrompt = event;
-    window.dispatchEvent(new CustomEvent('pwa-installable'));
-});
-
-window.addEventListener('appinstalled', () => {
-    deferredPrompt = null;
-});
-
-window.triggerPwaInstall = async () => {
-    if (!deferredPrompt) {
-        return false;
-    }
-
-    deferredPrompt.prompt();
-    await deferredPrompt.userChoice;
-    deferredPrompt = null;
-    return true;
-};
+// The beforeinstallprompt and installation logic is now handled in the layout
+// for better integration with the UI components there.
 
 document.addEventListener('DOMContentLoaded', () => {
     const container = document.querySelector('#flash-message-container');

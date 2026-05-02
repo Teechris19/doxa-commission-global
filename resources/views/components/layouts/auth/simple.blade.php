@@ -2,6 +2,10 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         @include('partials.head')
+        <link rel="manifest" href="{{ route('pwa.admin-manifest') }}">
+        <meta name="theme-color" content="#2563eb">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     </head>
     <body class="min-h-screen bg-slate-50 antialiased">
         <div class="relative min-h-svh overflow-hidden">

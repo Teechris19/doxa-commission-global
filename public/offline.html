@@ -2,63 +2,120 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Offline - Doxa Commission Global</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Offline - Doxa Church</title>
   <style>
     :root {
-      color-scheme: light;
-    }
-
-    * {
-      box-sizing: border-box;
+      --primary: #1877f2;
+      --bg: #f8faff;
+      --text: #0f172a;
+      --muted: #64748b;
     }
 
     body {
       margin: 0;
       min-height: 100vh;
-      display: grid;
-      place-items: center;
-      background: #ffffff;
-      color: #0f172a;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-      padding: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Poppins', ui-sans-serif, system-ui, -apple-system, sans-serif;
+      padding: 2rem;
+      text-align: center;
     }
 
-    .card {
-      max-width: 28rem;
+    .container {
+      max-width: 400px;
       width: 100%;
-      border: 1px solid #dbeafe;
-      border-radius: 1rem;
+    }
+
+    .icon-wrapper {
+      width: 80px;
+      height: 80px;
       background: #fff;
-      padding: 1.5rem;
-      box-shadow: 0 16px 36px -24px rgba(37, 99, 235, 0.35);
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 2rem;
+      box-shadow: 0 10px 25px -5px rgba(24, 119, 242, 0.2);
+    }
+
+    .icon-wrapper svg {
+      width: 40px;
+      height: 40px;
+      color: var(--primary);
     }
 
     h1 {
-      margin: 0 0 0.75rem;
-      font-size: 1.25rem;
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin: 0 0 1rem;
+      letter-spacing: -0.025em;
     }
 
     p {
-      margin: 0 0 0.75rem;
-      line-height: 1.5;
-      color: #475569;
+      color: var(--muted);
+      line-height: 1.6;
+      margin: 0 0 2rem;
+      font-size: 0.95rem;
     }
 
-    a {
-      display: inline-block;
-      margin-top: 0.6rem;
-      color: #1877f2;
-      font-weight: 600;
+    .btn {
+      display: block;
+      background: var(--primary);
+      color: #fff;
+      text-decoration: none;
+      padding: 0.875rem 1.5rem;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      transition: transform 0.2s, background 0.2s;
+      box-shadow: 0 4px 12px rgba(24, 119, 242, 0.25);
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #fee2e2;
+      color: #ef4444;
+      padding: 0.35rem 0.75rem;
+      border-radius: 99px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
   </style>
 </head>
 <body>
-  <section class="card">
-    <h1>You are offline</h1>
-    <p>Some pages and messages are still available from cache.</p>
-    <p>Reconnect to refresh live content and media.</p>
-    <a href="/">Retry</a>
-  </section>
+  <div class="container">
+    <div class="status-badge">
+      <span style="width: 8px; height: 8px; background: currentColor; border-radius: 50%;"></span>
+      Offline Mode
+    </div>
+    
+    <div class="icon-wrapper">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-3.536 4.978 4.978 0 011.414-3.536m1.213-3.07a9.006 9.006 0 0110.192 1.07M11.636 11.636L9.515 9.515M11.636 11.636l2.121 2.121M11.636 11.636l2.121-2.121M11.636 11.636l-2.121 2.121M7.394 16.606l-2.829 2.829"></path>
+      </svg>
+    </div>
+
+    <h1>No Internet Connection</h1>
+    <p>We can't reach the server right now. Don't worry, you can still access some previously viewed pages and messages.</p>
+    
+    <a href="javascript:window.location.reload()" class="btn">Try Again</a>
+    
+    <div style="margin-top: 2rem;">
+        <a href="/" style="color: var(--primary); text-decoration: none; font-size: 0.85rem; font-weight: 600;">Back to Home</a>
+    </div>
+  </div>
 </body>
 </html>

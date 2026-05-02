@@ -234,11 +234,11 @@ new #[Layout('components.layouts.admin')] class extends Component {
 
 <div class="space-y-6">
     <!-- Header Section -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="bg-white dark:bg-zinc-900 rounded-lg shadow-sm border border-gray-200 dark:border-zinc-800 p-6">
         <div class="flex items-center justify-between mb-6">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Academy Settings</h1>
-                <p class="text-gray-600 mt-1">Configure academy details and manage batches</p>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Academy Settings</h1>
+                <p class="text-gray-600 dark:text-gray-400 mt-1">Configure academy details and manage batches</p>
             </div>
             <x-link class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors" :href="route('admin.dashboard.believers_class.index', request()->query())">
                 <i class="fas fa-plus mr-2"></i>Add Classes
@@ -246,44 +246,44 @@ new #[Layout('components.layouts.admin')] class extends Component {
         </div>
 
         <!-- Academy Configuration Card -->
-        <div class="bg-gray-50 rounded-lg p-6">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+        <div class="bg-gray-50 dark:bg-zinc-800/50 rounded-lg p-6">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
                 <i class="fas fa-cog mr-2 text-blue-600"></i>Academy Configuration
             </h2>
             <form wire:submit.prevent='save' class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Academy Status</label>
-                    <select wire:model.live='academy.status' class="form-input">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Academy Status</label>
+                    <select wire:model.live='academy.status' class="form-input dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-200">
                         <option value="">Select Status</option>
                         <option value="open">Open</option>
                         <option value="closed">Closed</option>
                     </select>
                     @error('academy.status')
-                        <span class="text-sm text-red-600 mt-1 block">{{ $message }}</span>
+                        <span class="text-sm text-red-600 dark:text-red-400 mt-1 block">{{ $message }}</span>
                     @enderror
-                    <p class="text-xs text-gray-500 mt-1">Current: <span class="font-medium {{ $academy['status'] == 'open' ? 'text-green-600' : 'text-red-600' }}">{{ ucfirst($academy['status'] ?? 'Not Set') }}</span></p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Current: <span class="font-medium {{ $academy['status'] == 'open' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">{{ ucfirst($academy['status'] ?? 'Not Set') }}</span></p>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
-                    <input type="date" wire:model='academy.start_at' class="form-input">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Start Date</label>
+                    <input type="date" wire:model='academy.start_at' class="form-input dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-200">
                     @error('academy.start_at')
-                        <span class="text-sm text-red-600 mt-1 block">{{ $message }}</span>
+                        <span class="text-sm text-red-600 dark:text-red-400 mt-1 block">{{ $message }}</span>
                     @enderror
                 </div>
 
                 <div class="md:col-span-1">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Certificate Template</label>
-                    <input type="file" wire:model='certificateTemplateFile' accept=".pdf" class="form-input">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Certificate Template</label>
+                    <input type="file" wire:model='certificateTemplateFile' accept=".pdf" class="form-input dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-200">
                     @error('certificateTemplateFile')
-                        <span class="text-sm text-red-600 mt-1 block">{{ $message }}</span>
+                        <span class="text-sm text-red-600 dark:text-red-400 mt-1 block">{{ $message }}</span>
                     @enderror
                     @if($academy['certificate_template'])
-                        <p class="text-xs text-gray-500 mt-1">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                             <i class="fas fa-file-pdf mr-1 text-red-500"></i>Current: {{ basename($academy['certificate_template']) }}
                         </p>
                     @else
-                        <p class="text-xs text-gray-500 mt-1">No template uploaded</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">No template uploaded</p>
                     @endif
                 </div>
 
@@ -306,40 +306,40 @@ new #[Layout('components.layouts.admin')] class extends Component {
     </div>
 
     <!-- Batches Management Section -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="bg-white dark:bg-zinc-900 rounded-lg shadow-sm border border-gray-200 dark:border-zinc-800 p-6">
         <div class="flex items-center justify-between mb-6">
             <div>
-                <h2 class="text-xl font-bold text-gray-900 flex items-center">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center">
                     <i class="fas fa-users mr-2 text-green-600"></i>Batch Management
                 </h2>
-                <p class="text-gray-600 mt-1">Create and manage student batches for this academy</p>
+                <p class="text-gray-600 dark:text-gray-400 mt-1">Create and manage student batches for this academy</p>
             </div>
-            <div class="text-sm text-gray-500">
+            <div class="text-sm text-gray-500 dark:text-gray-400">
                 Total Batches: {{ count($batches) }}
             </div>
         </div>
 
         <!-- Create Batch Form -->
-        <div class="bg-green-50 rounded-lg p-6 mb-6 border border-green-200">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+        <div class="bg-green-50 dark:bg-green-900/10 rounded-lg p-6 mb-6 border border-green-200 dark:border-green-800/50">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
                 <i class="fas fa-plus-circle mr-2 text-green-600"></i>Create New Batch
             </h3>
             <form wire:submit.prevent="createBatch" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Batch Name</label>
-                    <input type="text" wire:model="newBatch.name" class="form-input" placeholder="e.g., Batch A">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Batch Name</label>
+                    <input type="text" wire:model="newBatch.name" class="form-input dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-200" placeholder="e.g., Batch A">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
-                    <input type="date" wire:model="newBatch.start_date" class="form-input">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Start Date</label>
+                    <input type="date" wire:model="newBatch.start_date" class="form-input dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-200">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Max Students</label>
-                    <input type="number" wire:model="newBatch.max_students" class="form-input" placeholder="Leave empty for unlimited">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Max Students</label>
+                    <input type="number" wire:model="newBatch.max_students" class="form-input dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-200" placeholder="Leave empty for unlimited">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                    <select wire:model="newBatch.status" class="form-input">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
+                    <select wire:model="newBatch.status" class="form-input dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-200">
                         <option value="open">Open for Registration</option>
                         <option value="closed">Closed</option>
                     </select>
@@ -356,16 +356,16 @@ new #[Layout('components.layouts.admin')] class extends Component {
         @if(count($batches) > 0)
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 @foreach($batches as $batch)
-                    <div class="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+                    <div class="bg-white dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-800 rounded-lg p-6 hover:shadow-md transition-shadow">
                         @if($editingBatch && $editingBatch['id'] == $batch['id'])
                             <div class="mb-4">
-                                <h4 class="text-lg font-semibold text-gray-900 mb-4">Edit Batch</h4>
+                                <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Edit Batch</h4>
                                 <form wire:submit.prevent="updateBatch" class="space-y-4">
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <input type="text" wire:model="editingBatch.name" class="form-input" placeholder="Batch Name">
-                                        <input type="date" wire:model="editingBatch.start_date" class="form-input">
-                                        <input type="number" wire:model="editingBatch.max_students" class="form-input" placeholder="Max Students">
-                                        <select wire:model="editingBatch.status" class="form-input">
+                                        <input type="text" wire:model="editingBatch.name" class="form-input dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-200" placeholder="Batch Name">
+                                        <input type="date" wire:model="editingBatch.start_date" class="form-input dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-200">
+                                        <input type="number" wire:model="editingBatch.max_students" class="form-input dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-200" placeholder="Max Students">
+                                        <select wire:model="editingBatch.status" class="form-input dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-200">
                                             <option value="open">Open</option>
                                             <option value="closed">Closed</option>
                                         </select>
@@ -384,18 +384,18 @@ new #[Layout('components.layouts.admin')] class extends Component {
                             <div class="flex items-start justify-between">
                                 <div class="flex-1">
                                     <div class="flex items-center mb-3">
-                                        <div class="w-10 h-10 {{ $batch['status'] == 'open' ? 'bg-green-100' : 'bg-red-100' }} rounded-lg flex items-center justify-center mr-3">
-                                            <i class="fas fa-users {{ $batch['status'] == 'open' ? 'text-green-600' : 'text-red-600' }}"></i>
+                                        <div class="w-10 h-10 {{ $batch['status'] == 'open' ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30' }} rounded-lg flex items-center justify-center mr-3">
+                                            <i class="fas fa-users {{ $batch['status'] == 'open' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}"></i>
                                         </div>
                                         <div>
-                                            <h4 class="text-lg font-semibold text-gray-900">{{ $batch['name'] }}</h4>
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $batch['status'] == 'open' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                            <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100">{{ $batch['name'] }}</h4>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $batch['status'] == 'open' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' }}">
                                                 {{ ucfirst($batch['status']) }}
                                             </span>
                                         </div>
                                     </div>
 
-                                    <div class="space-y-2 text-sm text-gray-600">
+                                    <div class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
                                         <div class="flex items-center">
                                             <i class="fas fa-calendar mr-2 text-blue-500"></i>
                                             Start Date: {{ \Carbon\Carbon::parse($batch['start_date'])->format('M d, Y') }}
@@ -431,24 +431,24 @@ new #[Layout('components.layouts.admin')] class extends Component {
                 @endforeach
             </div>
         @else
-            <div class="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                <i class="fas fa-users text-4xl text-gray-400 mb-4"></i>
-                <h3 class="text-lg font-medium text-gray-900 mb-2">No Batches Yet</h3>
-                <p class="text-gray-500">Create your first batch to start organizing students.</p>
+            <div class="text-center py-12 bg-gray-50 dark:bg-zinc-800/50 rounded-lg border-2 border-dashed border-gray-300 dark:border-zinc-700">
+                <i class="fas fa-users text-4xl text-gray-400 dark:text-gray-600 mb-4"></i>
+                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No Batches Yet</h3>
+                <p class="text-gray-500 dark:text-gray-400">Create your first batch to start organizing students.</p>
             </div>
         @endif
     </div>
 
     {{-- Modal: View Batch Students --}}
     @if($viewingBatch)
-        <div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" wire:click.self="closeBatchViewer">
-            <div class="bg-white rounded-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto" @click.stop>
-                <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" wire:click.self="closeBatchViewer">
+            <div class="bg-white dark:bg-zinc-900 rounded-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto shadow-2xl border border-gray-200 dark:border-zinc-800" @click.stop>
+                <div class="p-6 border-b border-gray-200 dark:border-zinc-800 flex items-center justify-between">
                     <div>
-                        <h3 class="text-xl font-bold text-gray-900">{{ $viewingBatch['name'] }}</h3>
-                        <p class="text-sm text-gray-600">Registered Students</p>
+                        <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100">{{ $viewingBatch['name'] }}</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Registered Students</p>
                     </div>
-                    <button wire:click="closeBatchViewer" class="text-gray-400 hover:text-gray-600">
+                    <button wire:click="closeBatchViewer" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
                         <i class="fas fa-times text-xl"></i>
                     </button>
                 </div>
@@ -456,27 +456,27 @@ new #[Layout('components.layouts.admin')] class extends Component {
                     @if(count($batchStudents) > 0)
                         <div class="space-y-3">
                             @foreach($batchStudents as $student)
-                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-zinc-800/50 rounded-lg border border-gray-100 dark:border-zinc-800">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                                            <span class="text-blue-600 font-semibold">{{ substr($student['user']['name'] ?? 'N/A', 0, 1) }}</span>
+                                        <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                                            <span class="text-blue-600 dark:text-blue-400 font-semibold">{{ substr($student['user']['name'] ?? 'N/A', 0, 1) }}</span>
                                         </div>
                                         <div>
-                                            <p class="font-medium text-gray-900">{{ $student['user']['name'] ?? 'N/A' }}</p>
-                                            <p class="text-sm text-gray-500">{{ $student['user']['email'] ?? 'N/A' }}</p>
+                                            <p class="font-medium text-gray-900 dark:text-gray-100">{{ $student['user']['name'] ?? 'N/A' }}</p>
+                                            <p class="text-sm text-gray-500 dark:text-gray-400">{{ $student['user']['email'] ?? 'N/A' }}</p>
                                         </div>
                                     </div>
                                     <div class="text-right">
-                                        <p class="text-sm text-gray-600">{{ $student['phone'] ?? 'N/A' }}</p>
-                                        <p class="text-xs text-gray-500">Status: <span class="font-medium">{{ ucfirst($student['status']) }}</span></p>
+                                        <p class="text-sm text-gray-600 dark:text-gray-400">{{ $student['phone'] ?? 'N/A' }}</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-500">Status: <span class="font-medium text-gray-700 dark:text-gray-300">{{ ucfirst($student['status']) }}</span></p>
                                     </div>
                                 </div>
                             @endforeach
                         </div>
                     @else
                         <div class="text-center py-8">
-                            <i class="fas fa-user-slash text-4xl text-gray-300 mb-3"></i>
-                            <p class="text-gray-500">No students registered in this batch yet.</p>
+                            <i class="fas fa-user-slash text-4xl text-gray-300 dark:text-gray-700 mb-3"></i>
+                            <p class="text-gray-500 dark:text-gray-400">No students registered in this batch yet.</p>
                         </div>
                     @endif
                 </div>
@@ -486,14 +486,14 @@ new #[Layout('components.layouts.admin')] class extends Component {
 
     {{-- Modal: Assign Classes to Batch --}}
     @if($assigningClassesToBatch)
-        <div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" wire:click.self="closeAssignClasses">
-            <div class="bg-white rounded-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto" @click.stop>
-                <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" wire:click.self="closeAssignClasses">
+            <div class="bg-white dark:bg-zinc-900 rounded-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto shadow-2xl border border-gray-200 dark:border-zinc-800" @click.stop>
+                <div class="p-6 border-b border-gray-200 dark:border-zinc-800 flex items-center justify-between">
                     <div>
-                        <h3 class="text-xl font-bold text-gray-900">Assign Classes</h3>
-                        <p class="text-sm text-gray-600">Select classes for this batch</p>
+                        <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100">Assign Classes</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Select classes for this batch</p>
                     </div>
-                    <button wire:click="closeAssignClasses" class="text-gray-400 hover:text-gray-600">
+                    <button wire:click="closeAssignClasses" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
                         <i class="fas fa-times text-xl"></i>
                     </button>
                 </div>
@@ -501,19 +501,19 @@ new #[Layout('components.layouts.admin')] class extends Component {
                     @if(count($availableClasses) > 0)
                         <div class="space-y-3">
                             @foreach($availableClasses as $class)
-                                <label class="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                                <label class="flex items-center justify-between p-3 bg-gray-50 dark:bg-zinc-800/50 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors border border-transparent hover:border-gray-200 dark:hover:border-zinc-700">
                                     <div class="flex items-center gap-3">
-                                        <input type="checkbox" wire:model="selectedClassIds" value="{{ $class['id'] }}" class="w-5 h-5 text-blue-600 rounded">
+                                        <input type="checkbox" wire:model="selectedClassIds" value="{{ $class['id'] }}" class="w-5 h-5 text-blue-600 rounded border-gray-300 dark:border-zinc-700 dark:bg-zinc-800 focus:ring-blue-500">
                                         <div>
-                                            <p class="font-medium text-gray-900">{{ $class['name'] }}</p>
-                                            <p class="text-sm text-gray-500">{{ Str::limit($class['description'] ?? 'No description', 80) }}</p>
+                                            <p class="font-medium text-gray-900 dark:text-gray-100">{{ $class['name'] }}</p>
+                                            <p class="text-sm text-gray-500 dark:text-gray-400">{{ Str::limit($class['description'] ?? 'No description', 80) }}</p>
                                         </div>
                                     </div>
                                 </label>
                             @endforeach
                         </div>
                         <div class="mt-6 flex justify-end gap-3">
-                            <button wire:click="closeAssignClasses" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                            <button wire:click="closeAssignClasses" class="px-4 py-2 bg-gray-500 dark:bg-zinc-700 text-white rounded-lg hover:bg-gray-600 dark:hover:bg-zinc-600 transition-colors">
                                 Cancel
                             </button>
                             <button wire:click="saveBatchClasses" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
@@ -522,9 +522,9 @@ new #[Layout('components.layouts.admin')] class extends Component {
                         </div>
                     @else
                         <div class="text-center py-8">
-                            <i class="fas fa-book text-4xl text-gray-300 mb-3"></i>
-                            <p class="text-gray-500">No classes available. Create classes first.</p>
-                            <a href="{{ route('admin.dashboard.believers_class.index', request()->query()) }}" class="inline-block mt-3 text-blue-600 hover:underline">
+                            <i class="fas fa-book text-4xl text-gray-300 dark:text-gray-700 mb-3"></i>
+                            <p class="text-gray-500 dark:text-gray-400">No classes available. Create classes first.</p>
+                            <a href="{{ route('admin.dashboard.believers_class.index', request()->query()) }}" class="inline-block mt-3 text-blue-600 dark:text-blue-400 hover:underline">
                                 Go to Classes →
                             </a>
                         </div>

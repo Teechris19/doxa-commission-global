@@ -1,25 +1,69 @@
 {
   "name": "Doxa Commission Global",
   "short_name": "Doxa Church",
-  "description": "Doxa Commission Global church platform.",
+  "description": "Doxa Commission Global church platform - Bringing nations into God's glory worldwide.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "minimal-ui"],
   "background_color": "#ffffff",
   "theme_color": "#1877f2",
   "orientation": "portrait",
+  "categories": ["education", "social", "lifestyle"],
   "icons": [
     {
       "src": "/Img/doxa.PNG",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/Img/doxa.PNG",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "/Img/doxa.PNG",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/Img/doxa.PNG",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Events",
+      "short_name": "Events",
+      "description": "View upcoming church events",
+      "url": "/events",
+      "icons": [{ "src": "/Img/doxa.PNG", "sizes": "192x192" }]
+    },
+    {
+      "name": "Sermons",
+      "short_name": "Sermons",
+      "description": "Watch or listen to latest sermons",
+      "url": "/sermons",
+      "icons": [{ "src": "/Img/doxa.PNG", "sizes": "192x192" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/Img/doxa.PNG",
+      "type": "image/png",
+      "sizes": "512x512",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/Img/doxa.PNG",
+      "type": "image/png",
+      "sizes": "512x512",
+      "form_factor": "narrow"
     }
   ]
 }

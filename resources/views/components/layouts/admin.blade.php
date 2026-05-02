@@ -17,6 +17,16 @@ TODO: Add Active route indicators
 
     @include('partials.head')
     @stack('styles')
+    @fluxScripts
+
+    @php
+        $isSuperAdmin = auth()->check() && auth()->user()->hasRole('super-admin');
+        $manifestUrl = $isSuperAdmin ? route('pwa.super-admin-manifest') : route('pwa.admin-manifest');
+    @endphp
+    <link rel="manifest" href="{{ $manifestUrl }}">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
     <script>
         // Apply theme from session on page load
@@ -66,6 +76,7 @@ TODO: Add Active route indicators
     <div class="relative min-h-screen bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.06),transparent_55%)] dark:bg-none">
         <flux:sidebar id="admin-sidebar" sticky stashable class="border-e border-slate-200 bg-white text-slate-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-gray-200">
         <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
+        <flux:sidebar.toggle class="hidden lg:inline-flex" icon="bars-2" inset="left" />
 
         <a href="{{ route('dashboard') }}" class="me-5 flex items-center gap-3 rtl:space-x-reverse" wire:navigate>
             <span class="flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl bg-blue-50 ring-1 ring-blue-100 dark:bg-blue-900/30 dark:ring-blue-800">
@@ -101,8 +112,7 @@ TODO: Add Active route indicators
         <flux:navlist variant="outline" class="text-sm">
 
              @role(['admin', 'team-lead', 'lead-assist', 'lead_assist', 'super-admin'])
-            <flux:navlist.group expandable heading="Members"
-                :expanded="request()->routeIs('admin.dashboard.members.*') ? 'true' : 'false'">
+            <flux:navlist.group expandable heading="Members">
                 @if($isSuperAdmin || $isAdmin || $isAttendanceTeamLead)
                 <flux:navlist.item icon="users" :href="route('admin.dashboard.members', ['chapter' => request()->get('chapter')])"
                     wire:navigate :active=" request()->routeIs('admin.dashboard.members') ? 'true' : 'false' ">
@@ -138,8 +148,7 @@ TODO: Add Active route indicators
             @endrole
              @role(['admin', 'super-admin'])
             {{-- Teams Group --}}
-            <flux:navlist.group expandable heading="Teams"
-                :expanded=" request()->routeIs('admin.dashboard.teams.*') ? 'true' : 'false' ">
+            <flux:navlist.group expandable heading="Teams">
                 <flux:navlist.item icon="users" :href="route('admin.dashboard.teams', ['chapter' => request()->get('chapter')])" wire:navigate
                     :active="request()->routeIs('admin.dashboard.teams') ? 'true' : 'false' ">
                     All Teams
@@ -158,8 +167,7 @@ TODO: Add Active route indicators
 
             @endrole
             @if($isAttendanceTeamLead)
-            <flux:navlist.group expandable heading="Teams"
-                :expanded=" request()->routeIs('admin.dashboard.teams.*') ? 'true' : 'false' ">
+            <flux:navlist.group expandable heading="Teams">
                 <flux:navlist.item icon="users" :href="route('admin.dashboard.teams', ['chapter' => request()->get('chapter')])" wire:navigate
                     :active="request()->routeIs('admin.dashboard.teams') ? 'true' : 'false' ">
                     All Teams
@@ -167,8 +175,7 @@ TODO: Add Active route indicators
             </flux:navlist.group>
             @endif
             @role('super-admin')
-            <flux:navlist.group expandable heading="Chapters"
-                :expanded="request()->routeIs('super-admin.conclaves*') ? 'true' : 'false'">
+            <flux:navlist.group expandable heading="Chapters">
                 <flux:navlist.item icon="building-office" :href="route('super-admin.conclaves', request()->query())" wire:navigate
                     :active="request()->routeIs('super-admin.conclaves') ? 'true' : 'false'">
                     All Chapters
@@ -183,8 +190,7 @@ TODO: Add Active route indicators
                 </flux:navlist.item>
             </flux:navlist.group>
 
-            <flux:navlist.group expandable heading="Locations"
-                :expanded="request()->routeIs('super-admin.locations*') ? 'true' : 'false'">
+            <flux:navlist.group expandable heading="Locations">
                 <flux:navlist.item icon="map-pin" :href="route('super-admin.locations', request()->query())" wire:navigate
                     :active="request()->routeIs('super-admin.locations') ? 'true' : 'false'">
                     Chapter Locations
@@ -192,8 +198,7 @@ TODO: Add Active route indicators
             </flux:navlist.group>
             
             {{-- Conclaves Management (Separate from Chapters) --}}
-            <flux:navlist.group expandable heading="Conclaves"
-                :expanded="request()->routeIs('admin.dashboard.conclaves*') ? 'true' : 'false'">
+            <flux:navlist.group expandable heading="Conclaves">
                 <flux:navlist.item icon="map" :href="route('admin.dashboard.conclaves', request()->query())" wire:navigate
                     :active="request()->routeIs('admin.dashboard.conclaves') ? 'true' : 'false'">
                     All Conclaves
@@ -318,11 +323,104 @@ TODO: Add Active route indicators
     </flux:main>
     </div>
 
-    <x-toast />
-    <x-dialog />
+    {{-- PWA Scripts --}}
+    <script>
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/admin-sw.js', { scope: '/admin' })
+                    .then(async (reg) => {
+                        console.log('Admin SW registered');
+                        try {
+                            let sub = await reg.pushManager.getSubscription();
+                            if (!sub && Notification.permission === 'granted') {
+                                const vapidPublicKey = '{{ config('services.webpush.public_key', '') }}';
+                                if (vapidPublicKey) {
+                                    sub = await reg.pushManager.subscribe({
+                                        userVisibleOnly: true,
+                                        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+                                    });
+                                    await fetch('/pwa/subscribe', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                        },
+                                        body: JSON.stringify({ subscription: sub }),
+                                    });
+                                }
+                            }
+                        } catch (err) {
+                            console.log('Push subscription failed:', err);
+                        }
+                    })
+                    .catch(err => console.log('Admin SW registration failed:', err));
+            });
+        }
 
-    @fluxScripts
-    @stack('scripts')
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        }
+
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+    </script>
+
+    {{-- PWA Install Prompt --}}
+    <script>
+        (() => {
+            let deferredPrompt = null;
+            const promptEl = document.getElementById('pwa-install-prompt');
+            const installBtn = document.getElementById('pwa-install-btn');
+            const closeBtn = document.getElementById('pwa-install-close');
+            const dismissBtn = document.getElementById('pwa-dismiss-btn');
+
+            if (!promptEl) return;
+
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                const dismissed = localStorage.getItem('pwa_install_dismissed');
+                const dismissedAt = dismissed ? parseInt(dismissed) : 0;
+                const showAfter = Date.now() - 7 * 24 * 60 * 60 * 1000;
+                if (!dismissed || dismissedAt < showAfter) {
+                    promptEl.style.display = 'block';
+                }
+            });
+
+            installBtn.addEventListener('click', async () => {
+                if (!deferredPrompt) return;
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    promptEl.style.display = 'none';
+                }
+                deferredPrompt = null;
+            });
+
+            const hidePrompt = () => {
+                promptEl.style.display = 'none';
+                localStorage.setItem('pwa_install_dismissed', String(Date.now()));
+            };
+
+            closeBtn.addEventListener('click', hidePrompt);
+            dismissBtn.addEventListener('click', hidePrompt);
+
+            window.addEventListener('appinstalled', () => {
+                promptEl.style.display = 'none';
+                deferredPrompt = null;
+            });
+        })();
+    </script>
+
     <script>
         (() => {
             const key = 'admin_sidebar_scroll';

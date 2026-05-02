@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\SchedulerController;
+use App\Http\Controllers\PwaManifestController;
 use Illuminate\Support\Facades\DB;
 
 Volt::route('/', 'home.landing')->name('home');
@@ -96,6 +97,11 @@ Route::post('/transport/pickup-request', [
 include __DIR__ .'/super_admin_route.php';
 
 include __DIR__ .'/admin_route.php';
+
+// PWA Manifests (role-specific)
+Route::get('/pwa/super-admin-manifest', [PwaManifestController::class, 'superAdminManifest'])->name('pwa.super-admin-manifest');
+Route::get('/pwa/admin-manifest', [PwaManifestController::class, 'adminManifest'])->name('pwa.admin-manifest');
+Route::post('/pwa/subscribe', [PwaManifestController::class, 'subscribe'])->middleware('auth')->name('pwa.subscribe');
 
 Route::get('/internal/scheduler/tick', [SchedulerController::class, 'tick'])
     ->name('scheduler.tick');

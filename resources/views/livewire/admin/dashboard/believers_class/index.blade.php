@@ -122,166 +122,140 @@ new #[Layout('components.layouts.admin')] class extends Component {
     }
 }; ?>
 
-<div>
-    <x-card>
-        @if (empty($classes))
-            <div class="p-8">
-                <div class="text-center">
-                    <div
-                        class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900/30">
-                        <svg class="h-6 w-6 text-indigo-600 dark:text-indigo-300" xmlns="http://www.w3.org/2000/svg"
-                            fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                d="M12 14l9-5-9-5-9 5 9 5z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                d="M12 14l6.16-3.422A12.083 12.083 0 0112 21.5a12.083 12.083 0 01-6.16-10.922L12 14z" />
-                        </svg>
-                    </div>
+<div class="space-y-6">
+    <x-fancy-header 
+        title="Academy Curriculum" 
+        subtitle="Design and structure your academy's learning path"
+        :breadcrumbs="[
+            ['label' => 'Dashboard', 'url' => route('admin.dashboard', request()->query())],
+            ['label' => 'Academy', 'url' => route('admin.dashboard.believers_class.academy', request()->query())],
+            ['label' => 'Curriculum']
+        ]"
+    >
+        <div class="flex items-center gap-3">
+            <x-button wire:click="addClass" icon="plus" color="blue" class="shadow-sm">
+                Add New Class
+            </x-button>
+            <x-button wire:click="save" icon="check" color="green" class="shadow-sm" wire:loading.attr="disabled">
+                <span wire:loading.remove wire:target="save">Save Curriculum</span>
+                <span wire:loading wire:target="save">Saving...</span>
+            </x-button>
+        </div>
+    </x-fancy-header>
 
-                    <h2 class="mt-4 text-lg font-semibold text-gray-900 dark:text-gray-100">There are no classes now
-                    </h2>
-                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                        Click the Add Class button to begin adding new classes to the Believers Academy.
-                    </p>
-
-                    <div class="mt-6 flex items-center justify-center gap-3">
-                        <button type="button"
-                            class="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                            title="Add Class" wire:click="addClass">
-                            <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                    d="M12 4v16m8-8H4" />
-                            </svg>
-                            <span wire:loading wire:target="addClass">
-                                <x-spinner-loader size="sm" color="white"></x-spinner-loader> Loading
-                            </span>
-                            <span wire:loading.remove>Add Class</span>
-                        </button>
-
-                        <a href="{{ route('admin.dashboard') }}"
-                            class="inline-flex items-center rounded-md border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">
-                            Back to Dashboard
-                        </a>
-                    </div>
+    @if (empty($classes))
+        <x-card class="py-16 text-center">
+            <div class="max-w-md mx-auto">
+                <div class="w-16 h-16 bg-blue-50 dark:bg-blue-900/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-graduation-cap text-2xl text-blue-600 dark:text-blue-400"></i>
                 </div>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Build Your Curriculum</h3>
+                <p class="text-gray-500 dark:text-gray-400 mb-6">Create classes to guide your students through their spiritual journey in the Believers Academy.</p>
+                <x-button wire:click="addClass" icon="plus" color="blue" class="px-8">
+                    Start by Adding a Class
+                </x-button>
             </div>
-        @else
+        </x-card>
+    @else
+        <div class="space-y-4">
             <form wire:submit.prevent="save" class="space-y-4">
-                @csrf
-
                 @foreach ($this->classes as $index => $class)
-                    <x-card class="dark:bg-zinc-900 mb-3" wire:key="class-{{ $index }}">
-                        <div class="flex items-center justify-between mb-2">
-                            <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Class
-                                #{{ $index + 1 }}</h3>
-                            <button type="button"
-                                class="inline-flex items-center rounded-md bg-red-600 px-2 py-1 text-xs font-medium text-white shadow-sm hover:bg-red-500"
-                                wire:click="removeClass({{ $index }})" title="Remove Class">
-                                Remove
-                            </button>
+                    <div class="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-md group" wire:key="class-{{ $index }}">
+                        {{-- Class Header --}}
+                        <div class="px-6 py-4 bg-gray-50/50 dark:bg-zinc-800/30 border-b border-gray-100 dark:border-zinc-800 flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-sm font-bold">
+                                    {{ $index + 1 }}
+                                </span>
+                                <h3 class="text-base font-bold text-gray-900 dark:text-gray-100">
+                                    {{ $class['name'] ?: 'Untitled Class' }}
+                                </h3>
+                            </div>
+                            <x-button.circle 
+                                wire:click="removeClass({{ $index }})" 
+                                icon="trash" 
+                                color="red" 
+                                variant="soft"
+                                class="opacity-0 group-hover:opacity-100 transition-opacity"
+                            />
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="font-bold block text-sm text-gray-700 dark:text-gray-300">Class
-                                    Name</label>
-                                <input wire:model.defer="classes.{{ $index }}.name" placeholder="Class Name"
-                                    class="mt-1 block w-full border-gray-600 dark:bg-dark-700 text-gray-300 rounded-md shadow-sm" />
-                                @error("classes.$index.name")
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
+                        {{-- Class Body --}}
+                        <div class="p-6">
+                            <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                                {{-- Main Info --}}
+                                <div class="md:col-span-8 space-y-4">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <x-input 
+                                            label="Class Title" 
+                                            placeholder="e.g., Understanding the Gospel" 
+                                            wire:model.defer="classes.{{ $index }}.name"
+                                        />
+                                        <x-select.styled 
+                                            label="Tutor" 
+                                            placeholder="Assign a tutor" 
+                                            wire:model.defer="classes.{{ $index }}.tutor"
+                                            :options="$users"
+                                            select="label:name|value:id"
+                                        />
+                                    </div>
+                                    <x-textarea 
+                                        label="Description" 
+                                        placeholder="Briefly explain what this class covers..." 
+                                        wire:model.defer="classes.{{ $index }}.description"
+                                        rows="3"
+                                    />
+                                </div>
 
-                            <div>
-                                <label class="font-bold block text-sm text-gray-700 dark:text-gray-300">Date</label>
-                                <input type="date" wire:model.defer="classes.{{ $index }}.date"
-                                    class="mt-1 block w-full border-gray-600 bg-dark-700 text-gray-300 rounded-md shadow-sm" />
-                                @error("classes.$index.date")
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            <div class="md:col-span-2">
-                                <label
-                                    class="font-bold block text-sm text-gray-700 dark:text-gray-300">Description</label>
-                                <textarea wire:model.defer="classes.{{ $index }}.description" placeholder="Class Description"
-                                    class="mt-1 block w-full border-gray-600 bg-dark-700 text-gray-300 rounded-md shadow-sm"></textarea>
-                                @error("classes.$index.description")
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            <div>
-                                <label class="font-bold block text-sm text-gray-700 dark:text-gray-300">Time</label>
-                                <input type="time" wire:model.defer="classes.{{ $index }}.time"
-                                    class="mt-1 block w-full border-gray-600 bg-dark-700 text-gray-300 rounded-md shadow-sm" />
-                                @error("classes.$index.time")
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            {{-- If using URL for study material --}}
-                            <div>
-                                <label class="font-bold block text-sm text-gray-700 dark:text-gray-300">Study Material
-                                    (URL)
-                                </label>
-                                <input type="url" placeholder="https://example.com/material.pdf"
-                                    wire:model.defer="classes.{{ $index }}.study_material"
-                                    class="mt-1 block w-full border-gray-600 bg-dark-700 text-gray-300 rounded-md shadow-sm" />
-                                @error("classes.$index.study_material")
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            <div>
-                                <label class="font-bold block text-sm text-gray-700 dark:text-gray-300">Tutor</label>
-                                <select wire:model.defer="classes.{{ $index }}.tutor"
-                                    class="mt-1 block w-full border-gray-600 bg-dark-700 text-gray-300 rounded-md shadow-sm">
-                                    <option value="">Select a Tutor</option>
-                                    @foreach($users as $key => $value)
-                                        <option value="{{ $value['id'] }}">{{ $value['name'] }}</option>
-                                    @endforeach
-                                </select>
-                                @error("classes.$index.tutor")
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                                <input type="hidden" wire:model='"classes.{{ $index }}.id'>
+                                {{-- Schedule & Resources --}}
+                                <div class="md:col-span-4 space-y-4 p-4 bg-gray-50/50 dark:bg-zinc-800/20 rounded-xl border border-gray-100 dark:border-zinc-800/50">
+                                    <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-4">Schedule & Resources</h4>
+                                    <div class="grid grid-cols-1 gap-4">
+                                        <x-input 
+                                            type="date" 
+                                            label="Class Date" 
+                                            wire:model.defer="classes.{{ $index }}.date"
+                                        />
+                                        <x-input 
+                                            type="time" 
+                                            label="Class Time" 
+                                            wire:model.defer="classes.{{ $index }}.time"
+                                        />
+                                        <x-input 
+                                            label="Study Material Link" 
+                                            placeholder="https://..." 
+                                            wire:model.defer="classes.{{ $index }}.study_material"
+                                            icon="link"
+                                        />
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </x-card>
+                    </div>
                 @endforeach
 
-                <div class="flex items-center gap-3">
-                    <button type="submit"
-                        class="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
-                        <span wire:loading wire:target="save">
-                            <x-spinner-loader size="sm" color="white"></x-spinner-loader> Saving...
-                        </span>
-                        <span wire:loading.remove>Save</span>
-                    </button>
-
-                    <button type="button"
-                        class="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="Add Class" wire:click="addClass">
-                        <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                d="M12 4v16m8-8H4" />
-                        </svg>
-                        <span wire:loading wire:target="addClass">
-                            <x-spinner-loader size="sm" color="white"></x-spinner-loader> Loading
-                        </span>
-                        <span wire:loading.remove>Add Class</span>
-                    </button>
+                {{-- Bottom Actions --}}
+                <div class="flex items-center justify-between pt-4 bg-white dark:bg-zinc-950/50 p-4 rounded-xl border border-dashed border-gray-200 dark:border-zinc-800">
+                    <p class="text-sm text-gray-500 dark:text-gray-400 italic">
+                        <i class="fas fa-info-circle mr-2"></i>You have {{ count($classes) }} classes in your curriculum.
+                    </p>
+                    <div class="flex items-center gap-3">
+                        <x-button wire:click="addClass" variant="outline" icon="plus">
+                            Add Another Class
+                        </x-button>
+                        <x-button wire:click="save" color="blue" class="px-8 shadow-md" wire:loading.attr="disabled">
+                            <span wire:loading.remove wire:target="save">Finalize curriculum</span>
+                            <span wire:loading wire:target="save">Saving...</span>
+                        </x-button>
+                    </div>
                 </div>
             </form>
-        @endif
-    </x-card>
+        </div>
+    @endif
 
     @if (session('status'))
-        <div class="mt-4 text-sm text-green-600 dark:text-green-400">
+        <x-alert title="Curriculum Updated" color="green" light>
             {{ session('status') }}
-        </div>
+        </x-alert>
     @endif
 </div>

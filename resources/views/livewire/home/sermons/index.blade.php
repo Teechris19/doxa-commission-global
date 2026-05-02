@@ -469,6 +469,7 @@ input[type="range"]::-moz-range-thumb:hover {
         </div>
     </section>
 
+    <div wire:ignore>
     <div id="audio-player-bar" class="audio-player-bar hidden">
         <!-- Desktop Expanded View -->
         <div class="expanded-view hidden md:flex items-center gap-6 px-6 py-4">
@@ -486,8 +487,8 @@ input[type="range"]::-moz-range-thumb:hover {
                     <button id="prev-btn" class="rounded-full border border-blue-100 bg-blue-50 px-3 py-2 text-blue-700 transition hover:border-blue-300">
                         <i class="fas fa-step-backward"></i>
                     </button>
-                    <button id="play-pause-btn" class="rounded-full bg-blue-600 px-4 py-2 text-2xl text-white transition hover:bg-blue-700">
-                        <i id="play-pause-icon" class="fas fa-play fa-2x"></i>
+                    <button id="play-pause-btn" class="rounded-full bg-blue-600 flex h-10 w-10 items-center justify-center text-white transition hover:bg-blue-700">
+                        <i id="play-pause-icon" class="fas fa-play"></i>
                     </button>
                     <button id="next-btn" class="rounded-full border border-blue-100 bg-blue-50 px-3 py-2 text-blue-700 transition hover:border-blue-300">
                         <i class="fas fa-step-forward"></i>
@@ -530,8 +531,8 @@ input[type="range"]::-moz-range-thumb:hover {
                 <button id="prev-btn-mobile" class="rounded-full border border-blue-100 bg-blue-50 px-3 py-2 text-blue-700 transition hover:border-blue-300">
                     <i class="fas fa-step-backward"></i>
                 </button>
-                <button id="play-pause-btn-mobile" class="rounded-full bg-blue-600 px-4 py-2 text-2xl text-white transition hover:bg-blue-700">
-                    <i id="play-pause-icon-mobile" class="fas fa-play fa-2x"></i>
+                <button id="play-pause-btn-mobile" class="rounded-full bg-blue-600 flex h-10 w-10 items-center justify-center text-white transition hover:bg-blue-700">
+                    <i id="play-pause-icon-mobile" class="fas fa-play"></i>
                 </button>
                 <button id="next-btn-mobile" class="rounded-full border border-blue-100 bg-blue-50 px-3 py-2 text-blue-700 transition hover:border-blue-300">
                     <i class="fas fa-step-forward"></i>
@@ -555,6 +556,7 @@ input[type="range"]::-moz-range-thumb:hover {
     </div>
 
     <audio id="player-audio" src="" preload="metadata"></audio>
+    </div>
 
     <!-- WhatsApp Floating Button -->
     @php
@@ -718,7 +720,9 @@ input[type="range"]::-moz-range-thumb:hover {
             // Update the current time display and seek bar
             audioPlayer.addEventListener('timeupdate', () => {
                 updateTimeDisplays();
-                updateSeekBars();
+                if (!isSeeking) {
+                    updateSeekBars();
+                }
             });
 
             // Update the total duration when the audio loads metadata
@@ -849,47 +853,45 @@ input[type="range"]::-moz-range-thumb:hover {
                 pipToggleBtnMobile.addEventListener('click', togglePipMode);
             }
 
-            // Seek bar functionality
             let isSeeking = false;
 
+            function seekToValue(seekBarElement) {
+                const value = parseFloat(seekBarElement.value);
+                if (audioPlayer.duration && !isNaN(audioPlayer.duration) && isFinite(audioPlayer.duration)) {
+                    const time = (value / 100) * audioPlayer.duration;
+                    audioPlayer.currentTime = time;
+                }
+            }
+
             function setupSeekBar(seekBarElement) {
-                seekBarElement.addEventListener('mousedown', () => {
+                const startSeeking = (e) => {
+                    e.stopPropagation();
                     isSeeking = true;
-                });
+                };
 
-                seekBarElement.addEventListener('touchstart', () => {
-                    isSeeking = true;
-                });
-
-                seekBarElement.addEventListener('mouseup', () => {
-                    isSeeking = false;
-                });
-
-                seekBarElement.addEventListener('touchend', () => {
-                    isSeeking = false;
-                });
-
-                seekBarElement.addEventListener('input', () => {
-                    if (audioPlayer.duration && !isNaN(audioPlayer.duration)) {
-                        const time = (parseFloat(seekBarElement.value) / 100) * audioPlayer.duration;
-                        audioPlayer.currentTime = time;
-                        // Sync the other seek bar
-                        if (seekBarElement === seekBar) {
-                            seekBarMobile.value = seekBarElement.value;
-                            seekBarMobile.style.background = seekBarElement.style.background;
-                        } else {
-                            seekBar.value = seekBarElement.value;
-                            seekBar.style.background = seekBarElement.style.background;
-                        }
+                const handleInput = (e) => {
+                    e.stopPropagation();
+                    if (seekBarElement === seekBar) {
+                        seekBarMobile.value = seekBarElement.value;
+                    } else {
+                        seekBar.value = seekBarElement.value;
                     }
-                });
+                };
 
-                // Also handle 'change' event for browsers that don't fire 'input' properly
+                const finishSeeking = () => {
+                    if (isSeeking) {
+                        isSeeking = false;
+                        seekToValue(seekBarElement);
+                    }
+                };
+
+                seekBarElement.addEventListener('mousedown', startSeeking);
+                seekBarElement.addEventListener('touchstart', startSeeking, { passive: true });
+                seekBarElement.addEventListener('input', handleInput);
+                document.addEventListener('mouseup', finishSeeking);
+                document.addEventListener('touchend', finishSeeking);
                 seekBarElement.addEventListener('change', () => {
-                    if (audioPlayer.duration && !isNaN(audioPlayer.duration)) {
-                        const time = (parseFloat(seekBarElement.value) / 100) * audioPlayer.duration;
-                        audioPlayer.currentTime = time;
-                    }
+                    seekToValue(seekBarElement);
                     isSeeking = false;
                 });
             }

@@ -426,6 +426,31 @@
                     </a>
                 </div>
             @endauth
+
+            {{-- Install App Button (Shown only when installable) --}}
+            <div id="pwa-install-container" class="hidden border-t border-blue-100 p-4">
+                <button id="pwa-install-btn" class="flex w-full items-center justify-center gap-2 rounded-full border-2 border-blue-600 px-4 py-2.5 text-sm font-bold text-blue-700 transition hover:bg-blue-50">
+                    <i class="fas fa-download"></i>
+                    Install App
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- PWA Install Prompt Toast --}}
+    <div id="pwa-install-toast" class="fixed bottom-24 left-1/2 z-[100] hidden w-[90%] max-w-sm -translate-x-1/2 animate-slide-up rounded-2xl bg-white p-4 shadow-2xl ring-1 ring-blue-100 sm:bottom-6">
+        <div class="flex items-center gap-4">
+            <img src="{{ asset('Img/doxa.PNG') }}" alt="App Icon" class="h-12 w-12 rounded-xl shadow-sm">
+            <div class="flex-1">
+                <h4 class="text-sm font-bold text-slate-800">Install Doxa Church App</h4>
+                <p class="text-xs text-slate-500">Get the best experience on your home screen</p>
+            </div>
+            <button id="close-pwa-toast" class="text-slate-400 hover:text-slate-600">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="mt-4 flex gap-2">
+            <button id="pwa-install-toast-btn" class="flex-1 rounded-xl bg-blue-600 py-2 text-sm font-bold text-white transition hover:bg-blue-700">Install Now</button>
         </div>
     </div>
 
@@ -538,6 +563,69 @@
                     }
                 }, 100);
             });
+            // PWA Installation Logic
+            let deferredPrompt = null;
+            const installContainer = document.getElementById('pwa-install-container');
+            const installBtn = document.getElementById('pwa-install-btn');
+            const installToast = document.getElementById('pwa-install-toast');
+            const installToastBtn = document.getElementById('pwa-install-toast-btn');
+            const closeToastBtn = document.getElementById('close-pwa-toast');
+
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                
+                // Show install button in drawer
+                if (installContainer) installContainer.classList.remove('hidden');
+                
+                // Show toast if not dismissed before
+                const isDismissed = localStorage.getItem('pwa-prompt-dismissed');
+                const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+                
+                if (!isDismissed && !isInstalled && installToast) {
+                    setTimeout(() => {
+                        installToast.classList.remove('hidden');
+                    }, 3000);
+                }
+            });
+
+            async function handleInstall() {
+                if (!deferredPrompt) return;
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    console.log('User accepted the PWA install');
+                }
+                deferredPrompt = null;
+                if (installContainer) installContainer.classList.add('hidden');
+                if (installToast) installToast.classList.add('hidden');
+            }
+
+            if (installBtn) installBtn.addEventListener('click', handleInstall);
+            if (installToastBtn) installToastBtn.addEventListener('click', handleInstall);
+            
+            if (closeToastBtn) {
+                closeToastBtn.addEventListener('click', () => {
+                    if (installToast) installToast.classList.add('hidden');
+                    localStorage.setItem('pwa-prompt-dismissed', 'true');
+                });
+            }
+
+            window.addEventListener('appinstalled', () => {
+                deferredPrompt = null;
+                if (installContainer) installContainer.classList.add('hidden');
+                if (installToast) installToast.classList.add('hidden');
+                console.log('PWA was installed');
+            });
+
+            // iOS "Add to Home Screen" detection/instruction could be added here
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+            
+            if (isIOS && !isStandalone) {
+                // You could show a special iOS instruction toast here
+                console.log('On iOS and not standalone');
+            }
         })();
     </script>
 
