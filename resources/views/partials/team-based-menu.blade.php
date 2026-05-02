@@ -66,19 +66,19 @@
 @if($can('cells') || ($isTeamLeader && $leadersTeam && str_contains(strtolower($leadersTeam->name ?? ''), 'cell')))
     <flux:navlist.group expandable heading="Cells">
         <flux:navlist.item icon="user-group" :href="route('admin.dashboard.cells.index', request()->query())" wire:navigate
-            :active="request()->routeIs('admin.dashboard.cells.index') ? 'true' : 'false'">
+            :active="request()->routeIs('admin.dashboard.cells.index')">
             All Cells
         </flux:navlist.item>
         <flux:navlist.item icon="plus-circle" :href="route('admin.dashboard.cells.create', request()->query())" wire:navigate
-            :active="request()->routeIs('admin.dashboard.cells.create') ? 'true' : 'false'">
+            :active="request()->routeIs('admin.dashboard.cells.create')">
             Create Cell
         </flux:navlist.item>
         <flux:navlist.item icon="user-circle" :href="route('admin.dashboard.cells.leaders', request()->query())" wire:navigate
-            :active="request()->routeIs('admin.dashboard.cells.leaders') ? 'true' : 'false'">
+            :active="request()->routeIs('admin.dashboard.cells.leaders')">
             Cell Leaders
         </flux:navlist.item>
         <flux:navlist.item icon="cog-6-tooth" :href="route('admin.dashboard.cells.settings', request()->query())" wire:navigate
-            :active="request()->routeIs('admin.dashboard.cells.settings') ? 'true' : 'false'">
+            :active="request()->routeIs('admin.dashboard.cells.settings')">
             Cell Settings
         </flux:navlist.item>
     </flux:navlist.group>
@@ -87,7 +87,7 @@
 @if($can('transport') && ($isSuperAdmin || $isAdmin || ($leadersTeam && in_array($leadersTeam->id, $appointment_teams))))
     <flux:navlist.group expandable heading="Transportation">
         <flux:navlist.item icon="truck" :href="route('admin.dashboard.transport.index', request()->query())" wire:navigate
-            :active="request()->routeIs('admin.dashboard.transport.index') ? 'true' : 'false'">
+            :active="request()->routeIs('admin.dashboard.transport.index')">
             All Requests
         </flux:navlist.item>
     </flux:navlist.group>
@@ -96,7 +96,7 @@
 @if ($can('appointments') && ($isSuperAdmin || $isAdmin || ($leadersTeam && in_array($leadersTeam->id, $appointment_teams))))
     <flux:navlist.group expandable heading="Appointments">
         <flux:navlist.item icon="calendar-days" :href="route('admin.dashboard.appointments.index', request()->query())" wire:navigate
-            :active="request()->routeIs('admin.dashboard.appointments.index') ? 'true' : 'false'">
+            :active="request()->routeIs('admin.dashboard.appointments.index')">
             All Appointments
         </flux:navlist.item>
         <flux:navlist.item icon="cog-6-tooth" :href="route('admin.dashboard.appointments.settings', request()->query())" wire:navigate>
@@ -104,7 +104,7 @@
         </flux:navlist.item>
         <flux:navlist.item icon="archive-box" :href="route('admin.dashboard.appointments.deleted_appointment', request()->query())"
             wire:navigate
-            :active="request()->routeIs('admin.dashboard.appointments.deleted_appointment') ? 'true' : 'false'">
+            :active="request()->routeIs('admin.dashboard.appointments.deleted_appointment')">
             Deleted Appointment
         </flux:navlist.item>
 
@@ -122,7 +122,7 @@
 @if ($isSuperAdmin || $isAdmin)
     <flux:navlist.group expandable heading="Testimonies">
         <flux:navlist.item icon="chat-bubble-left-ellipsis" :href="route('admin.dashboard.testimonies.index', request()->query())" wire:navigate
-            :active="request()->routeIs('admin.dashboard.testimonies.index') ? 'true' : 'false'">
+            :active="request()->routeIs('admin.dashboard.testimonies.index')">
             View Testimonies
         </flux:navlist.item>
     </flux:navlist.group>
@@ -130,7 +130,7 @@
 @if($can('team_settings'))
     <flux:navlist.group expandable heading="Team Setting">
         <flux:navlist.item icon="users" :href="route('admin.dashboard.settings.team-functions', request()->query())" wire:navigate
-            :active="request()->routeIs('admin.dashboard.settings.team-functions') ? 'true' : 'false'">
+            :active="request()->routeIs('admin.dashboard.settings.team-functions')">
             Team Functions
         </flux:navlist.item>
     </flux:navlist.group>
@@ -140,7 +140,7 @@
 @if($isSuperAdmin)
     <flux:navlist.group expandable heading="System Settings">
         <flux:navlist.item icon="cog-6-tooth" :href="route('admin.dashboard.settings.index', request()->query())" wire:navigate
-            :active="request()->routeIs('admin.dashboard.settings.index') ? 'true' : 'false'">
+            :active="request()->routeIs('admin.dashboard.settings.index')">
             Global & Landing
         </flux:navlist.item>
     </flux:navlist.group>
@@ -149,22 +149,22 @@
 {{-- Appearance Settings - All Users --}}
 <flux:navlist.group expandable heading="Appearance">
     <flux:navlist.item icon="paint-brush" :href="route('settings.appearance', request()->query())" wire:navigate
-        :active="request()->routeIs('settings.appearance') ? 'true' : 'false'">
+        :active="request()->routeIs('settings.appearance')">
         Theme Preference
     </flux:navlist.item>
 </flux:navlist.group>
 @if($can('partnerships') && ($isSuperAdmin || $isAdmin || $isPartnershipTeamMember))
     <flux:navlist.group expandable heading="Partnerships">
         <flux:navlist.item icon="hand-raised" :href="route('admin.dashboard.partnership.intents', request()->query())" wire:navigate
-            :active="request()->routeIs('admin.dashboard.partnership.intents') ? 'true' : 'false'">
+            :active="request()->routeIs('admin.dashboard.partnership.intents')">
             Intent Management
         </flux:navlist.item>
         <flux:navlist.item icon="banknotes" :href="route('admin.dashboard.partnership.accounts', request()->query())" wire:navigate
-            :active="request()->routeIs('admin.dashboard.partnership.accounts') ? 'true' : 'false'">
+            :active="request()->routeIs('admin.dashboard.partnership.accounts')">
             Accounts
         </flux:navlist.item>
         <flux:navlist.item icon="rectangle-group" :href="route('admin.dashboard.partnership.form-builder', request()->query())" wire:navigate
-            :active="request()->routeIs('admin.dashboard.partnership.form-builder') ? 'true' : 'false'">
+            :active="request()->routeIs('admin.dashboard.partnership.form-builder')">
             Form Builder
         </flux:navlist.item>
     </flux:navlist.group>
@@ -172,15 +172,15 @@
 @if ($can('believers_academy') && ($isSuperAdmin || $isAdmin || ($leadersTeam && in_array($leadersTeam->id, $believersAcademyTeam))))
     <flux:navlist.group expandable heading="Believer's Academy">
         <flux:navlist.item icon="academic-cap" :href="route('admin.dashboard.believers_class.academy', request()->query())" wire:navigate
-            :active="request()->routeIs('admin.dashboard.believers_class.academy') ? 'true' : 'false'">
+            :active="request()->routeIs('admin.dashboard.believers_class.academy')">
             Academy
         </flux:navlist.item>
         <flux:navlist.item icon="book-open" :href="route('admin.dashboard.believers_class.index', request()->query())" wire:navigate
-            :active="request()->routeIs('admin.dashboard.believers_class.index') ? 'true' : 'false'">
+            :active="request()->routeIs('admin.dashboard.believers_class.index')">
             Believer's Classes
         </flux:navlist.item>
         <flux:navlist.item icon="users" :href="route('admin.dashboard.believers_class.student-monitor', request()->query())" wire:navigate
-            :active="request()->routeIs('admin.dashboard.believers_class.student-monitor') ? 'true' : 'false'">
+            :active="request()->routeIs('admin.dashboard.believers_class.student-monitor')">
             Students Monitor
         </flux:navlist.item>
     </flux:navlist.group>
@@ -190,11 +190,11 @@
 <flux:navlist.group expandable heading="Report">
 
     <flux:navlist.item icon="document-text" :href="route('admin.dashboard.reports.index', request()->query())" wire:navigate
-        :active="request()->routeIs('admin.dashboard.reports.index') ? 'true' : 'false'">
+        :active="request()->routeIs('admin.dashboard.reports.index')">
         Report
     </flux:navlist.item>
     <flux:navlist.item icon="pencil-square" :href="route('admin.dashboard.reports.create-report', request()->query())" wire:navigate
-        :active="request()->routeIs('admin.dashboard.reports.create-report') ? 'true' : 'false'">
+        :active="request()->routeIs('admin.dashboard.reports.create-report')">
         Create Report
     </flux:navlist.item>
 
@@ -202,10 +202,10 @@
 @endif
 
 @if($can('analytics'))
-<flux:navlist.group expandable heading="Analytics">
+<flux:navlist.group expandable heading="Analytics" icon="chart-bar">
 
     <flux:navlist.item icon="chart-bar" :href="route('admin.dashboard.analytics.index', request()->query())" wire:navigate
-        :active="request()->routeIs('admin.dashboard.analytics.index') ? 'true' : 'false'">
+        :active="request()->routeIs('admin.dashboard.analytics.index')">
         Analytics Dashboard
     </flux:navlist.item>
 
@@ -214,21 +214,25 @@
 
 {{-- Attendance Management System - Only for assigned teams --}}
 @if($isSuperAdmin || $isAdmin || ($leadersTeam && in_array($leadersTeam->id, $attendanceTeams ?? [])))
-<flux:navlist.group expandable heading="Attendance">
+<flux:navlist.group expandable heading="Attendance" icon="clipboard-document-check">
     <flux:navlist.item icon="calendar" :href="route('admin.dashboard.attendance.manage', request()->query())" wire:navigate
-        :active="request()->routeIs('admin.dashboard.attendance.manage') ? 'true' : 'false'">
+        :active="request()->routeIs('admin.dashboard.attendance.manage')">
         Manage Attendance
     </flux:navlist.item>
+    <flux:navlist.item icon="user-plus" :href="route('admin.members.add-to-team', request()->query())" wire:navigate
+        :active="request()->routeIs('admin.members.add-to-team')">
+        Add Member
+    </flux:navlist.item>
     <flux:navlist.item icon="check-circle" :href="route('admin.dashboard.attendance.checkin', request()->query())" wire:navigate
-        :active="request()->routeIs('admin.dashboard.attendance.checkin') ? 'true' : 'false'">
+        :active="request()->routeIs('admin.dashboard.attendance.checkin')">
         Check-in
     </flux:navlist.item>
     <flux:navlist.item icon="document-chart-bar" :href="route('admin.dashboard.attendance.reports', request()->query())" wire:navigate
-        :active="request()->routeIs('admin.dashboard.attendance.reports') ? 'true' : 'false'">
+        :active="request()->routeIs('admin.dashboard.attendance.reports')">
         Reports
     </flux:navlist.item>
     <flux:navlist.item icon="users" :href="route('admin.dashboard.attendance.members', request()->query())" wire:navigate
-        :active="request()->routeIs('admin.dashboard.attendance.members') ? 'true' : 'false'">
+        :active="request()->routeIs('admin.dashboard.attendance.members')">
         Team Members
     </flux:navlist.item>
 </flux:navlist.group>
@@ -236,9 +240,9 @@
 
 {{-- Subunits Management - Team Lead Only (Separate from Attendance) --}}
 @role(['team-lead'])
-<flux:navlist.group expandable heading="Subunits">
+<flux:navlist.group expandable heading="Subunits" icon="building-office">
     <flux:navlist.item icon="rectangle-group" :href="route('admin.dashboard.subunits.index', request()->query())" wire:navigate
-        :active="request()->routeIs('admin.dashboard.subunits.index') ? 'true' : 'false'">
+        :active="request()->routeIs('admin.dashboard.subunits.index')">
         Manage Subunits
     </flux:navlist.item>
 </flux:navlist.group>
@@ -247,11 +251,11 @@
 @if ($can('events') && ($isSuperAdmin || $isAdmin || ($leadersTeam && in_array($leadersTeam->id, $eventTeams))))
     <flux:navlist.group expandable heading="Events">
         <flux:navlist.item icon="calendar-days" :href="route('admin.dashboard.events.index', request()->query())" wire:navigate
-            :active="request()->routeIs('admin.dashboard.events.index') ? 'true' : 'false'">
+            :active="request()->routeIs('admin.dashboard.events.index')">
             All Events
         </flux:navlist.item>
         <flux:navlist.item icon="plus-circle" :href="route('admin.dashboard.events.create', request()->query())" wire:navigate
-            :active="request()->routeIs('admin.dashboard.events.create') ? 'true' : 'false'">
+            :active="request()->routeIs('admin.dashboard.events.create')">
             Create Event
         </flux:navlist.item>
 
@@ -261,7 +265,7 @@
 @if($can('media'))
     <flux:navlist.group expandable heading="Media">
         <flux:navlist.item icon="play-circle" :href="route('admin.dashboard.sermons.index', request()->query())" wire:navigate
-            :active="request()->routeIs('admin.dashboard.sermons.index') ? 'true' : 'false'">
+            :active="request()->routeIs('admin.dashboard.sermons.index')">
             Sermons
         </flux:navlist.item>
     </flux:navlist.group>
@@ -270,8 +274,9 @@
 @role(['admin', 'super-admin'])
 <flux:navlist.group expandable heading="Announcements">
     <flux:navlist.item icon="megaphone" :href="route('admin.dashboard.announcements.index', request()->query())" wire:navigate
-        :active="request()->routeIs('admin.dashboard.announcements.index') ? 'true' : 'false'">
+        :active="request()->routeIs('admin.dashboard.announcements.index')">
         Broadcasts
     </flux:navlist.item>
 </flux:navlist.group>
 @endrole
+

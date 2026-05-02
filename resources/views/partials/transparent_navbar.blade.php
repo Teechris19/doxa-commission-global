@@ -12,7 +12,7 @@
                 <li class="nav-item"><a class="nav-link" href="{{ route('missions.index') }}" wire:navigate>Missions</a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ route('giving.index') }}" wire:navigate>Giving</a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ route('attendance.index') }}" wire:navigate>Attendance</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ route('cells.index') }}" wire:navigate>Cell</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ route('cells.index') }}" wire:navigate><i class="fa-solid fa-people-group"></i> Cell</a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ route('events.index') }}" wire:navigate>Event</a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ route('location.index') }}" wire:navigate>Location</a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ route('believers.academy') }}" wire:navigate>Believers academy</a></li>

@@ -35,7 +35,7 @@
 
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=poppins:300,400,500,600,700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
@@ -52,13 +52,13 @@
         $footerSocial = json_decode($globalSettings?->social_links ?? '{}', true) ?? [];
 
         $primaryNav = [
-            ['label' => 'Home', 'route' => 'home', 'active' => request()->routeIs('home'), 'icon' => 'fa-house'],
-            ['label' => 'About', 'route' => 'about', 'active' => request()->routeIs('about'), 'icon' => 'fa-circle-info'],
-            ['label' => 'Conclaves', 'route' => 'conclaves.index', 'active' => request()->routeIs('conclaves.*'), 'icon' => 'fa-map-location-dot'],
-            ['label' => 'Events', 'route' => 'events.index', 'active' => request()->routeIs('events.*'), 'icon' => 'fa-calendar-days'],
-            ['label' => 'Messages', 'route' => 'sermons.index', 'active' => request()->routeIs('sermons.*'), 'icon' => 'fa-circle-play'],
-            ['label' => 'Cells', 'route' => 'cells.index', 'active' => request()->routeIs('cells.*'), 'icon' => 'fa-people-group'],
-            ['label' => 'Location', 'route' => 'location.index', 'active' => request()->routeIs('location.*'), 'icon' => 'fa-location-dot'],
+            ['label' => 'Home', 'route' => 'home', 'active' => request()->routeIs('home'), 'icon' => 'fa-solid fa-house'],
+            ['label' => 'About', 'route' => 'about', 'active' => request()->routeIs('about'), 'icon' => 'fa-solid fa-circle-info'],
+            ['label' => 'Conclaves', 'route' => 'conclaves.index', 'active' => request()->routeIs('conclaves.*'), 'icon' => 'fa-solid fa-map-location-dot'],
+            ['label' => 'Events', 'route' => 'events.index', 'active' => request()->routeIs('events.*'), 'icon' => 'fa-solid fa-calendar-days'],
+            ['label' => 'Messages', 'route' => 'sermons.index', 'active' => request()->routeIs('sermons.*'), 'icon' => 'fa-solid fa-circle-play'],
+            ['label' => 'Cells', 'route' => 'cells.index', 'active' => request()->routeIs('cells.*'), 'icon' => 'fa-solid fa-people-group'],
+            ['label' => 'Location', 'route' => 'location.index', 'active' => request()->routeIs('location.*'), 'icon' => 'fa-solid fa-location-dot'],
         ];
 
         $secondaryNav = [
@@ -351,7 +351,7 @@
                     'is-active' => $item['active'],
                 ])
             >
-                <i class="fas {{ $item['icon'] }} text-[0.9rem]" aria-hidden="true"></i>
+                <i class="{{ $item['icon'] }} text-[0.9rem]" aria-hidden="true"></i>
                 <span>{{ $item['label'] }}</span>
             </a>
         @endforeach
@@ -385,7 +385,7 @@
                             'is-active' => $item['active'],
                         ])
                     >
-                        <i class="fas {{ $item['icon'] }}" aria-hidden="true"></i>
+                        <i class="{{ $item['icon'] }}" aria-hidden="true"></i>
                         <span>{{ $item['label'] }}</span>
                     </a>
                 @endforeach

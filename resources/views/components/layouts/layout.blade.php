@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="/assets/vendor/bootstrap-icons/bootstrap-icons.css">
     <link rel="stylesheet" href="/assets/vendor/aos/aos.css">
     <link rel="stylesheet" href="/assets/css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <script src="/assets/vendor/bootstrap/js/bootstrap.bundle.js"></script>
     <script src="/assets/vendor/aos/aos.js"></script>
     <meta charset="utf-8" />
@@ -55,7 +55,7 @@
                     <li class="nav-item"><a class="nav-link" href="{{ route('missions.index') }}" wire:navigate>Missions</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ route('giving.index') }}" wire:navigate>Giving</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ route('attendance.index') }}" wire:navigate>Attendance</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ route('cells.index') }}" wire:navigate>Cell</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ route('cells.index') }}" wire:navigate><i class="fa-solid fa-people-group"></i> Cell</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ route('events.index') }}" wire:navigate>Event</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ route('location.index') }}" wire:navigate>Location</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ route('believers.academy') }}" wire:navigate>Believers academy</a></li>

@@ -48,6 +48,9 @@ self.addEventListener('fetch', (event) => {
         event.respondWith(
             fetch(request)
                 .then((response) => {
+                    if (!response || response.status !== 200 || response.type !== 'basic') {
+                        return response;
+                    }
                     const clone = response.clone();
                     caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
                     return response;
@@ -68,8 +71,9 @@ self.addEventListener('fetch', (event) => {
                 cached ??
                 fetch(request).then((response) => {
                     if (response.ok) {
+                        const clone = response.clone();
                         caches.open(CACHE_NAME).then((cache) =>
-                            cache.put(request, response.clone())
+                            cache.put(request, clone)
                         );
                     }
                     return response;
@@ -86,8 +90,9 @@ self.addEventListener('fetch', (event) => {
             fetch(request)
                 .then((response) => {
                     if (response.ok) {
+                        const clone = response.clone();
                         caches.open(DYNAMIC_CACHE).then((cache) =>
-                            cache.put(request, response.clone())
+                            cache.put(request, clone)
                         );
                     }
                     return response;
@@ -102,8 +107,9 @@ self.addEventListener('fetch', (event) => {
         caches.match(request).then((cached) => {
             const fetchPromise = fetch(request).then((response) => {
                 if (response.ok) {
+                    const clone = response.clone();
                     caches.open(DYNAMIC_CACHE).then((cache) =>
-                        cache.put(request, response.clone())
+                        cache.put(request, clone)
                     );
                 }
                 return response;
@@ -120,6 +126,7 @@ self.addEventListener('push', (event) => {
 
     if (event.data) {
         try {
+            // event.data.json() can only be called once.
             const parsed = event.data.json();
             data = { ...data, ...parsed };
         } catch {

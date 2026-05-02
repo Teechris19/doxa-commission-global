@@ -7,316 +7,167 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Volt\Component;
 use TallStackUi\Traits\Interactions;
+
 new #[Layout('components.layouts.admin')] class extends Component {
     use Interactions;
 
     #[Url]
-    public ?string $chapter = null; // chapter slug/name from URL
-
-    public ?int $chapterId = null; // actual chapter_id for DB queries
+    public ?string $chapter = null; 
+    public ?int $chapterId = null;
 
     public array $teams = [];
-    public array $teamLeaders = [];
-
     public ?int $selectedTeam = null;
 
-    // Two separate select bindings
-    public ?int $selectedUserInTeam = null;
-    public ?int $selectedUserOutsideTeam = null;
+    // Leader assignment state
+    public ?int $selectedUserForLeader = null;
+    // Assistant assignment state
+    public ?int $selectedUserForAssistant = null;
+    public string $newAssistantTitle = '';
 
     public ?User $currentLeader = null;
-    public array $teamUsers = [];
-    public array $nonTeamUsers = [];
+    public array $currentAssistants = [];
+    public array $chapterUsers = [];
 
     public function mount(): void
     {
-        // Find chapter
-        $chapter         = Chapter::where('name', $this->chapter)->firstOrFail();
+        $chapter = Chapter::where('name', $this->chapter)->firstOrFail();
         $this->chapterId = $chapter->id;
 
-        // Load all teams in this chapter for the select dropdown
-        $this->teams = Team::where('chapter_id', $this->chapterId) ->when(
-                $this->chapter,
-                fn($q) =>
-                $q->whereHas(
-                    'chapter',
-                    fn($qq) =>
-                    $qq->where('name', $this->chapter)
-                )
-            )
+        $this->teams = Team::where('chapter_id', $this->chapterId)
             ->get()
-            ->map(fn($t) => [
-                'value' => $t->id,
-                'label' => $t->name,
-            ])->toArray();
-
-        $this->teamLeaders = Team::with('users')
-            ->where('chapter_id', $this->chapterId)
-            ->orderBy('name')
-            ->get()
-            ->map(function ($team) {
-                // Find leader for THIS specific team using pivot table
-                $leader = $team->users()
-                    ->wherePivot('role_in_team', 'team-lead')
-                    ->first();
-
-                return [
-                    'team' => $team->name,
-                    'leader' => $leader?->name ?? 'No leader assigned',
-                ];
-            })
+            ->map(fn($t) => ['value' => $t->id, 'label' => $t->name])
             ->toArray();
     }
 
     public function updatedSelectedTeam($teamId): void
     {
-        $team = Team::with('users')->find($teamId);
+        $team = Team::with(['users' => fn($q) => $q->withPivot('role_title', 'role_in_team')])->find($teamId);
 
         if (!$team) {
-            $this->reset(['currentLeader', 'teamUsers', 'nonTeamUsers']);
+            $this->reset(['currentLeader', 'currentAssistants', 'chapterUsers']);
             return;
         }
 
-        // Current leader based on pivot table role_in_team for THIS specific team
-        $this->currentLeader = $team->users()
-            ->wherePivot('role_in_team', 'team-lead')
-            ->first();
-
-        // Users in team
-        $this->teamUsers = $team->users->map(fn($u) => [
-            'value' => $u->id,
-            'label' => $u->name,
-        ])->toArray();
-
-        // Users not in team but in the same chapter
-        $this->nonTeamUsers = User::where('chapter_id', $this->chapterId)
-            ->whereDoesntHave('teams', fn($q) => $q->where('teams.id', $team->id))
+        $this->currentLeader = $team->users()->wherePivot('role_in_team', 'team-lead')->first();
+        
+        $this->currentAssistants = $team->users()
+            ->wherePivot('role_in_team', 'assistant-team-lead')
             ->get()
             ->map(fn($u) => [
-                'value' => $u->id,
-                'label' => $u->name,
-            ])->toArray();
+                'id' => $u->id,
+                'name' => $u->name,
+                'title' => $u->pivot->role_title ?? 'Assistant'
+            ])
+            ->toArray();
 
-        // Reset selections
-        $this->reset(['selectedUserInTeam', 'selectedUserOutsideTeam']);
+        $this->chapterUsers = User::where('chapter_id', $this->chapterId)
+            ->get()
+            ->map(fn($u) => ['value' => $u->id, 'label' => $u->name])
+            ->toArray();
+
+        $this->reset(['selectedUserForLeader', 'selectedUserForAssistant', 'newAssistantTitle']);
     }
-
 
     public function assignLeader(): void
     {
-        $userId = $this->selectedUserInTeam ?? $this->selectedUserOutsideTeam;
+        if (!$this->selectedTeam || !$this->selectedUserForLeader) return;
 
-        if (!$this->selectedTeam || !$userId) {
-            $this->toast()->error('Invalid Selection', 'Please select a team and a user to assign as leader.')->send();
-            return;
+        $team = Team::find($this->selectedTeam);
+        $user = User::find($this->selectedUserForLeader);
+
+        // Demote old leader
+        $oldLeader = $team->users()->wherePivot('role_in_team', 'team-lead')->first();
+        if ($oldLeader) {
+            $team->users()->updateExistingPivot($oldLeader->id, ['role_in_team' => 'member']);
         }
 
-        $team = Team::with('users')->find($this->selectedTeam);
-        $newLeader = User::find($userId);
-
-        if (!$team || !$newLeader) {
-            $this->toast()->error('Not Found', 'Team or user not found.')->send();
-            return;
-        }
-
-        // Find current leader in THIS SPECIFIC TEAM using pivot table
-        $currentLeaderPivot = $team->users()
-            ->wherePivot('role_in_team', 'team-lead')
-            ->first();
-
-        if ($currentLeaderPivot) {
-            // Update pivot to 'member' for the current leader in THIS team only
-            $team->users()->updateExistingPivot($currentLeaderPivot->id, [
-                'role_in_team' => 'member',
-            ]);
-
-            // Check if this user is still a team-lead in ANY other team
-            $isStillTeamLeadElsewhere = $currentLeaderPivot->teams()
-                ->wherePivot('role_in_team', 'team-lead')
-                ->where('teams.id', '!=', $team->id)
-                ->exists();
-
-            // Only remove the global team-lead role if they're not leading any other team
-            if (!$isStillTeamLeadElsewhere && $currentLeaderPivot->hasRole('team-lead')) {
-                $currentLeaderPivot->removeRole('team-lead');
-            }
-        }
-
-        // Add or update new leader in pivot for THIS team
-        if ($team->users()->where('user_id', $newLeader->id)->exists()) {
-            $team->users()->updateExistingPivot($newLeader->id, [
-                'role_in_team' => 'team-lead',
-            ]);
-        } else {
-            $team->users()->attach($newLeader->id, [
-                'chapter_id' => $this->chapterId,
-                'role_in_team' => 'team-lead',
-            ]);
-        }
-
-        // Assign Spatie role to new leader (they need it for dashboard access)
-        if (!$newLeader->hasRole('team-lead')) {
-            $newLeader->assignRole('team-lead');
-        }
-
-        $this->toast()->success(
-            'Team Leader Assigned',
-            'The selected user is now the team leader.'
-        )->send();
-
-        // Refresh lists and current leader
+        // Promote new leader
+        $team->users()->syncWithoutDetaching([
+            $user->id => ['chapter_id' => $this->chapterId, 'role_in_team' => 'team-lead']
+        ]);
+        
+        $this->toast()->success('Done', 'Team leader updated.')->send();
         $this->updatedSelectedTeam($this->selectedTeam);
-
-        $this->teamLeaders = Team::with('users')
-            ->where('chapter_id', $this->chapterId)
-            ->orderBy('name')
-            ->get()
-            ->map(function ($team) {
-                // Find leader for THIS specific team using pivot
-                $leader = $team->users()
-                    ->wherePivot('role_in_team', 'team-lead')
-                    ->first();
-
-                return [
-                    'team' => $team->name,
-                    'leader' => $leader?->name ?? 'No leader assigned',
-                ];
-            })
-            ->toArray();
     }
 
+    public function addAssistant(): void
+    {
+        if (!$this->selectedTeam || !$this->selectedUserForAssistant || empty($this->newAssistantTitle)) {
+            $this->toast()->error('Error', 'Please select a user and provide a role title.')->send();
+            return;
+        }
 
+        $team = Team::find($this->selectedTeam);
+        $team->users()->syncWithoutDetaching([
+            $this->selectedUserForAssistant => [
+                'chapter_id' => $this->chapterId, 
+                'role_in_team' => 'assistant-team-lead',
+                'role_title' => $this->newAssistantTitle
+            ]
+        ]);
+        
+        $this->reset(['selectedUserForAssistant', 'newAssistantTitle']);
+        $this->updatedSelectedTeam($this->selectedTeam);
+        $this->toast()->success('Done', 'Assistant added.')->send();
+    }
+
+    public function removeAssistant(int $userId): void
+    {
+        $team = Team::find($this->selectedTeam);
+        $team->users()->updateExistingPivot($userId, ['role_in_team' => 'member', 'role_title' => null]);
+        $this->updatedSelectedTeam($this->selectedTeam);
+        $this->toast()->success('Done', 'Assistant removed.')->send();
+    }
 };
 ?>
 <div>
-    <x-fancy-header title="Teams" subtitle="Manage Teams" :breadcrumbs="[
+    <x-fancy-header title="Team Leadership Management" subtitle="Assign leaders and support roles" :breadcrumbs="[
         ['label' => 'Home', 'url' => route('admin.dashboard', request()->query())],
         ['label'=>'Teams', 'url'=>route('admin.dashboard.teams', request()->query())],
-        ['label' => 'Edit Teams Leader']
-    ]" class="mb-4">
-      
-    </x-fancy-header>
+        ['label' => 'Edit Leadership']
+    ]" class="mb-4" />
+
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-        <!-- Select Team -->
-        <div>
-            <label for="team" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                Select Team <span class="float-right">{{ count($teams) }}</span>
-            </label>
-            <select id="team" wire:model.live="selectedTeam" class="w-full rounded-lg border-zinc-300 dark:border-zinc-700 shadow-sm
-                       bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100
-                       focus:border-indigo-500 focus:ring focus:ring-indigo-400 focus:ring-opacity-50">
+        {{-- Team Selection --}}
+        <x-card header="Team Selection" class="dark:bg-zinc-900">
+            <select wire:model.live="selectedTeam" class="w-full p-2 rounded-lg bg-zinc-800 text-zinc-100 border border-zinc-700">
                 <option value="">Choose a team</option>
                 @foreach($teams as $team)
                     <option value="{{ $team['value'] }}">{{ $team['label'] }}</option>
                 @endforeach
             </select>
-        </div>
+        </x-card>
 
-        <!-- Current Team Leader -->
-        <div>
-            <label for="currentLeader" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                Current Team Leader
-            </label>
-            <select id="currentLeader" disabled class="w-full rounded-lg border-zinc-300 dark:border-zinc-700 shadow-sm
-                       bg-zinc-100 dark:bg-zinc-700 text-zinc-900 dark:text-zinc-200">
-                @if($currentLeader)
-                    <option>{{ $currentLeader->name }}</option>
-                @else
-                    <option>No leader assigned</option>
-                @endif
+        {{-- Main Leader --}}
+        <x-card header="Team Leader" class="dark:bg-zinc-900">
+            <p class="text-sm text-zinc-400 mb-2">Current Leader: <span class="font-bold text-white">{{ $currentLeader?->name ?? 'None' }}</span></p>
+            <select wire:model="selectedUserForLeader" class="w-full p-2 rounded bg-zinc-800 text-white border border-zinc-700 mb-2">
+                <option value="">New Leader</option>
+                @foreach($chapterUsers as $u) <option value="{{ $u['value'] }}">{{ $u['label'] }}</option> @endforeach
             </select>
-        </div>
+            <x-button wire:click="assignLeader" color="blue" class="w-full">Change Leader</x-button>
+        </x-card>
 
-        <!-- Users in Team -->
-        <div>
-            <label for="teamUsers" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                Users in Team <span class="float-right">{{ count($teamUsers) }}</span>
-            </label>
-            <select id="teamUsers" wire:model.live="selectedUserInTeam" class="w-full rounded-lg border-zinc-300 dark:border-zinc-700 shadow-sm
-                       bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100
-                       focus:border-indigo-500 focus:ring focus:ring-indigo-400 focus:ring-opacity-50">
-                <option value="">Select a user</option>
-                @foreach($teamUsers as $user)
-                    <option value="{{ $user['value'] }}">{{ $user['label'] }}</option>
-                @endforeach
-            </select>
-        </div>
-
-        <!-- Users outside Team -->
-        <div>
-            <label for="nonTeamUsers" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                Users outside Team <span class="float-right">{{ count($nonTeamUsers) }}</span>
-            </label>
-            <select id="nonTeamUsers" wire:model.live="selectedUserOutsideTeam" class="w-full rounded-lg border-zinc-300 dark:border-zinc-700 shadow-sm
-                       bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100
-                       focus:border-indigo-500 focus:ring focus:ring-indigo-400 focus:ring-opacity-50">
-                <option value="">Select a user</option>
-                @foreach($nonTeamUsers as $user)
-                    <option value="{{ $user['value'] }}">{{ $user['label'] }}</option>
-                @endforeach
-            </select>
-        </div>
-
-        <!-- Final Selected User Card -->
-        <div class="col-span-1 md:col-span-3">
-            @if($selectedUserInTeam || $selectedUserOutsideTeam)
-                @php
-                    $selectedUser = null;
-                    if ($selectedUserInTeam) {
-                        $selectedUser = collect($teamUsers)->firstWhere('value', $selectedUserInTeam);
-                    } elseif ($selectedUserOutsideTeam) {
-                        $selectedUser = collect($nonTeamUsers)->firstWhere('value', $selectedUserOutsideTeam);
-                    }
-                @endphp
-
-                @if($selectedUser)
-                    <div class="p-4 bg-white dark:bg-zinc-800 rounded-lg shadow border border-zinc-200 dark:border-zinc-700">
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Selected New Leader:</p>
-                        <p class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-                            {{ $selectedUser['label'] }}
-                        </p>
-                    </div>
-                @endif
-            @endif
-        </div>
-    </div>
-
-    <div class="col-span-1 md:col-span-3 mt-4">
-        <button wire:click="assignLeader" @if(!$selectedUserInTeam && !$selectedUserOutsideTeam) disabled @endif class="px-4 py-2 rounded-lg text-white bg-indigo-600 hover:bg-indigo-700
-               disabled:opacity-50 disabled:cursor-not-allowed">
-            Save Leader
-        </button>
-        <x-button :href="route('admin.dashboard.teams', request()->query())" icon="arrow-long-left" wire:navigate>Back</x-button>
-    </div>
-
-    <div class="mt-8">
-        <x-card header="Teams & Leaders" class="dark:bg-zinc-900 dark:text-gray-200 text-zinc-900">
-            <div class="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
-                Team list for this branch with the current assigned leader.
-            </div>
-            <div class="overflow-x-auto">
-                <table class="min-w-full text-sm">
-                    <thead class="text-left text-zinc-500 dark:text-zinc-400">
-                        <tr>
-                            <th class="py-2 pr-4">Team</th>
-                            <th class="py-2">Leader</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($teamLeaders as $row)
-                            <tr class="border-t border-zinc-200 dark:border-zinc-700">
-                                <td class="py-2 pr-4">{{ $row['team'] }}</td>
-                                <td class="py-2 font-semibold">{{ $row['leader'] }}</td>
-                            </tr>
-                        @empty
-                            <tr class="border-t border-zinc-200 dark:border-zinc-700">
-                                <td class="py-2 text-zinc-500 dark:text-zinc-400" colspan="2">
-                                    No teams found for this branch.
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+        {{-- Assistant Management --}}
+        <x-card header="Assistant Team Leads" class="dark:bg-zinc-900">
+            <details class="group mb-4">
+                <summary class="cursor-pointer font-bold text-zinc-300 p-2 bg-zinc-800 rounded">Manage Assistants ({{ count($currentAssistants) }})</summary>
+                <ul class="mt-2 space-y-1">
+                    @foreach($currentAssistants as $asst)
+                        <li class="flex justify-between p-2 bg-zinc-800 rounded text-sm text-white">
+                            {{ $asst['name'] }} ({{ $asst['title'] }})
+                            <button wire:click="removeAssistant({{ $asst['id'] }})" class="text-red-400">×</button>
+                        </li>
+                    @endforeach
+                </ul>
+            </details>
+            <div class="space-y-2">
+                <select wire:model="selectedUserForAssistant" class="w-full p-2 rounded bg-zinc-800 text-white border border-zinc-700">
+                    <option value="">Select User</option>
+                    @foreach($chapterUsers as $u) <option value="{{ $u['value'] }}">{{ $u['label'] }}</option> @endforeach
+                </select>
+                <input wire:model="newAssistantTitle" placeholder="Custom Role Title" class="w-full p-2 rounded bg-zinc-800 text-white border border-zinc-700">
+                <x-button wire:click="addAssistant" color="green" class="w-full">Add Assistant</x-button>
             </div>
         </x-card>
     </div>

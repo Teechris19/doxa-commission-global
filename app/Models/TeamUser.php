@@ -8,7 +8,7 @@ class TeamUser extends Model
 {
     protected $table = 'team_user';
 
-    protected $fillable = ['user_id', 'team_id', 'chapter_id', 'unit_id', 'role_in_team'];
+    protected $fillable = ['user_id', 'team_id', 'chapter_id', 'unit_id', 'role_in_team', 'role_title'];
 
     public function user()
     {
